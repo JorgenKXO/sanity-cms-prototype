@@ -8,27 +8,17 @@ import {
   ClockIcon,
   CompletedIcon,
   type IconPropsWithoutSvgPath,
+  type IconProps,
   InfoIcon,
   HelpOutlineIcon,
   LockIcon,
-  WarningOutlineIcon,
 } from '@skatteetaten/ds-icons'
 import {NavigationTile} from '@skatteetaten/ds-navigation'
 import {Heading, Paragraph} from '@skatteetaten/ds-typography'
 import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
-import type {CSSProperties, JSX} from 'react'
+import type {CSSProperties, JSX, ReactElement} from 'react'
 import {useEffect, useState} from 'react'
 import {useClient} from 'sanity'
-
-type NavigationPanelBlock = {
-  _key?: string
-  _type: 'navigationPanel'
-  type?: 'warning' | 'information'
-  color?: string
-  icon?: string
-  heading?: string
-  body?: PortableTextBlock[]
-}
 
 type RettskilderPanelBlock = {
   _key?: string
@@ -46,7 +36,7 @@ type InformasjonPanelBlock = {
   body?: PortableTextBlock[]
 }
 
-type PanelEntry = NavigationPanelBlock | RettskilderPanelBlock | InformasjonPanelBlock
+type PanelEntry = RettskilderPanelBlock | InformasjonPanelBlock
 
 type NavigationGroupHeadingTile = {
   _key?: string
@@ -100,20 +90,15 @@ const informasjonIconMap: Record<string, (props: IconPropsWithoutSvgPath) => JSX
   lock: LockIcon,
 }
 
-// Eldre "Boks"-type sine farger, oversatt til Panel sine color/variant-props.
-const navigationPanelColorMap: Record<string, {color: PanelColor; variant: PanelVariant}> = {
-  green: {color: 'forest', variant: 'filled'},
-  blue: {color: 'denim', variant: 'filled'},
-  'yellow-outline': {color: 'ochre', variant: 'outline'},
-  'blue-outline': {color: 'denim', variant: 'outline'},
-  'green-outline': {color: 'forest', variant: 'outline'},
-}
+// Panel-komponenten plasserer ikonet øverst i sin egen grid-celle uten å sentrere
+// det mot overskriften. Denne innrykk-verdien dytter ikonet ned slik at det visuelt
+// aligner med overskriftsteksten, slik det gjør i designsystemets eget eksempel.
+const iconAlignmentOffset = '0.3rem'
 
-const navigationPanelIconMap: Record<string, (props: IconPropsWithoutSvgPath) => JSX.Element> = {
-  info: InfoIcon,
-  success: CompletedIcon,
-  tip: HelpOutlineIcon,
-  help: HelpOutlineIcon,
+function withAlignmentOffset(icon: ReactElement): ReactElement<IconProps> {
+  return (
+    <span style={{display: 'inline-block', marginTop: iconAlignmentOffset}}>{icon}</span>
+  ) as unknown as ReactElement<IconProps>
 }
 
 // Bakgrunnsfargen på den fremhevede introen, som ekte palette-fargetokens
@@ -278,33 +263,14 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
           variant={appearance.variant}
           padding="m"
           spacing="l"
-          renderIcon={Icon ? () => <Icon /> : undefined}
+          renderIcon={Icon ? () => withAlignmentOffset(<Icon />) : undefined}
         >
           {panel.body ? <PortableText value={panel.body} components={bodyComponents} /> : null}
         </Panel>
       )
     }
 
-    // Eldre "navigationPanel"-type.
-    const isWarning = panel.type === 'warning'
-    const appearance = isWarning
-      ? {color: 'ochre' as PanelColor, variant: 'filled' as PanelVariant}
-      : navigationPanelColorMap[panel.color || 'blue'] || navigationPanelColorMap.blue
-    const Icon = isWarning ? WarningOutlineIcon : panel.icon && navigationPanelIconMap[panel.icon]
-    return (
-      <Panel
-        key={panel._key || index}
-        title={panel.heading || (isWarning ? 'Advarsel' : 'Informasjon')}
-        titleAs="h2"
-        color={appearance.color}
-        variant={appearance.variant}
-        padding="m"
-        spacing="l"
-        renderIcon={Icon ? () => <Icon /> : undefined}
-      >
-        {panel.body ? <PortableText value={panel.body} components={bodyComponents} /> : null}
-      </Panel>
-    )
+    return null
   }
 
   function renderTiles() {

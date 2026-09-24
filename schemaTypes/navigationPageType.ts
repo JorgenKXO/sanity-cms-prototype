@@ -200,7 +200,6 @@ export const navigationPageType = defineType({
       type: 'array',
       group: 'content',
       of: [
-        defineArrayMember({type: 'navigationPanel'}),
         defineArrayMember({type: 'rettskilderPanel'}),
         defineArrayMember({type: 'informasjonPanel'}),
       ],

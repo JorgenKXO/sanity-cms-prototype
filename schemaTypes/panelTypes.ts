@@ -1,4 +1,4 @@
-import {BookIcon, InfoOutlineIcon, WarningOutlineIcon} from '@sanity/icons'
+import {BookIcon, InfoOutlineIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
 // Delt lenke-annotasjon for portable text-feltene under.
@@ -47,96 +47,6 @@ const informasjonTextBlock = defineArrayMember({
       {title: 'Kursiv', value: 'em'},
     ],
     annotations: [linkAnnotation],
-  },
-})
-
-// Eldre boks-type som fortsatt brukes av navigasjonssider som ikke er migrert
-// til de nyere Rettskilder-/Informasjon-boksene. Beholdes for å ikke miste
-// eksisterende innhold.
-const navigationPanelTextBlock = defineArrayMember({
-  type: 'block',
-  styles: [{title: 'Normal', value: 'normal'}],
-  lists: [],
-  marks: {
-    decorators: [
-      {title: 'Fet', value: 'strong'},
-      {title: 'Kursiv', value: 'em'},
-    ],
-    annotations: [linkAnnotation],
-  },
-})
-
-export const navigationPanelType = defineType({
-  name: 'navigationPanel',
-  title: 'Boks (eldre type)',
-  type: 'object',
-  icon: WarningOutlineIcon,
-  fields: [
-    defineField({
-      name: 'type',
-      title: 'Type',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'Advarsel', value: 'warning'},
-          {title: 'Informasjon', value: 'information'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'information',
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'color',
-      title: 'Farge',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'Grønn', value: 'green'},
-          {title: 'Blå', value: 'blue'},
-          {title: 'Hvit med gul ramme', value: 'yellow-outline'},
-          {title: 'Hvit med blå ramme', value: 'blue-outline'},
-          {title: 'Hvit med grønn ramme', value: 'green-outline'},
-        ],
-        layout: 'dropdown',
-      },
-      initialValue: 'blue',
-      hidden: ({parent}) => (parent as {type?: string} | undefined)?.type !== 'information',
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'icon',
-      title: 'Ikon',
-      type: 'string',
-      description: 'Valgfritt. Velg et ikon fra listen.',
-      options: {
-        list: [
-          {title: 'Informasjon', value: 'info'},
-          {title: 'Suksess', value: 'success'},
-          {title: 'Tips', value: 'tip'},
-          {title: 'Hjelp', value: 'help'},
-        ],
-        layout: 'dropdown',
-      },
-      hidden: ({parent}) => (parent as {type?: string} | undefined)?.type !== 'information',
-    }),
-    defineField({
-      name: 'heading',
-      title: 'Overskrift',
-      type: 'string',
-    }),
-    defineField({
-      name: 'body',
-      title: 'Innhold',
-      type: 'array',
-      of: [navigationPanelTextBlock],
-    }),
-  ],
-  preview: {
-    select: {title: 'heading', type: 'type'},
-    prepare({title, type}) {
-      return {title: title || 'Boks', subtitle: type === 'warning' ? 'Advarsel' : 'Informasjon'}
-    },
   },
 })
 

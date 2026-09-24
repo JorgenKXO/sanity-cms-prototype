@@ -10,6 +10,7 @@ import {
   ErrorOutlineIcon,
   HelpOutlineIcon,
   type IconPropsWithoutSvgPath,
+  type IconProps,
   InfoIcon,
   LockIcon,
   WarningOutlineIcon,
@@ -17,7 +18,7 @@ import {
 import {Breadcrumbs} from '@skatteetaten/ds-navigation'
 import {Heading, List, Paragraph} from '@skatteetaten/ds-typography'
 import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
-import type {CSSProperties, JSX} from 'react'
+import type {CSSProperties, JSX, ReactElement} from 'react'
 import {useClient} from 'sanity'
 
 type Breadcrumb = {
@@ -92,6 +93,17 @@ const panelTitle: Record<PanelBlock['_type'], string> = {
   informasjon: 'Informasjon',
   varsel: 'Varsel',
   krise: 'Krise',
+}
+
+// Panel-komponenten plasserer ikonet øverst i sin egen grid-celle uten å sentrere
+// det mot overskriften. Denne innrykk-verdien dytter ikonet ned slik at det visuelt
+// aligner med overskriftsteksten, slik det gjør i designsystemets eget eksempel.
+const iconAlignmentOffset = '0.3rem'
+
+function withAlignmentOffset(icon: ReactElement): ReactElement<IconProps> {
+  return (
+    <span style={{display: 'inline-block', marginTop: iconAlignmentOffset}}>{icon}</span>
+  ) as unknown as ReactElement<IconProps>
 }
 
 type ArticlePreviewProps = {
@@ -215,7 +227,7 @@ export function ArticlePreview(props: ArticlePreviewProps) {
         variant={appearance.variant}
         padding="m"
         spacing="l"
-        renderIcon={Icon ? () => <Icon /> : undefined}
+        renderIcon={Icon ? () => withAlignmentOffset(<Icon />) : undefined}
       >
         {block.text ? <PortableText value={block.text} components={components} /> : null}
       </Panel>

@@ -4,7 +4,7 @@ import {
   navigationPageType,
   navigationTilePageType,
 } from './navigationPageType'
-import {informasjonPanelType, navigationPanelType, rettskilderPanelType} from './panelTypes'
+import {informasjonPanelType, rettskilderPanelType} from './panelTypes'
 import {siteSettingsType} from './siteSettingsType'
 
 export const schemaTypes = [
@@ -13,7 +13,6 @@ export const schemaTypes = [
   navigationPageType,
   navigationGroupHeadingType,
   navigationTilePageType,
-  navigationPanelType,
   rettskilderPanelType,
   informasjonPanelType,
 ]

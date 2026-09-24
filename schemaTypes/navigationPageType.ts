@@ -4,7 +4,6 @@ import {
   EarthGlobeIcon,
   MasterDetailIcon,
   PresentationIcon,
-  ThLargeIcon,
 } from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import type {ArrayOfObjectsInputProps} from 'sanity'
@@ -53,7 +52,7 @@ export const navigationGroupHeadingType = defineType({
     defineField({
       name: 'title',
       title: 'Gruppeoverskrift',
-      description: 'Vises som overskrift over flisene som følger under denne.',
+      description: 'Vises som overskrift over navigasjonskortene som følger under denne.',
       type: 'string',
       validation: (rule) => rule.required(),
     }),
@@ -68,7 +67,7 @@ export const navigationGroupHeadingType = defineType({
 
 export const navigationTilePageType = defineType({
   name: 'navigationTilePage',
-  title: 'Sideflis',
+  title: 'Navigasjonskort',
   type: 'object',
   icon: DocumentIcon,
   fields: [
@@ -83,14 +82,14 @@ export const navigationTilePageType = defineType({
       name: 'titleOverride',
       title: 'Overstyr tittel',
       description:
-        'Valgfritt. Vises i stedet for den lenkede sidens tittel/listeoverskrift, kun i denne flislisten. La stå tomt for å bruke den lenkede sidens listeoverskrift (eller tittelen, hvis den ikke har noen listeoverskrift).',
+        'Valgfritt. Vises i stedet for den lenkede sidens tittel/listeoverskrift, kun i denne kortlisten. La stå tomt for å bruke den lenkede sidens listeoverskrift (eller tittelen, hvis den ikke har noen listeoverskrift).',
       type: 'string',
     }),
     defineField({
       name: 'ingressOverride',
       title: 'Overstyr ingress',
       description:
-        'Valgfritt. Vises i stedet for den lenkede sidens listeingress, kun i denne flislisten. La stå tomt for å bruke den lenkede sidens listeingress (eller ingen ingress i det hele tatt, hvis den ikke har noen).',
+        'Valgfritt. Vises i stedet for den lenkede sidens listeingress, kun i denne kortlisten. La stå tomt for å bruke den lenkede sidens listeingress (eller ingen ingress i det hele tatt, hvis den ikke har noen).',
       type: 'text',
       rows: 2,
     }),
@@ -99,8 +98,8 @@ export const navigationTilePageType = defineType({
     select: {title: 'titleOverride', pageTitle: 'page.title', pageType: 'page._type'},
     prepare({title, pageTitle, pageType}) {
       return {
-        title: title || pageTitle || 'Sideflis',
-        subtitle: 'Sideflis',
+        title: title || pageTitle || 'Navigasjonskort',
+        subtitle: 'Navigasjonskort',
         media: pageType === 'navigationPage' ? MasterDetailIcon : DocumentIcon,
       }
     },
@@ -113,24 +112,21 @@ export const navigationPageType = defineType({
   type: 'document',
   icon: MasterDetailIcon,
   groups: [
-    {name: 'innhold', title: 'Innhold', default: true, icon: BlockContentIcon},
     {name: 'hero', title: 'Fremhevet intro', icon: PresentationIcon},
-    {name: 'fliser', title: 'Fliser', icon: ThLargeIcon},
-    {name: 'seo', title: 'SEO', icon: EarthGlobeIcon},
+    {name: 'content', title: 'Hovedinnhold', icon: BlockContentIcon},
+    {name: 'navigationSeo', title: 'Navigasjon og SEO', icon: EarthGlobeIcon},
   ],
   fields: [
     defineField({
       name: 'title',
       title: 'Tittel',
       type: 'string',
-      group: 'innhold',
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'slug',
       title: 'Nettadresse',
       type: 'slug',
-      group: 'innhold',
       options: {source: 'title'},
       validation: (rule) => rule.required(),
     }),
@@ -140,7 +136,6 @@ export const navigationPageType = defineType({
       description:
         'Kort innledende tekst som vises under tittelen. Lenker er tillatt, men ingen annen formatering (ingen fet/kursiv skrift, overskrifter eller lister).',
       type: 'array',
-      group: 'innhold',
       of: [ingressBlock],
       validation: (rule) => rule.required(),
     }),
@@ -149,7 +144,6 @@ export const navigationPageType = defineType({
       title: 'Kategori',
       description: 'Hvilken tematisk mappe siden hører til.',
       type: 'string',
-      group: 'innhold',
       options: {
         list: [...kategoriOptions],
         layout: 'dropdown',
@@ -204,7 +198,7 @@ export const navigationPageType = defineType({
       title: 'Rettskilder- og informasjonsbokser',
       description: 'Valgfritt. Vises over gruppene med navigasjonskort. Varsel- og krise-bokser kan ikke brukes på navigasjonssider.',
       type: 'array',
-      group: 'innhold',
+      group: 'content',
       of: [
         defineArrayMember({type: 'navigationPanel'}),
         defineArrayMember({type: 'rettskilderPanel'}),
@@ -213,11 +207,11 @@ export const navigationPageType = defineType({
     }),
     defineField({
       name: 'tiles',
-      title: 'Fliser og gruppeoverskrifter',
+      title: 'Navigasjonskort og gruppeoverskrifter',
       description:
-        'Legg til gruppeoverskrifter for å dele inn flisene i seksjoner, og legg til én eller flere sidefliser. Dra elementer for å styre rekkefølgen.',
+        'Legg til gruppeoverskrifter for å dele inn navigasjonskortene i seksjoner, og legg til ett eller flere navigasjonskort. Dra elementer for å styre rekkefølgen.',
       type: 'array',
-      group: 'fliser',
+      group: 'content',
       of: [
         defineArrayMember({type: 'navigationGroupHeading'}),
         defineArrayMember({type: 'navigationTilePage'}),
@@ -237,7 +231,7 @@ export const navigationPageType = defineType({
       description:
         'Brukes i stedet for tittelen når denne siden vises som et navigasjonskort på en annen side. La stå tomt for å bruke tittelen.',
       type: 'string',
-      group: 'fliser',
+      group: 'navigationSeo',
     }),
     defineField({
       name: 'listIngress',
@@ -246,13 +240,13 @@ export const navigationPageType = defineType({
         'Brukes som en kort beskrivelse når denne siden vises som et navigasjonskort på en annen side. La stå tomt for ikke å vise noen ingress på kortet.',
       type: 'text',
       rows: 2,
-      group: 'fliser',
+      group: 'navigationSeo',
     }),
     defineField({
       name: 'seoTitle',
       title: 'SEO-tittel',
       type: 'string',
-      group: 'seo',
+      group: 'navigationSeo',
       validation: (rule) => rule.max(70),
     }),
     defineField({
@@ -260,7 +254,7 @@ export const navigationPageType = defineType({
       title: 'SEO-beskrivelse',
       type: 'text',
       rows: 3,
-      group: 'seo',
+      group: 'navigationSeo',
       validation: (rule) => rule.max(160),
     }),
   ],

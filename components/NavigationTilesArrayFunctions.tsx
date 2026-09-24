@@ -36,8 +36,8 @@ function isNavigationTilePageItem(item: ObjectItem): item is NavigationTilePageI
   return item._type === 'navigationTilePage'
 }
 
-// Slår sammen "Gruppeoverskrift" og "Sideflis" (standardvalgene) med et eget
-// alternativ for å søke opp og legge til flere sidefliser samtidig.
+// Slår sammen "Gruppeoverskrift" og "Navigasjonskort" (standardvalgene) med et eget
+// alternativ for å søke opp og legge til flere navigasjonskort samtidig.
 export function NavigationTilesArrayFunctions(
   props: ArrayInputFunctionsProps<ObjectItem, ArraySchemaType>,
 ) {
@@ -154,7 +154,7 @@ export function NavigationTilesArrayFunctions(
             ))}
             <MenuDivider />
             <MenuItem
-              text="Legg til flere sidefliser…"
+              text="Legg til flere navigasjonskort…"
               icon={SearchIcon}
               onClick={openDialog}
             />
@@ -165,7 +165,7 @@ export function NavigationTilesArrayFunctions(
       {dialogOpen ? (
         <Dialog
           id="bulk-navigation-tile-picker"
-          header="Legg til flere sidefliser"
+          header="Legg til flere navigasjonskort"
           width={1}
           onClose={closeDialog}
         >

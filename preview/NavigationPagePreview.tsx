@@ -339,7 +339,7 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
       }
 
       const referenced = tile.page?._ref ? referencedPages[tile.page._ref] : undefined
-      const title = tile.titleOverride || referenced?.listHeading || referenced?.title || 'Sideflis'
+      const title = tile.titleOverride || referenced?.listHeading || referenced?.title || 'Navigasjonskort'
       const ingress = tile.ingressOverride || referenced?.listIngress
       const href = referenced?.slug?.current ? `/${referenced.slug.current}` : '#'
 

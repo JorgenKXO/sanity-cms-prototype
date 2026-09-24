@@ -1,7 +1,7 @@
 import '@skatteetaten/ds-core-designtokens/index.css'
 import {PortableText, type PortableTextBlock, type PortableTextComponents} from '@portabletext/react'
 import {Link} from '@skatteetaten/ds-buttons'
-import {Card, Panel, type PanelColor, type PanelVariant} from '@skatteetaten/ds-content'
+import {Panel, type PanelColor, type PanelVariant} from '@skatteetaten/ds-content'
 import {
   BellIcon,
   CalendarIcon,
@@ -13,6 +13,7 @@ import {
   LockIcon,
   WarningOutlineIcon,
 } from '@skatteetaten/ds-icons'
+import {NavigationTile} from '@skatteetaten/ds-navigation'
 import {Heading, Paragraph} from '@skatteetaten/ds-typography'
 import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
 import type {CSSProperties, JSX} from 'react'
@@ -77,6 +78,7 @@ type ReferencedPage = {
   title?: string
   listHeading?: string
   listIngress?: string
+  slug?: {current?: string}
 }
 
 // Fargevalget redaktørene har i "Informasjon"-boksen, oversatt til Panel sine color/variant-props.
@@ -114,11 +116,12 @@ const navigationPanelIconMap: Record<string, (props: IconPropsWithoutSvgPath) =>
   help: HelpOutlineIcon,
 }
 
-// Bakgrunnsfargen på den fremhevede introen, som semantiske CSS-fargetokens.
+// Bakgrunnsfargen på den fremhevede introen, som ekte palette-fargetokens
+// (verifisert mot @skatteetaten/ds-core-designtokens/designtokens/palette.css).
 const heroBackgroundMap: Record<string, string> = {
-  blue: 'var(--semantic-denim-10)',
-  green: 'var(--semantic-forest-10)',
-  yellow: 'var(--semantic-ochre-10)',
+  blue: 'var(--palette-denim-10)',
+  green: 'var(--palette-forest-10)',
+  yellow: 'var(--palette-ochre-10)',
   white: 'var(--semantic-page-background)',
 }
 
@@ -221,7 +224,7 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
     let cancelled = false
     client
       .fetch<Record<string, ReferencedPage>>(
-        `*[_id in $ids]{"_id": _id, title, listHeading, listIngress} | order(_id) [0...200]`,
+        `*[_id in $ids]{"_id": _id, title, listHeading, listIngress, slug} | order(_id) [0...200]`,
         {ids: tileRefs},
       )
       .then((results) => {
@@ -338,16 +341,17 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
       const referenced = tile.page?._ref ? referencedPages[tile.page._ref] : undefined
       const title = tile.titleOverride || referenced?.listHeading || referenced?.title || 'Sideflis'
       const ingress = tile.ingressOverride || referenced?.listIngress
+      const href = referenced?.slug?.current ? `/${referenced.slug.current}` : '#'
 
       currentGroup.push(
-        <Card key={tile._key || index} color="white" spacing="m">
-          <Card.Header>
-            <Heading as="h3" level={3}>
-              {title}
-            </Heading>
-          </Card.Header>
-          {ingress ? <Card.Content>{ingress}</Card.Content> : null}
-        </Card>,
+        <NavigationTile
+          key={tile._key || index}
+          href={href}
+          title={title}
+          titleAs="h3"
+          description={ingress}
+          size="medium"
+        />,
       )
     })
 

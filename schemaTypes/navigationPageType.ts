@@ -1,7 +1,16 @@
-import {LinkIcon, ThLargeIcon, TiersIcon} from '@sanity/icons'
+import {
+  BlockContentIcon,
+  DocumentIcon,
+  EarthGlobeIcon,
+  MasterDetailIcon,
+  PresentationIcon,
+  ThLargeIcon,
+} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import type {ArrayOfObjectsInputProps} from 'sanity'
 
 import {kategoriOptions} from './kategoriOptions'
+import {NavigationTilesArrayFunctions} from '../components/NavigationTilesArrayFunctions'
 
 // Delt med informasjon/rettskilder-boksene: enkel lenke-annotasjon uten fri formatering.
 const linkAnnotation = {
@@ -39,7 +48,7 @@ export const navigationGroupHeadingType = defineType({
   name: 'navigationGroupHeading',
   title: 'Gruppeoverskrift',
   type: 'object',
-  icon: TiersIcon,
+  icon: BlockContentIcon,
   fields: [
     defineField({
       name: 'title',
@@ -61,7 +70,7 @@ export const navigationTilePageType = defineType({
   name: 'navigationTilePage',
   title: 'Sideflis',
   type: 'object',
-  icon: LinkIcon,
+  icon: DocumentIcon,
   fields: [
     defineField({
       name: 'page',
@@ -87,9 +96,13 @@ export const navigationTilePageType = defineType({
     }),
   ],
   preview: {
-    select: {title: 'titleOverride', pageTitle: 'page.title'},
-    prepare({title, pageTitle}) {
-      return {title: title || pageTitle || 'Sideflis', subtitle: 'Sideflis'}
+    select: {title: 'titleOverride', pageTitle: 'page.title', pageType: 'page._type'},
+    prepare({title, pageTitle, pageType}) {
+      return {
+        title: title || pageTitle || 'Sideflis',
+        subtitle: 'Sideflis',
+        media: pageType === 'navigationPage' ? MasterDetailIcon : DocumentIcon,
+      }
     },
   },
 })
@@ -98,12 +111,12 @@ export const navigationPageType = defineType({
   name: 'navigationPage',
   title: 'Navigasjonsside',
   type: 'document',
-  icon: ThLargeIcon,
+  icon: MasterDetailIcon,
   groups: [
-    {name: 'innhold', title: 'Innhold', default: true},
-    {name: 'hero', title: 'Fremhevet intro'},
-    {name: 'fliser', title: 'Fliser'},
-    {name: 'seo', title: 'SEO'},
+    {name: 'innhold', title: 'Innhold', default: true, icon: BlockContentIcon},
+    {name: 'hero', title: 'Fremhevet intro', icon: PresentationIcon},
+    {name: 'fliser', title: 'Fliser', icon: ThLargeIcon},
+    {name: 'seo', title: 'SEO', icon: EarthGlobeIcon},
   ],
   fields: [
     defineField({
@@ -189,7 +202,7 @@ export const navigationPageType = defineType({
     defineField({
       name: 'panels',
       title: 'Rettskilder- og informasjonsbokser',
-      description: 'Valgfritt. Vises over gruppene med navigasjonsfliser. Varsel- og krise-bokser kan ikke brukes på navigasjonssider.',
+      description: 'Valgfritt. Vises over gruppene med navigasjonskort. Varsel- og krise-bokser kan ikke brukes på navigasjonssider.',
       type: 'array',
       group: 'innhold',
       of: [
@@ -209,13 +222,20 @@ export const navigationPageType = defineType({
         defineArrayMember({type: 'navigationGroupHeading'}),
         defineArrayMember({type: 'navigationTilePage'}),
       ],
+      components: {
+        input: (inputProps: ArrayOfObjectsInputProps) =>
+          inputProps.renderDefault({
+            ...inputProps,
+            arrayFunctions: NavigationTilesArrayFunctions,
+          }),
+      },
       validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: 'listHeading',
       title: 'Listeoverskrift',
       description:
-        'Brukes i stedet for tittelen når denne siden vises som en navigasjonsflis på en annen side. La stå tomt for å bruke tittelen.',
+        'Brukes i stedet for tittelen når denne siden vises som et navigasjonskort på en annen side. La stå tomt for å bruke tittelen.',
       type: 'string',
       group: 'fliser',
     }),
@@ -223,7 +243,7 @@ export const navigationPageType = defineType({
       name: 'listIngress',
       title: 'Listeingress',
       description:
-        'Brukes som en kort beskrivelse når denne siden vises som en navigasjonsflis på en annen side. La stå tomt for ikke å vise noen ingress på flisen.',
+        'Brukes som en kort beskrivelse når denne siden vises som et navigasjonskort på en annen side. La stå tomt for ikke å vise noen ingress på kortet.',
       type: 'text',
       rows: 2,
       group: 'fliser',

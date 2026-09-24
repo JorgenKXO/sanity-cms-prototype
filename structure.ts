@@ -1,4 +1,4 @@
-import {FolderIcon} from '@sanity/icons'
+import {FolderIcon, MasterDetailIcon} from '@sanity/icons'
 import type {DefaultDocumentNodeResolver, StructureResolver} from 'sanity/structure'
 
 import {ArticlePreview} from './preview/ArticlePreview'
@@ -43,7 +43,7 @@ const allNavigationPages = (S: Parameters<StructureResolver>[0]) =>
   S.listItem()
     .title('Alle navigasjonssider')
     .id('allNavigationPages')
-    .icon(FolderIcon)
+    .icon(MasterDetailIcon)
     .child(
       S.documentList()
         .title('Alle navigasjonssider')
@@ -92,7 +92,7 @@ function kategoriFolder(
           S.listItem()
             .title('Navigasjonssider')
             .id(`kategori-${idSuffix}-navigasjonssider`)
-            .icon(FolderIcon)
+            .icon(MasterDetailIcon)
             .child(
               S.documentList()
                 .title(`Navigasjonssider – ${title}`)

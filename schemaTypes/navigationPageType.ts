@@ -1,6 +1,8 @@
 import {LinkIcon, ThLargeIcon, TiersIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
+import {kategoriOptions} from './kategoriOptions'
+
 // Delt med informasjon/rettskilder-boksene: enkel lenke-annotasjon uten fri formatering.
 const linkAnnotation = {
   name: 'link',
@@ -30,36 +32,8 @@ const ingressBlock = defineArrayMember({
   },
 })
 
-export const navigasjonKategorier = [
-  {title: 'Aksjer og verdipapirer', value: 'aksjer-og-verdipapirer'},
-  {title: 'Aksjonærregisteroppgaven', value: 'aksjonaerregisteroppgaven'},
-  {title: 'A-meldingen', value: 'a-meldingen'},
-  {title: 'Arbeid', value: 'arbeid'},
-  {title: 'Arbeidsgiver', value: 'arbeidsgiver'},
-  {title: 'Arv og gave', value: 'arv-og-gave'},
-  {title: 'Bank og lån', value: 'bank-og-lan'},
-  {title: 'Bil og kjøretøy (skatt)', value: 'bil-og-kjoretoy-skatt'},
-  {title: 'Bilavgift', value: 'bilavgift'},
-  {title: 'Bolig og eiendom', value: 'bolig-og-eiendom'},
-  {title: 'Deling', value: 'deling'},
-  {title: 'Familie og helse', value: 'familie-og-helse'},
-  {title: 'Finnmark og svalbard', value: 'finnmark-og-svalbard'},
-  {title: 'Folkeregister', value: 'folkeregister'},
-  {title: 'Hobby eller næring', value: 'hobby-eller-naering'},
-  {title: 'Innkreving og betaling', value: 'innkreving-og-betaling'},
-  {title: 'Internprising', value: 'internprising'},
-  {title: 'Kalender (datoer og frister)', value: 'kalender-datoer-og-frister'},
-  {title: 'Merverdiavgift', value: 'merverdiavgift'},
-  {title: 'Offentlig støtte', value: 'offentlig-stotte'},
-  {title: 'Samisk', value: 'samisk'},
-  {title: 'Skatt næring', value: 'skatt-naering'},
-  {title: 'Skattekort og forskudd', value: 'skattekort-og-forskudd'},
-  {title: 'Skattemelding person', value: 'skattemelding-person'},
-  {title: 'Skatteoppgjør', value: 'skatteoppgjor'},
-  {title: 'Særavgift', value: 'saeravgift'},
-  {title: 'Tredjepartsopplysninger', value: 'tredjepartsopplysninger'},
-  {title: 'Trygd og pensjon', value: 'trygd-og-pensjon'},
-] as const
+// Beholdt for bakoverkompatibilitet: structure.ts importerte tidligere kategoriene herfra.
+export {kategoriOptions as navigasjonKategorier} from './kategoriOptions'
 
 export const navigationGroupHeadingType = defineType({
   name: 'navigationGroupHeading',
@@ -125,17 +99,25 @@ export const navigationPageType = defineType({
   title: 'Navigasjonsside',
   type: 'document',
   icon: ThLargeIcon,
+  groups: [
+    {name: 'innhold', title: 'Innhold', default: true},
+    {name: 'hero', title: 'Fremhevet intro'},
+    {name: 'fliser', title: 'Fliser'},
+    {name: 'seo', title: 'SEO'},
+  ],
   fields: [
     defineField({
       name: 'title',
       title: 'Tittel',
       type: 'string',
+      group: 'innhold',
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'slug',
       title: 'Nettadresse',
       type: 'slug',
+      group: 'innhold',
       options: {source: 'title'},
       validation: (rule) => rule.required(),
     }),
@@ -145,6 +127,7 @@ export const navigationPageType = defineType({
       description:
         'Kort innledende tekst som vises under tittelen. Lenker er tillatt, men ingen annen formatering (ingen fet/kursiv skrift, overskrifter eller lister).',
       type: 'array',
+      group: 'innhold',
       of: [ingressBlock],
       validation: (rule) => rule.required(),
     }),
@@ -153,8 +136,9 @@ export const navigationPageType = defineType({
       title: 'Kategori',
       description: 'Hvilken tematisk mappe siden hører til.',
       type: 'string',
+      group: 'innhold',
       options: {
-        list: [...navigasjonKategorier],
+        list: [...kategoriOptions],
         layout: 'dropdown',
       },
     }),
@@ -164,12 +148,14 @@ export const navigationPageType = defineType({
       description:
         'Gir mulighet for bakgrunnsfarge og bruk av bilde. Brukes for alle sider som er tydelige landingssider eller startpunkt for et tema',
       type: 'boolean',
+      group: 'hero',
       initialValue: false,
     }),
     defineField({
       name: 'heroBackgroundColor',
       title: 'Bakgrunnsfarge',
       type: 'string',
+      group: 'hero',
       options: {
         list: [
           {title: 'Blå', value: 'blue'},
@@ -196,6 +182,7 @@ export const navigationPageType = defineType({
       description:
         'Vises til høyre for tittel og ingress i den fremhevede introen. Bildet blir vist som dekorativt (med tom alt-tekst) for skjermlesere.',
       type: 'image',
+      group: 'hero',
       options: {hotspot: true},
       hidden: ({parent}) => !(parent as {heroEnabled?: boolean} | undefined)?.heroEnabled,
     }),
@@ -204,6 +191,7 @@ export const navigationPageType = defineType({
       title: 'Rettskilder- og informasjonsbokser',
       description: 'Valgfritt. Vises over gruppene med navigasjonsfliser. Varsel- og krise-bokser kan ikke brukes på navigasjonssider.',
       type: 'array',
+      group: 'innhold',
       of: [
         defineArrayMember({type: 'navigationPanel'}),
         defineArrayMember({type: 'rettskilderPanel'}),
@@ -216,6 +204,7 @@ export const navigationPageType = defineType({
       description:
         'Legg til gruppeoverskrifter for å dele inn flisene i seksjoner, og legg til én eller flere sidefliser. Dra elementer for å styre rekkefølgen.',
       type: 'array',
+      group: 'fliser',
       of: [
         defineArrayMember({type: 'navigationGroupHeading'}),
         defineArrayMember({type: 'navigationTilePage'}),
@@ -228,6 +217,7 @@ export const navigationPageType = defineType({
       description:
         'Brukes i stedet for tittelen når denne siden vises som en navigasjonsflis på en annen side. La stå tomt for å bruke tittelen.',
       type: 'string',
+      group: 'fliser',
     }),
     defineField({
       name: 'listIngress',
@@ -236,11 +226,13 @@ export const navigationPageType = defineType({
         'Brukes som en kort beskrivelse når denne siden vises som en navigasjonsflis på en annen side. La stå tomt for ikke å vise noen ingress på flisen.',
       type: 'text',
       rows: 2,
+      group: 'fliser',
     }),
     defineField({
       name: 'seoTitle',
       title: 'SEO-tittel',
       type: 'string',
+      group: 'seo',
       validation: (rule) => rule.max(70),
     }),
     defineField({
@@ -248,6 +240,7 @@ export const navigationPageType = defineType({
       title: 'SEO-beskrivelse',
       type: 'text',
       rows: 3,
+      group: 'seo',
       validation: (rule) => rule.max(160),
     }),
   ],

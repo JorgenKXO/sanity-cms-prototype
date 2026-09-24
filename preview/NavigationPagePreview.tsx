@@ -1,0 +1,391 @@
+import '@skatteetaten/ds-core-designtokens/index.css'
+import {PortableText, type PortableTextBlock, type PortableTextComponents} from '@portabletext/react'
+import {Link} from '@skatteetaten/ds-buttons'
+import {Card, Panel, type PanelColor, type PanelVariant} from '@skatteetaten/ds-content'
+import {
+  BellIcon,
+  CalendarIcon,
+  ClockIcon,
+  CompletedIcon,
+  type IconPropsWithoutSvgPath,
+  InfoIcon,
+  HelpOutlineIcon,
+  LockIcon,
+  WarningOutlineIcon,
+} from '@skatteetaten/ds-icons'
+import {Heading, Paragraph} from '@skatteetaten/ds-typography'
+import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
+import type {CSSProperties, JSX} from 'react'
+import {useEffect, useState} from 'react'
+import {useClient} from 'sanity'
+
+type NavigationPanelBlock = {
+  _key?: string
+  _type: 'navigationPanel'
+  type?: 'warning' | 'information'
+  color?: string
+  icon?: string
+  heading?: string
+  body?: PortableTextBlock[]
+}
+
+type RettskilderPanelBlock = {
+  _key?: string
+  _type: 'rettskilderPanel'
+  heading?: string
+  body?: PortableTextBlock[]
+}
+
+type InformasjonPanelBlock = {
+  _key?: string
+  _type: 'informasjonPanel'
+  color?: string
+  icon?: string
+  heading?: string
+  body?: PortableTextBlock[]
+}
+
+type PanelEntry = NavigationPanelBlock | RettskilderPanelBlock | InformasjonPanelBlock
+
+type NavigationGroupHeadingTile = {
+  _key?: string
+  _type: 'navigationGroupHeading'
+  title?: string
+}
+
+type NavigationTilePageTile = {
+  _key?: string
+  _type: 'navigationTilePage'
+  page?: {_ref?: string}
+  titleOverride?: string
+  ingressOverride?: string
+}
+
+type TileEntry = NavigationGroupHeadingTile | NavigationTilePageTile
+
+type NavigationPageDocument = {
+  title?: string
+  ingress?: PortableTextBlock[]
+  heroEnabled?: boolean
+  heroBackgroundColor?: string
+  heroImage?: SanityImageSource
+  panels?: PanelEntry[]
+  tiles?: TileEntry[]
+}
+
+type ReferencedPage = {
+  title?: string
+  listHeading?: string
+  listIngress?: string
+}
+
+// Fargevalget redaktørene har i "Informasjon"-boksen, oversatt til Panel sine color/variant-props.
+const informasjonColorMap: Record<string, {color: PanelColor; variant: PanelVariant}> = {
+  denim: {color: 'denim', variant: 'filled'},
+  forest: {color: 'forest', variant: 'filled'},
+  'denim-outline': {color: 'denim', variant: 'outline'},
+  'forest-outline': {color: 'forest', variant: 'outline'},
+  white: {color: 'graphite', variant: 'outline'},
+}
+
+const informasjonIconMap: Record<string, (props: IconPropsWithoutSvgPath) => JSX.Element> = {
+  info: InfoIcon,
+  help: HelpOutlineIcon,
+  completed: CompletedIcon,
+  calendar: CalendarIcon,
+  clock: ClockIcon,
+  bell: BellIcon,
+  lock: LockIcon,
+}
+
+// Eldre "Boks"-type sine farger, oversatt til Panel sine color/variant-props.
+const navigationPanelColorMap: Record<string, {color: PanelColor; variant: PanelVariant}> = {
+  green: {color: 'forest', variant: 'filled'},
+  blue: {color: 'denim', variant: 'filled'},
+  'yellow-outline': {color: 'ochre', variant: 'outline'},
+  'blue-outline': {color: 'denim', variant: 'outline'},
+  'green-outline': {color: 'forest', variant: 'outline'},
+}
+
+const navigationPanelIconMap: Record<string, (props: IconPropsWithoutSvgPath) => JSX.Element> = {
+  info: InfoIcon,
+  success: CompletedIcon,
+  tip: HelpOutlineIcon,
+  help: HelpOutlineIcon,
+}
+
+// Bakgrunnsfargen på den fremhevede introen, som semantiske CSS-fargetokens.
+const heroBackgroundMap: Record<string, string> = {
+  blue: 'var(--semantic-denim-10)',
+  green: 'var(--semantic-forest-10)',
+  yellow: 'var(--semantic-ochre-10)',
+  white: 'var(--semantic-page-background)',
+}
+
+type NavigationPagePreviewProps = {
+  document?: {
+    displayed?: NavigationPageDocument
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function getString(value: Record<string, unknown>, key: string) {
+  return typeof value[key] === 'string' ? value[key] : undefined
+}
+
+const styles: Record<string, CSSProperties> = {
+  shell: {
+    minHeight: '100%',
+    background: 'var(--semantic-page-background)',
+    color: 'var(--semantic-page-foreground)',
+  },
+  page: {
+    maxWidth: 'var(--semantic-responsive-wide-content)',
+    margin: '0 auto',
+    padding: 'var(--spacing-xl) var(--spacing-m) var(--spacing-mega)',
+  },
+  hero: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr) auto',
+    gap: 'var(--spacing-l)',
+    alignItems: 'center',
+    padding: 'var(--spacing-xl)',
+    margin: '0 0 var(--spacing-xl)',
+    borderRadius: 'var(--border-radius-m)',
+  },
+  heroImage: {
+    display: 'block',
+    maxWidth: '220px',
+    height: 'auto',
+    borderRadius: 'var(--border-radius-m)',
+  },
+  empty: {
+    padding: 'var(--spacing-xl)',
+  },
+  groupHeading: {
+    marginTop: 'var(--spacing-xl)',
+  },
+  tileGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+    gap: 'var(--spacing-m)',
+    marginTop: 'var(--spacing-m)',
+  },
+}
+
+const ingressComponents: PortableTextComponents = {
+  block: {
+    normal: ({children}) => <Paragraph variant="ingress" hasSpacing>{children}</Paragraph>,
+  },
+  marks: {
+    link: ({children, value}) => {
+      const href = isRecord(value) ? getString(value, 'href') || '#' : '#'
+      return <Link href={href}>{String(children)}</Link>
+    },
+  },
+}
+
+const bodyComponents: PortableTextComponents = {
+  block: {
+    normal: ({children}) => <Paragraph hasSpacing>{children}</Paragraph>,
+    h3: ({children}) => <Heading as="h3" level={3}>{children}</Heading>,
+  },
+  marks: {
+    link: ({children, value}) => {
+      const href = isRecord(value) ? getString(value, 'href') || '#' : '#'
+      return <Link href={href}>{String(children)}</Link>
+    },
+  },
+}
+
+export function NavigationPagePreview(props: NavigationPagePreviewProps) {
+  const page = props.document?.displayed
+  const client = useClient({apiVersion: '2026-09-10'})
+  const builder = imageUrlBuilder(client)
+  const [referencedPages, setReferencedPages] = useState<Record<string, ReferencedPage>>({})
+
+  const tileRefs = (page?.tiles || [])
+    .filter((tile): tile is NavigationTilePageTile => tile._type === 'navigationTilePage')
+    .map((tile) => tile.page?._ref)
+    .filter((ref): ref is string => Boolean(ref))
+
+  useEffect(() => {
+    if (tileRefs.length === 0) {
+      setReferencedPages({})
+      return
+    }
+
+    let cancelled = false
+    client
+      .fetch<Record<string, ReferencedPage>>(
+        `*[_id in $ids]{"_id": _id, title, listHeading, listIngress} | order(_id) [0...200]`,
+        {ids: tileRefs},
+      )
+      .then((results) => {
+        if (cancelled) return
+        const byId: Record<string, ReferencedPage> = {}
+        for (const result of results as unknown as (ReferencedPage & {_id: string})[]) {
+          byId[result._id] = result
+        }
+        setReferencedPages(byId)
+      })
+      .catch(() => {
+        if (!cancelled) setReferencedPages({})
+      })
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(tileRefs)])
+
+  if (!page) {
+    return <div style={styles.empty}>No navigation page content to preview yet.</div>
+  }
+
+  function renderPanel(panel: PanelEntry, index: number) {
+    if (panel._type === 'rettskilderPanel') {
+      return (
+        <Panel
+          key={panel._key || index}
+          title={panel.heading || 'Rettskilder'}
+          titleAs="h2"
+          color="graphite"
+          variant="outline"
+          padding="m"
+          spacing="l"
+        >
+          {panel.body ? <PortableText value={panel.body} components={bodyComponents} /> : null}
+        </Panel>
+      )
+    }
+
+    if (panel._type === 'informasjonPanel') {
+      const appearance = informasjonColorMap[panel.color || 'denim'] || informasjonColorMap.denim
+      const Icon = panel.icon && informasjonIconMap[panel.icon]
+      return (
+        <Panel
+          key={panel._key || index}
+          title={panel.heading || 'Informasjon'}
+          titleAs="h2"
+          color={appearance.color}
+          variant={appearance.variant}
+          padding="m"
+          spacing="l"
+          renderIcon={Icon ? () => <Icon /> : undefined}
+        >
+          {panel.body ? <PortableText value={panel.body} components={bodyComponents} /> : null}
+        </Panel>
+      )
+    }
+
+    // Eldre "navigationPanel"-type.
+    const isWarning = panel.type === 'warning'
+    const appearance = isWarning
+      ? {color: 'ochre' as PanelColor, variant: 'filled' as PanelVariant}
+      : navigationPanelColorMap[panel.color || 'blue'] || navigationPanelColorMap.blue
+    const Icon = isWarning ? WarningOutlineIcon : panel.icon && navigationPanelIconMap[panel.icon]
+    return (
+      <Panel
+        key={panel._key || index}
+        title={panel.heading || (isWarning ? 'Advarsel' : 'Informasjon')}
+        titleAs="h2"
+        color={appearance.color}
+        variant={appearance.variant}
+        padding="m"
+        spacing="l"
+        renderIcon={Icon ? () => <Icon /> : undefined}
+      >
+        {panel.body ? <PortableText value={panel.body} components={bodyComponents} /> : null}
+      </Panel>
+    )
+  }
+
+  function renderTiles() {
+    const tiles = page?.tiles || []
+    const elements: JSX.Element[] = []
+    let currentGroup: JSX.Element[] = []
+    let groupKey = 'default'
+
+    function flushGroup() {
+      if (currentGroup.length > 0) {
+        elements.push(
+          <div key={`group-${groupKey}`} style={styles.tileGrid}>
+            {currentGroup}
+          </div>,
+        )
+        currentGroup = []
+      }
+    }
+
+    tiles.forEach((tile, index) => {
+      if (tile._type === 'navigationGroupHeading') {
+        flushGroup()
+        groupKey = tile._key || `heading-${index}`
+        elements.push(
+          <div key={`heading-${tile._key || index}`} style={styles.groupHeading}>
+            <Heading as="h2" level={2}>
+              {tile.title || 'Gruppeoverskrift'}
+            </Heading>
+          </div>,
+        )
+        return
+      }
+
+      const referenced = tile.page?._ref ? referencedPages[tile.page._ref] : undefined
+      const title = tile.titleOverride || referenced?.listHeading || referenced?.title || 'Sideflis'
+      const ingress = tile.ingressOverride || referenced?.listIngress
+
+      currentGroup.push(
+        <Card key={tile._key || index} color="white" spacing="m">
+          <Card.Header>
+            <Heading as="h3" level={3}>
+              {title}
+            </Heading>
+          </Card.Header>
+          {ingress ? <Card.Content>{ingress}</Card.Content> : null}
+        </Card>,
+      )
+    })
+
+    flushGroup()
+    return elements
+  }
+
+  const heroImageSrc = page.heroImage
+    ? builder.image(page.heroImage).width(400).fit('max').auto('format').url()
+    : undefined
+
+  return (
+    <main style={styles.shell}>
+      <div style={styles.page}>
+        {page.heroEnabled ? (
+          <div
+            style={{
+              ...styles.hero,
+              background: heroBackgroundMap[page.heroBackgroundColor || 'white'],
+            }}
+          >
+            <div>
+              <Heading as="h1" level={1}>{page.title || 'Untitled navigation page'}</Heading>
+              {page.ingress ? <PortableText value={page.ingress} components={ingressComponents} /> : null}
+            </div>
+            {heroImageSrc ? <img src={heroImageSrc} alt="" style={styles.heroImage} /> : null}
+          </div>
+        ) : (
+          <>
+            <Heading as="h1" level={1}>{page.title || 'Untitled navigation page'}</Heading>
+            {page.ingress ? <PortableText value={page.ingress} components={ingressComponents} /> : null}
+          </>
+        )}
+
+        {page.panels?.map((panel, index) => renderPanel(panel, index))}
+
+        {renderTiles()}
+      </div>
+    </main>
+  )
+}

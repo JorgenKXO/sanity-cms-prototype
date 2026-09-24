@@ -1,6 +1,8 @@
 import {ErrorOutlineIcon, ImageIcon, InfoOutlineIcon, TextIcon, WarningOutlineIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
+import {kategoriOptions} from './kategoriOptions'
+
 type PortableTextBlockPreview = {
   _type: string
   children?: {text?: string}[]
@@ -84,6 +86,16 @@ export const articleType = defineType({
       type: 'text',
       rows: 3,
       validation: (rule) => rule.required().max(300),
+    }),
+    defineField({
+      name: 'kategori',
+      title: 'Kategori',
+      description: 'Hvilken tematisk mappe artikkelen hører til.',
+      type: 'string',
+      options: {
+        list: [...kategoriOptions],
+        layout: 'dropdown',
+      },
     }),
     defineField({
       name: 'breadcrumbs',

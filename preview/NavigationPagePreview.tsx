@@ -140,15 +140,18 @@ const styles: Record<string, CSSProperties> = {
     gridTemplateColumns: 'minmax(0, 1fr) auto',
     gap: 'var(--spacing-l)',
     alignItems: 'center',
-    padding: 'var(--spacing-xl)',
-    margin: '0 0 var(--spacing-xl)',
-    borderRadius: 'var(--border-radius-m)',
+    maxWidth: 'var(--semantic-responsive-wide-content)',
+    margin: '0 auto',
+    padding: 'var(--spacing-xl) var(--spacing-m)',
+  },
+  heroBand: {
+    width: '100%',
   },
   heroImage: {
     display: 'block',
     maxWidth: '220px',
     height: 'auto',
-    borderRadius: 'var(--border-radius-m)',
+    borderRadius: '4px',
   },
   empty: {
     padding: 'var(--spacing-xl)',
@@ -331,26 +334,30 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
 
   return (
     <main style={styles.shell}>
-      <div style={styles.page}>
-        {page.heroEnabled ? (
-          <div
-            style={{
-              ...styles.hero,
-              background: heroBackgroundMap[page.heroBackgroundColor || 'white'],
-            }}
-          >
+      {page.heroEnabled ? (
+        <div
+          style={{
+            ...styles.heroBand,
+            background: heroBackgroundMap[page.heroBackgroundColor || 'white'],
+          }}
+        >
+          <div style={styles.hero}>
             <div>
               <Heading as="h1" level={1}>{page.title || 'Untitled navigation page'}</Heading>
               {page.ingress ? <PortableText value={page.ingress} components={ingressComponents} /> : null}
             </div>
             {heroImageSrc ? <img src={heroImageSrc} alt="" style={styles.heroImage} /> : null}
           </div>
-        ) : (
+        </div>
+      ) : null}
+
+      <div style={styles.page}>
+        {!page.heroEnabled ? (
           <>
             <Heading as="h1" level={1}>{page.title || 'Untitled navigation page'}</Heading>
             {page.ingress ? <PortableText value={page.ingress} components={ingressComponents} /> : null}
           </>
-        )}
+        ) : null}
 
         {page.panels?.map((panel, index) => renderPanel(panel, index))}
 

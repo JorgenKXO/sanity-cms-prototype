@@ -131,18 +131,8 @@ const styles: Record<string, CSSProperties> = {
     margin: '0 auto',
     padding: 'var(--spacing-xl) var(--spacing-m) var(--spacing-mega)',
   },
-  contentGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0, var(--semantic-responsive-article)) var(--semantic-responsive-internal-aside)',
-    gap: 'var(--spacing-xl)',
-  },
   article: {
     maxWidth: 'var(--semantic-responsive-article)',
-  },
-  aside: {
-    borderTop: 'var(--size-small) solid var(--semantic-interactive-main)',
-    paddingTop: 'var(--spacing-m)',
-    color: 'var(--semantic-page-foreground)',
   },
   empty: {
     padding: 'var(--spacing-xl)',
@@ -152,7 +142,7 @@ const styles: Record<string, CSSProperties> = {
     maxWidth: '100%',
     height: 'auto',
     margin: 'var(--spacing-m) 0',
-    borderRadius: 'var(--border-radius-m)',
+    borderRadius: '4px',
   },
 }
 
@@ -249,21 +239,13 @@ export function ArticlePreview(props: ArticlePreviewProps) {
           </Breadcrumbs>
         ) : null}
 
-        <div style={styles.contentGrid}>
-          <article style={styles.article}>
-            <Heading as="h1" level={1}>{article.title || 'Untitled article'}</Heading>
-            {article.ingress ? <Paragraph variant="ingress" hasSpacing>{article.ingress}</Paragraph> : null}
-            {article.content?.map((block, index) => (
-              <div key={block._key || index}>{renderContentBlock(block)}</div>
-            ))}
-          </article>
-
-          <aside style={styles.aside}>
-            <Heading as="h2" level={3}>Studio preview</Heading>
-            <Paragraph>Header, footer, feedback widget, and top button are intentionally omitted.</Paragraph>
-            {article.updatedAt ? <Paragraph>Updated: {article.updatedAt}</Paragraph> : null}
-          </aside>
-        </div>
+        <article style={styles.article}>
+          <Heading as="h1" level={1}>{article.title || 'Untitled article'}</Heading>
+          {article.ingress ? <Paragraph variant="ingress" hasSpacing>{article.ingress}</Paragraph> : null}
+          {article.content?.map((block, index) => (
+            <div key={block._key || index}>{renderContentBlock(block)}</div>
+          ))}
+        </article>
       </div>
     </main>
   )

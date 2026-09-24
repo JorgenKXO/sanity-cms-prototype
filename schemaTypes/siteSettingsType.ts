@@ -41,7 +41,7 @@ export const siteSettingsType = defineType({
               name: 'page',
               title: 'Side',
               type: 'reference',
-              to: [{type: 'page'}],
+              to: [{type: 'article'}, {type: 'navigationPage'}],
             }),
           ],
           preview: {

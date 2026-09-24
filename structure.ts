@@ -136,8 +136,4 @@ export const deskStructure: StructureResolver = (S) =>
             .documentId('siteSettings')
             .title('Nettstedsinnstillinger'),
         ),
-      S.divider(),
-      ...S.documentTypeListItems().filter(
-        (item) => !['article', 'navigationPage', 'siteSettings'].includes(item.getId() || ''),
-      ),
     ])

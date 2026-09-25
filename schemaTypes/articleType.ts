@@ -1,4 +1,12 @@
-import {ErrorOutlineIcon, ImageIcon, InfoOutlineIcon, TextIcon, WarningOutlineIcon} from '@sanity/icons'
+import {
+  BlockContentIcon,
+  EarthGlobeIcon,
+  ErrorOutlineIcon,
+  ImageIcon,
+  InfoOutlineIcon,
+  TextIcon,
+  WarningOutlineIcon,
+} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
 import {kategoriOptions} from './kategoriOptions'
@@ -86,6 +94,10 @@ export const articleType = defineType({
   name: 'article',
   title: 'Artikkel',
   type: 'document',
+  groups: [
+    {name: 'content', title: 'Hovedinnhold', icon: BlockContentIcon},
+    {name: 'navigationSeo', title: 'Navigasjon og SEO', icon: EarthGlobeIcon},
+  ],
   fields: [
     defineField({
       name: 'title',
@@ -123,6 +135,7 @@ export const articleType = defineType({
       name: 'breadcrumbs',
       title: 'Brødsmulesti',
       type: 'array',
+      group: 'navigationSeo',
       of: [
         defineArrayMember({
           type: 'object',
@@ -155,6 +168,7 @@ export const articleType = defineType({
       title: 'Innhold',
       description: 'Bygg opp artikkelen ved å legge til tekst-, bilde- og varselblokker.',
       type: 'array',
+      group: 'content',
       of: [
         defineArrayMember({
           name: 'tekst',
@@ -366,6 +380,7 @@ export const articleType = defineType({
       name: 'updatedAt',
       title: 'Sist oppdatert',
       type: 'date',
+      group: 'navigationSeo',
     }),
   ],
   preview: {

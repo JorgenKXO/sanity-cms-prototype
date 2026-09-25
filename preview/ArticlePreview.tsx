@@ -54,7 +54,7 @@ type ArticleContentBlock = TekstBlock | BildeBlock | PanelBlock
 
 type ArticleDocument = {
   title?: string
-  ingress?: string
+  ingress?: PortableTextBlock[]
   breadcrumbs?: Breadcrumb[]
   content?: ArticleContentBlock[]
   updatedAt?: string
@@ -169,6 +169,20 @@ const components: PortableTextComponents = {
   },
 }
 
+// Ingressen tillater kun lenker, ingen annen formatering – egen renderer uten overskrifter/lister.
+const ingressComponents: PortableTextComponents = {
+  block: {
+    normal: ({children}) => <Paragraph variant="ingress" hasSpacing>{children}</Paragraph>,
+  },
+  marks: {
+    link: ({children, value}) => {
+      const href = isRecord(value) ? getString(value, 'href') || '#' : '#'
+
+      return <Link href={href}>{String(children)}</Link>
+    },
+  },
+}
+
 export function ArticlePreview(props: ArticlePreviewProps) {
   const article = props.document?.displayed
   const client = useClient({apiVersion: '2026-09-10'})
@@ -241,7 +255,7 @@ export function ArticlePreview(props: ArticlePreviewProps) {
 
         <article style={styles.article}>
           <Heading as="h1" level={1}>{article.title || 'Untitled article'}</Heading>
-          {article.ingress ? <Paragraph variant="ingress" hasSpacing>{article.ingress}</Paragraph> : null}
+          {article.ingress ? <PortableText value={article.ingress} components={ingressComponents} /> : null}
           {article.content?.map((block, index) => (
             <div key={block._key || index}>{renderContentBlock(block)}</div>
           ))}

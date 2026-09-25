@@ -36,6 +36,7 @@ const ingressBlock = defineArrayMember({
   styles: [{title: 'Normal', value: 'normal'}],
   lists: [],
   marks: {
+    decorators: [],
     annotations: [linkAnnotation],
   },
 })

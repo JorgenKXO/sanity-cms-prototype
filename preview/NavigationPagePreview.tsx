@@ -161,7 +161,7 @@ const styles: Record<string, CSSProperties> = {
   },
   tileGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
     gap: 'var(--spacing-m)',
     marginTop: 'var(--spacing-m)',
   },

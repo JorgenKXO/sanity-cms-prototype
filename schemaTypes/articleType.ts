@@ -48,6 +48,17 @@ const articleTextBlock = defineArrayMember({
   },
 })
 
+// Ingressen tillater kun lenker, ingen annen formatering.
+const ingressBlock = defineArrayMember({
+  type: 'block',
+  styles: [{title: 'Normal', value: 'normal'}],
+  lists: [],
+  marks: {
+    decorators: [],
+    annotations: [linkAnnotation],
+  },
+})
+
 // Enklere tekst til varsel-/informasjonsboksene: kun underoverskrift og lenker.
 const panelTextBlock = defineArrayMember({
   type: 'block',
@@ -82,10 +93,11 @@ export const articleType = defineType({
     defineField({
       name: 'ingress',
       title: 'Ingress',
-      description: 'Kort innledende avsnitt som vises under tittelen.',
-      type: 'text',
-      rows: 3,
-      validation: (rule) => rule.required().max(300),
+      description:
+        'Kort innledende avsnitt som vises under tittelen. Lenker er tillatt, men ingen annen formatering (ingen fet/kursiv skrift, overskrifter eller lister).',
+      type: 'array',
+      of: [ingressBlock],
+      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'kategori',
@@ -344,7 +356,13 @@ export const articleType = defineType({
   preview: {
     select: {
       title: 'title',
-      subtitle: 'ingress',
+      ingress: 'ingress',
+    },
+    prepare({title, ingress}) {
+      return {
+        title,
+        subtitle: blockText(ingress),
+      }
     },
   },
 })

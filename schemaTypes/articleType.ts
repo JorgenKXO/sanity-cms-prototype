@@ -48,6 +48,17 @@ const articleTextBlock = defineArrayMember({
   },
 })
 
+// Ingressen tillater kun lenker, ingen annen formatering.
+const ingressBlock = defineArrayMember({
+  type: 'block',
+  styles: [{title: 'Normal', value: 'normal'}],
+  lists: [],
+  marks: {
+    decorators: [],
+    annotations: [linkAnnotation],
+  },
+})
+
 // Enklere tekst til varsel-/informasjonsboksene: kun underoverskrift og lenker.
 const panelTextBlock = defineArrayMember({
   type: 'block',
@@ -59,6 +70,16 @@ const panelTextBlock = defineArrayMember({
   marks: {
     annotations: [linkAnnotation],
   },
+})
+
+// Valgfritt redaktørnavn som vises i innholdslisten i stedet for det automatiske forhåndsvisningsnavnet.
+// Vises ikke i den publiserte artikkelen. Hvis feltet er tomt, brukes gjeldende forhåndsvisningslogikk.
+const blockNameField = defineField({
+  name: 'blockName',
+  title: 'Navn (valgfritt)',
+  description:
+    'Gi blokken et gjenkjennelig navn som vises i innholdslisten, slik at det blir enklere å orientere seg. Vises ikke for besøkende på nettsiden.',
+  type: 'string',
 })
 
 export const articleType = defineType({
@@ -82,10 +103,11 @@ export const articleType = defineType({
     defineField({
       name: 'ingress',
       title: 'Ingress',
-      description: 'Kort innledende avsnitt som vises under tittelen.',
-      type: 'text',
-      rows: 3,
-      validation: (rule) => rule.required().max(300),
+      description:
+        'Kort innledende avsnitt som vises under tittelen. Lenker er tillatt, men ingen annen formatering (ingen fet/kursiv skrift, overskrifter eller lister).',
+      type: 'array',
+      of: [ingressBlock],
+      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'kategori',
@@ -140,6 +162,7 @@ export const articleType = defineType({
           type: 'object',
           icon: TextIcon,
           fields: [
+            blockNameField,
             defineField({
               name: 'text',
               title: 'Tekst',
@@ -150,10 +173,10 @@ export const articleType = defineType({
             }),
           ],
           preview: {
-            select: {blocks: 'text'},
-            prepare({blocks}) {
+            select: {blockName: 'blockName', blocks: 'text'},
+            prepare({blockName, blocks}) {
               return {
-                title: blockText(blocks) || 'Tekst',
+                title: blockName || blockText(blocks) || 'Tekst',
                 subtitle: 'Tekst',
               }
             },
@@ -165,6 +188,7 @@ export const articleType = defineType({
           type: 'object',
           icon: ImageIcon,
           fields: [
+            blockNameField,
             defineField({
               name: 'image',
               title: 'Bilde',
@@ -197,10 +221,10 @@ export const articleType = defineType({
             }),
           ],
           preview: {
-            select: {media: 'image', alt: 'alt', isDecorative: 'isDecorative'},
-            prepare({media, alt, isDecorative}) {
+            select: {media: 'image', alt: 'alt', isDecorative: 'isDecorative', blockName: 'blockName'},
+            prepare({media, alt, isDecorative, blockName}) {
               return {
-                title: isDecorative ? 'Bilde (dekorativt)' : alt || 'Bilde',
+                title: blockName || (isDecorative ? 'Bilde (dekorativt)' : alt || 'Bilde'),
                 media,
               }
             },
@@ -212,6 +236,7 @@ export const articleType = defineType({
           type: 'object',
           icon: InfoOutlineIcon,
           fields: [
+            blockNameField,
             defineField({
               name: 'heading',
               title: 'Overskrift',
@@ -263,10 +288,10 @@ export const articleType = defineType({
             }),
           ],
           preview: {
-            select: {title: 'heading', blocks: 'text'},
-            prepare({title, blocks}) {
+            select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
+            prepare({blockName, title, blocks}) {
               return {
-                title: title || 'Informasjon',
+                title: blockName || title || 'Informasjon',
                 subtitle: blockText(blocks),
               }
             },
@@ -278,6 +303,7 @@ export const articleType = defineType({
           type: 'object',
           icon: ErrorOutlineIcon,
           fields: [
+            blockNameField,
             defineField({
               name: 'heading',
               title: 'Overskrift',
@@ -293,10 +319,10 @@ export const articleType = defineType({
             }),
           ],
           preview: {
-            select: {title: 'heading', blocks: 'text'},
-            prepare({title, blocks}) {
+            select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
+            prepare({blockName, title, blocks}) {
               return {
-                title: title || 'Varsel',
+                title: blockName || title || 'Varsel',
                 subtitle: blockText(blocks),
               }
             },
@@ -308,6 +334,7 @@ export const articleType = defineType({
           type: 'object',
           icon: WarningOutlineIcon,
           fields: [
+            blockNameField,
             defineField({
               name: 'heading',
               title: 'Overskrift',
@@ -323,10 +350,10 @@ export const articleType = defineType({
             }),
           ],
           preview: {
-            select: {title: 'heading', blocks: 'text'},
-            prepare({title, blocks}) {
+            select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
+            prepare({blockName, title, blocks}) {
               return {
-                title: title || 'Krise',
+                title: blockName || title || 'Krise',
                 subtitle: blockText(blocks),
               }
             },
@@ -344,7 +371,13 @@ export const articleType = defineType({
   preview: {
     select: {
       title: 'title',
-      subtitle: 'ingress',
+      ingress: 'ingress',
+    },
+    prepare({title, ingress}) {
+      return {
+        title,
+        subtitle: blockText(ingress),
+      }
     },
   },
 })

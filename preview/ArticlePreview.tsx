@@ -7,6 +7,7 @@ import {
   CalendarIcon,
   ClockIcon,
   CompletedIcon,
+  FormatAlignLeftIcon,
   HelpOutlineIcon,
   type IconPropsWithoutSvgPath,
   type IconProps,
@@ -216,9 +217,10 @@ export function ArticlePreview(props: ArticlePreviewProps) {
           title={block.heading || 'Rettskilder'}
           titleAs="h2"
           color="graphite"
-          variant="outline"
+          variant="filled"
           padding="m"
           spacing="l"
+          renderIcon={() => <FormatAlignLeftIcon />}
         >
           {block.body ? <PortableText value={block.body} components={components} /> : null}
         </Panel>

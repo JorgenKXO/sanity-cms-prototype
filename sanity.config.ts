@@ -1,5 +1,5 @@
 import {visionTool} from '@sanity/vision'
-import {defineConfig} from 'sanity'
+import {defineConfig, type Template} from 'sanity'
 import {structureTool} from 'sanity/structure'
 
 import {schemaTypes} from './schemaTypes'
@@ -25,6 +25,25 @@ export default defineConfig({
   ],
   schema: {
     types: schemaTypes,
+    // Gjør det mulig å opprette artikler/navigasjonssider med kategori forhåndsutfylt
+    // når de opprettes fra en kategorimappe i strukturen.
+    templates: (prev): Template[] => [
+      ...prev,
+      {
+        id: 'article-with-kategori',
+        title: 'Artikkel med kategori',
+        schemaType: 'article',
+        parameters: [{name: 'kategori', type: 'string'}],
+        value: (params: {kategori?: string}) => ({kategori: params.kategori}),
+      },
+      {
+        id: 'navigationPage-with-kategori',
+        title: 'Navigasjonsside med kategori',
+        schemaType: 'navigationPage',
+        parameters: [{name: 'kategori', type: 'string'}],
+        value: (params: {kategori?: string}) => ({kategori: params.kategori}),
+      },
+    ],
   },
   i18n: {
     locales: [{id: 'nb-NO', title: 'Norsk bokmål'}],

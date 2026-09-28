@@ -7,6 +7,7 @@ import {
   CalendarIcon,
   ClockIcon,
   CompletedIcon,
+  FormatAlignLeftIcon,
   type IconPropsWithoutSvgPath,
   type IconProps,
   InfoIcon,
@@ -253,9 +254,10 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
           title={panel.heading || 'Rettskilder'}
           titleAs="h2"
           color="graphite"
-          variant="outline"
+          variant="filled"
           padding="m"
           spacing="l"
+          renderIcon={() => <FormatAlignLeftIcon />}
         >
           {panel.body ? <PortableText value={panel.body} components={bodyComponents} /> : null}
         </Panel>

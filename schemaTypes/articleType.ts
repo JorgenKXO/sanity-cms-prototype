@@ -164,6 +164,23 @@ export const articleType = defineType({
       ],
     }),
     defineField({
+      name: 'listHeading',
+      title: 'Navigasjonstittel',
+      description:
+        'Brukes i stedet for tittelen når artikkelen vises som et navigasjonskort på en annen side. La stå tomt for å bruke tittelen.',
+      type: 'string',
+      group: 'navigationSeo',
+    }),
+    defineField({
+      name: 'listIngress',
+      title: 'Navigasjonsingress',
+      description:
+        'Brukes som en kort beskrivelse når artikkelen vises som et navigasjonskort på en annen side. La stå tomt for ikke å vise noen ingress på kortet.',
+      type: 'text',
+      rows: 2,
+      group: 'navigationSeo',
+    }),
+    defineField({
       name: 'content',
       title: 'Innhold',
       description: 'Bygg opp artikkelen ved å legge til tekst-, bilde- og boksblokker.',

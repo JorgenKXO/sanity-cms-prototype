@@ -81,16 +81,16 @@ export const navigationTilePageType = defineType({
     }),
     defineField({
       name: 'titleOverride',
-      title: 'Overstyr tittel',
+      title: 'Overstyr navigasjonstittel',
       description:
-        'Valgfritt. Vises i stedet for den lenkede sidens tittel/listeoverskrift, kun i denne kortlisten. La stå tomt for å bruke den lenkede sidens listeoverskrift (eller tittelen, hvis den ikke har noen listeoverskrift).',
+        'Valgfritt. Vises i stedet for den lenkede sidens navigasjonstittel, kun i denne kortlisten. La stå tomt for å bruke den lenkede sidens navigasjonstittel (eller tittelen, hvis den ikke har noen).',
       type: 'string',
     }),
     defineField({
       name: 'ingressOverride',
-      title: 'Overstyr ingress',
+      title: 'Overstyr navigasjonsingress',
       description:
-        'Valgfritt. Vises i stedet for den lenkede sidens listeingress, kun i denne kortlisten. La stå tomt for å bruke den lenkede sidens listeingress (eller ingen ingress i det hele tatt, hvis den ikke har noen).',
+        'Valgfritt. Vises i stedet for den lenkede sidens navigasjonsingress, kun i denne kortlisten. La stå tomt for å bruke den lenkede sidens navigasjonsingress (eller ingen ingress i det hele tatt, hvis den ikke har noen).',
       type: 'text',
       rows: 2,
     }),
@@ -228,7 +228,7 @@ export const navigationPageType = defineType({
     }),
     defineField({
       name: 'listHeading',
-      title: 'Listeoverskrift',
+      title: 'Navigasjonstittel',
       description:
         'Brukes i stedet for tittelen når denne siden vises som et navigasjonskort på en annen side. La stå tomt for å bruke tittelen.',
       type: 'string',
@@ -236,7 +236,7 @@ export const navigationPageType = defineType({
     }),
     defineField({
       name: 'listIngress',
-      title: 'Listeingress',
+      title: 'Navigasjonsingress',
       description:
         'Brukes som en kort beskrivelse når denne siden vises som et navigasjonskort på en annen side. La stå tomt for ikke å vise noen ingress på kortet.',
       type: 'text',

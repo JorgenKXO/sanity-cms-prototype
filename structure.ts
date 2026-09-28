@@ -1,4 +1,4 @@
-import {FolderIcon, MasterDetailIcon} from '@sanity/icons'
+import {EditIcon, EyeOpenIcon, FolderIcon, MasterDetailIcon} from '@sanity/icons'
 import type {DefaultDocumentNodeResolver, StructureResolver} from 'sanity/structure'
 
 import {ArticlePreview} from './preview/ArticlePreview'
@@ -8,15 +8,15 @@ import {kategoriOptions} from './schemaTypes/kategoriOptions'
 export const defaultDocumentNode: DefaultDocumentNodeResolver = (S, {schemaType}) => {
   if (schemaType === 'article') {
     return S.document().views([
-      S.view.form(),
-      S.view.component(ArticlePreview).title('Forhåndsvisning av artikkel'),
+      S.view.form().icon(EditIcon),
+      S.view.component(ArticlePreview).title('Forhåndsvisning av artikkel').icon(EyeOpenIcon),
     ])
   }
 
   if (schemaType === 'navigationPage') {
     return S.document().views([
-      S.view.form(),
-      S.view.component(NavigationPagePreview).title('Forhåndsvisning av navigasjonsside'),
+      S.view.form().icon(EditIcon),
+      S.view.component(NavigationPagePreview).title('Forhåndsvisning av navigasjonsside').icon(EyeOpenIcon),
     ])
   }
 

@@ -166,7 +166,7 @@ export const articleType = defineType({
     defineField({
       name: 'content',
       title: 'Innhold',
-      description: 'Bygg opp artikkelen ved å legge til tekst-, bilde- og varselblokker.',
+      description: 'Bygg opp artikkelen ved å legge til tekst-, bilde- og boksblokker.',
       type: 'array',
       group: 'content',
       of: [
@@ -373,6 +373,7 @@ export const articleType = defineType({
             },
           },
         }),
+        defineArrayMember({type: 'rettskilderPanel'}),
       ],
       validation: (rule) => rule.required().min(1),
     }),

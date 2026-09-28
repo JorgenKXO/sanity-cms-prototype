@@ -1,4 +1,4 @@
-import {BookIcon, InfoOutlineIcon} from '@sanity/icons'
+import {BookIcon, ErrorOutlineIcon, InfoOutlineIcon, WarningOutlineIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
 // Delt lenke-annotasjon for portable text-feltene under.
@@ -136,6 +136,58 @@ export const informasjonPanelType = defineType({
     select: {title: 'heading'},
     prepare({title}) {
       return {title: title || 'Informasjon'}
+    },
+  },
+})
+
+export const varselPanelType = defineType({
+  name: 'varselPanel',
+  title: 'Varsel',
+  type: 'object',
+  icon: ErrorOutlineIcon,
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Overskrift',
+      type: 'string',
+    }),
+    defineField({
+      name: 'body',
+      title: 'Innhold',
+      type: 'array',
+      of: [informasjonTextBlock],
+    }),
+  ],
+  preview: {
+    select: {title: 'heading'},
+    prepare({title}) {
+      return {title: title || 'Varsel'}
+    },
+  },
+})
+
+export const krisePanelType = defineType({
+  name: 'krisePanel',
+  title: 'Krise',
+  type: 'object',
+  icon: WarningOutlineIcon,
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Overskrift',
+      type: 'string',
+    }),
+    defineField({
+      name: 'body',
+      title: 'Innhold',
+      type: 'array',
+      of: [informasjonTextBlock],
+    }),
+  ],
+  preview: {
+    select: {title: 'heading'},
+    prepare({title}) {
+      return {title: title || 'Krise'}
     },
   },
 })

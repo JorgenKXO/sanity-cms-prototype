@@ -7,19 +7,18 @@ import {
   CalendarIcon,
   ClockIcon,
   CompletedIcon,
-  ErrorOutlineIcon,
   HelpOutlineIcon,
   type IconPropsWithoutSvgPath,
   type IconProps,
   InfoIcon,
   LockIcon,
-  WarningOutlineIcon,
 } from '@skatteetaten/ds-icons'
 import {Breadcrumbs} from '@skatteetaten/ds-navigation'
 import {Heading, List, Paragraph} from '@skatteetaten/ds-typography'
 import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
 import type {CSSProperties, JSX, ReactElement} from 'react'
 import {useClient} from 'sanity'
+import {fixedPanelAppearance} from './fixedPanelAppearance'
 
 type Breadcrumb = {
   _key?: string
@@ -50,7 +49,14 @@ type PanelBlock = {
   text?: PortableTextBlock[]
 }
 
-type ArticleContentBlock = TekstBlock | BildeBlock | PanelBlock
+type RettskilderPanelBlock = {
+  _key?: string
+  _type: 'rettskilderPanel'
+  heading?: string
+  body?: PortableTextBlock[]
+}
+
+type ArticleContentBlock = TekstBlock | BildeBlock | PanelBlock | RettskilderPanelBlock
 
 type ArticleDocument = {
   title?: string
@@ -78,15 +84,6 @@ const informasjonIconMap: Record<string, (props: IconPropsWithoutSvgPath) => JSX
   clock: ClockIcon,
   bell: BellIcon,
   lock: LockIcon,
-}
-
-// "Varsel" og "Krise" har faste farger og ikoner som redaktørene ikke kan endre.
-const fixedPanelAppearance: Record<
-  Exclude<PanelBlock['_type'], 'informasjon'>,
-  {color: PanelColor; variant: PanelVariant; icon: (props: IconPropsWithoutSvgPath) => JSX.Element}
-> = {
-  varsel: {color: 'ochre', variant: 'filled', icon: ErrorOutlineIcon},
-  krise: {color: 'burgundy', variant: 'filled', icon: WarningOutlineIcon},
 }
 
 const panelTitle: Record<PanelBlock['_type'], string> = {
@@ -210,6 +207,21 @@ export function ArticlePreview(props: ArticlePreviewProps) {
           alt={block.isDecorative ? '' : block.alt || ''}
           style={styles.image}
         />
+      )
+    }
+
+    if (block._type === 'rettskilderPanel') {
+      return (
+        <Panel
+          title={block.heading || 'Rettskilder'}
+          titleAs="h2"
+          color="graphite"
+          variant="outline"
+          padding="m"
+          spacing="l"
+        >
+          {block.body ? <PortableText value={block.body} components={components} /> : null}
+        </Panel>
       )
     }
 

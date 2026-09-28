@@ -196,13 +196,14 @@ export const navigationPageType = defineType({
     }),
     defineField({
       name: 'panels',
-      title: 'Rettskilder- og informasjonsbokser',
-      description: 'Valgfritt. Vises over gruppene med navigasjonskort. Varsel- og krise-bokser kan ikke brukes på navigasjonssider.',
+      title: 'Informasjons-, varsel- og krisebokser',
+      description: 'Valgfritt. Vises over gruppene med navigasjonskort.',
       type: 'array',
       group: 'content',
       of: [
-        defineArrayMember({type: 'rettskilderPanel'}),
         defineArrayMember({type: 'informasjonPanel'}),
+        defineArrayMember({type: 'varselPanel'}),
+        defineArrayMember({type: 'krisePanel'}),
       ],
     }),
     defineField({

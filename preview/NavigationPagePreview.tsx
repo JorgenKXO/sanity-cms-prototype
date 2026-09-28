@@ -19,6 +19,7 @@ import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
 import type {CSSProperties, JSX, ReactElement} from 'react'
 import {useEffect, useState} from 'react'
 import {useClient} from 'sanity'
+import {fixedPanelAppearance} from './fixedPanelAppearance'
 
 type RettskilderPanelBlock = {
   _key?: string
@@ -36,7 +37,14 @@ type InformasjonPanelBlock = {
   body?: PortableTextBlock[]
 }
 
-type PanelEntry = RettskilderPanelBlock | InformasjonPanelBlock
+type FixedPanelBlock = {
+  _key?: string
+  _type: 'varselPanel' | 'krisePanel'
+  heading?: string
+  body?: PortableTextBlock[]
+}
+
+type PanelEntry = RettskilderPanelBlock | InformasjonPanelBlock | FixedPanelBlock
 
 type NavigationGroupHeadingTile = {
   _key?: string
@@ -273,7 +281,23 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
       )
     }
 
-    return null
+    const kind = panel._type === 'varselPanel' ? 'varsel' : 'krise'
+    const appearance = fixedPanelAppearance[kind]
+    const Icon = appearance.icon
+    return (
+      <Panel
+        key={panel._key || index}
+        title={panel.heading || (kind === 'varsel' ? 'Varsel' : 'Krise')}
+        titleAs="h2"
+        color={appearance.color}
+        variant={appearance.variant}
+        padding="m"
+        spacing="l"
+        renderIcon={() => withAlignmentOffset(<Icon />)}
+      >
+        {panel.body ? <PortableText value={panel.body} components={bodyComponents} /> : null}
+      </Panel>
+    )
   }
 
   function renderTiles() {

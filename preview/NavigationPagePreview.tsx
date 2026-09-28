@@ -7,7 +7,6 @@ import {
   CalendarIcon,
   ClockIcon,
   CompletedIcon,
-  FormatAlignLeftIcon,
   type IconPropsWithoutSvgPath,
   type IconProps,
   InfoIcon,
@@ -21,6 +20,7 @@ import type {CSSProperties, JSX, ReactElement} from 'react'
 import {useEffect, useState} from 'react'
 import {useClient} from 'sanity'
 import {fixedPanelAppearance} from './fixedPanelAppearance'
+import {SectionSignIcon} from './SectionSignIcon'
 
 type RettskilderPanelBlock = {
   _key?: string
@@ -257,7 +257,7 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
           variant="filled"
           padding="m"
           spacing="l"
-          renderIcon={() => <FormatAlignLeftIcon />}
+          renderIcon={() => withAlignmentOffset(<SectionSignIcon />)}
         >
           {panel.body ? <PortableText value={panel.body} components={bodyComponents} /> : null}
         </Panel>

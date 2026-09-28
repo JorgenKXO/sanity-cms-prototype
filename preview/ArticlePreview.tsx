@@ -7,7 +7,6 @@ import {
   CalendarIcon,
   ClockIcon,
   CompletedIcon,
-  FormatAlignLeftIcon,
   HelpOutlineIcon,
   type IconPropsWithoutSvgPath,
   type IconProps,
@@ -20,6 +19,7 @@ import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
 import type {CSSProperties, JSX, ReactElement} from 'react'
 import {useClient} from 'sanity'
 import {fixedPanelAppearance} from './fixedPanelAppearance'
+import {SectionSignIcon} from './SectionSignIcon'
 
 type Breadcrumb = {
   _key?: string
@@ -220,7 +220,7 @@ export function ArticlePreview(props: ArticlePreviewProps) {
           variant="filled"
           padding="m"
           spacing="l"
-          renderIcon={() => <FormatAlignLeftIcon />}
+          renderIcon={() => withAlignmentOffset(<SectionSignIcon />)}
         >
           {block.body ? <PortableText value={block.body} components={components} /> : null}
         </Panel>

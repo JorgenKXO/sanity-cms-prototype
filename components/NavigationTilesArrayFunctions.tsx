@@ -25,6 +25,7 @@ type SearchResult = {
   _type: 'article' | 'navigationPage'
   title?: string
   matchedIn?: 'title' | 'ingress' | 'content'
+  isPublished?: boolean
 }
 
 const SEARCH_DEBOUNCE_MS = 250
@@ -81,7 +82,12 @@ function toSearchTerms(term: string): string[] {
 
 type NavigationTilePageItem = ObjectItem & {
   _type: 'navigationTilePage'
-  page?: {_type: 'reference'; _ref: string}
+  page?: {
+    _type: 'reference'
+    _ref: string
+    _weak?: boolean
+    _strengthenOnPublish?: {type: string}
+  }
 }
 
 function isNavigationTilePageItem(item: ObjectItem): item is NavigationTilePageItem {
@@ -106,6 +112,7 @@ export function NavigationTilesArrayFunctions(
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<SearchResult[] | null>(null)
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
+  const seenResults = useRef(new Map<string, SearchResult>())
 
   const existingPageIds = useMemo(() => {
     const ids = new Set<string>()
@@ -148,11 +155,16 @@ export function NavigationTilesArrayFunctions(
           const id = doc._id.replace(/^drafts\./, '')
           if (id === currentDocumentId) continue
           const existing = byId.get(id)
+          const isPublished = doc._id === id || Boolean(existing?.isPublished)
           if (!existing || doc._id === id) {
-            byId.set(id, {...doc, _id: id})
+            byId.set(id, {...doc, _id: id, isPublished})
+          } else {
+            existing.isPublished = isPublished
           }
         }
-        setResults(Array.from(byId.values()))
+        const deduped = Array.from(byId.values())
+        for (const result of deduped) seenResults.current.set(result._id, result)
+        setResults(deduped)
         setSubmittedTerm(searchTerm.trim())
         setError(null)
       } catch {
@@ -173,6 +185,7 @@ export function NavigationTilesArrayFunctions(
     setSubmittedTerm('')
     setResults(null)
     setSelectedIds({})
+    seenResults.current.clear()
     setError(null)
   }
 
@@ -188,11 +201,17 @@ export function NavigationTilesArrayFunctions(
 
   function handleAddSelected() {
     if (!pageTileType) return
+    const resultsById = seenResults.current
     const items = Object.keys(selectedIds)
-      .filter((id) => selectedIds[id] && !existingPageIds.has(id))
+      .filter((id) => selectedIds[id] && !existingPageIds.has(id) && resultsById.has(id))
       .map((id) => {
+        const result = resultsById.get(id)!
         const item = onValueCreate(pageTileType as unknown as ArraySchemaType) as NavigationTilePageItem
-        item.page = {_type: 'reference', _ref: id}
+        // Upubliserte dokumenter kan ikke ha sterke referanser. Som Studios egen
+        // referansevelger lager vi en svak referanse som styrkes ved publisering.
+        item.page = result.isPublished
+          ? {_type: 'reference', _ref: id}
+          : {_type: 'reference', _ref: id, _weak: true, _strengthenOnPublish: {type: result._type}}
         return item
       })
     if (items.length === 0) return

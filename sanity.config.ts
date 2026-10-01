@@ -43,6 +43,24 @@ export default defineConfig({
         parameters: [{name: 'kategori', type: 'string'}],
         value: (params: {kategori?: string}) => ({kategori: params.kategori}),
       },
+      {
+        id: 'forside-person',
+        title: 'Forside – Person',
+        schemaType: 'forside',
+        value: () => ({
+          title: 'Person',
+          slug: {_type: 'slug', current: 'person'},
+        }),
+      },
+      {
+        id: 'forside-bedrift',
+        title: 'Forside – Bedrift og organisasjon',
+        schemaType: 'forside',
+        value: () => ({
+          title: 'Bedrift og organisasjon',
+          slug: {_type: 'slug', current: 'bedrift-og-organisasjon'},
+        }),
+      },
     ],
   },
   i18n: {

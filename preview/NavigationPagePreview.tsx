@@ -1,25 +1,16 @@
 import '@skatteetaten/ds-core-designtokens/index.css'
 import {PortableText, type PortableTextBlock, type PortableTextComponents} from '@portabletext/react'
 import {Link} from '@skatteetaten/ds-buttons'
-import {Panel, type PanelColor, type PanelVariant} from '@skatteetaten/ds-content'
-import {
-  BellIcon,
-  CalendarIcon,
-  ClockIcon,
-  CompletedIcon,
-  type IconPropsWithoutSvgPath,
-  type IconProps,
-  InfoIcon,
-  HelpOutlineIcon,
-  LockIcon,
-} from '@skatteetaten/ds-icons'
+import {Panel} from '@skatteetaten/ds-content'
 import {NavigationTile} from '@skatteetaten/ds-navigation'
 import {Heading, Paragraph} from '@skatteetaten/ds-typography'
 import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
-import type {CSSProperties, JSX, ReactElement} from 'react'
+import type {CSSProperties, JSX} from 'react'
 import {useEffect, useState} from 'react'
 import {useClient} from 'sanity'
 import {fixedPanelAppearance} from './fixedPanelAppearance'
+import {InformasjonPanel} from './InformasjonPanel'
+import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
 
 type RettskilderPanelBlock = {
@@ -78,36 +69,6 @@ type ReferencedPage = {
   listHeading?: string
   listIngress?: string
   slug?: {current?: string}
-}
-
-// Fargevalget redaktørene har i "Informasjon"-boksen, oversatt til Panel sine color/variant-props.
-const informasjonColorMap: Record<string, {color: PanelColor; variant: PanelVariant}> = {
-  denim: {color: 'denim', variant: 'filled'},
-  forest: {color: 'forest', variant: 'filled'},
-  'denim-outline': {color: 'denim', variant: 'outline'},
-  'forest-outline': {color: 'forest', variant: 'outline'},
-  white: {color: 'graphite', variant: 'outline'},
-}
-
-const informasjonIconMap: Record<string, (props: IconPropsWithoutSvgPath) => JSX.Element> = {
-  info: InfoIcon,
-  help: HelpOutlineIcon,
-  completed: CompletedIcon,
-  calendar: CalendarIcon,
-  clock: ClockIcon,
-  bell: BellIcon,
-  lock: LockIcon,
-}
-
-// Panel-komponenten plasserer ikonet øverst i sin egen grid-celle uten å sentrere
-// det mot overskriften. Denne innrykk-verdien dytter ikonet ned slik at det visuelt
-// aligner med overskriftsteksten, slik det gjør i designsystemets eget eksempel.
-const iconAlignmentOffset = '0.3rem'
-
-function withAlignmentOffset(icon: ReactElement): ReactElement<IconProps> {
-  return (
-    <span style={{display: 'inline-block', marginTop: iconAlignmentOffset}}>{icon}</span>
-  ) as unknown as ReactElement<IconProps>
 }
 
 // Bakgrunnsfargen på den fremhevede introen, som ekte palette-fargetokens
@@ -265,21 +226,14 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
     }
 
     if (panel._type === 'informasjonPanel') {
-      const appearance = informasjonColorMap[panel.color || 'denim'] || informasjonColorMap.denim
-      const Icon = panel.icon && informasjonIconMap[panel.icon]
       return (
-        <Panel
+        <InformasjonPanel
           key={panel._key || index}
-          title={panel.heading || 'Informasjon'}
-          titleAs="h2"
-          color={appearance.color}
-          variant={appearance.variant}
-          padding="m"
-          spacing="l"
-          renderIcon={Icon ? () => withAlignmentOffset(<Icon />) : undefined}
-        >
-          {panel.body ? <PortableText value={panel.body} components={bodyComponents} /> : null}
-        </Panel>
+          heading={panel.heading}
+          color={panel.color}
+          icon={panel.icon}
+          body={panel.body}
+        />
       )
     }
 

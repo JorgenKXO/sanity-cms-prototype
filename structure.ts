@@ -1,8 +1,9 @@
-import {EditIcon, EyeOpenIcon, FolderIcon, MasterDetailIcon} from '@sanity/icons'
+import {EditIcon, EarthGlobeIcon, EyeOpenIcon, FolderIcon, MasterDetailIcon} from '@sanity/icons'
 import type {DefaultDocumentNodeResolver, StructureResolver} from 'sanity/structure'
 
 import {ArticlePreview} from './preview/ArticlePreview'
 import {NavigationPagePreview} from './preview/NavigationPagePreview'
+import {ForsidePreview} from './preview/ForsidePreview'
 import {kategoriOptions} from './schemaTypes/kategoriOptions'
 
 export const defaultDocumentNode: DefaultDocumentNodeResolver = (S, {schemaType}) => {
@@ -17,6 +18,13 @@ export const defaultDocumentNode: DefaultDocumentNodeResolver = (S, {schemaType}
     return S.document().views([
       S.view.form().icon(EditIcon),
       S.view.component(NavigationPagePreview).title('Forhåndsvisning av navigasjonsside').icon(EyeOpenIcon),
+    ])
+  }
+
+  if (schemaType === 'forside') {
+    return S.document().views([
+      S.view.form().icon(EditIcon),
+      S.view.component(ForsidePreview).title('Forhåndsvisning av forside').icon(EyeOpenIcon),
     ])
   }
 
@@ -51,6 +59,39 @@ const allNavigationPages = (S: Parameters<StructureResolver>[0]) =>
         .schemaType('navigationPage')
         .apiVersion('2026-09-10')
         .filter('_type == "navigationPage"'),
+    )
+
+const globalerFolder = (S: Parameters<StructureResolver>[0]) =>
+  S.listItem()
+    .title('Globaler')
+    .id('globaler')
+    .icon(EarthGlobeIcon)
+    .child(
+      S.list()
+        .title('Globaler')
+        .id('globaler-list')
+        .items([
+          S.listItem()
+            .title('Person')
+            .id('globaler-person')
+            .child(
+              S.document()
+                .schemaType('forside')
+                .documentId('forside-person')
+                .title('Person')
+                .initialValueTemplate('forside-person'),
+            ),
+          S.listItem()
+            .title('Bedrift og organisasjon')
+            .id('globaler-bedrift')
+            .child(
+              S.document()
+                .schemaType('forside')
+                .documentId('forside-bedrift')
+                .title('Bedrift og organisasjon')
+                .initialValueTemplate('forside-bedrift'),
+            ),
+        ]),
     )
 
 // Bygger én kategorimappe med "Artikler"- og "Navigasjonssider"-undermapper,
@@ -124,6 +165,7 @@ export const deskStructure: StructureResolver = (S) =>
     .items([
       allArticles(S),
       allNavigationPages(S),
+      globalerFolder(S),
       S.divider(),
       ...kategoriFolders(S),
       S.divider(),

@@ -52,7 +52,7 @@ type NavigationTilePageTile = {
   ingressOverride?: string
 }
 
-type TileEntry = NavigationGroupHeadingTile | NavigationTilePageTile
+type TileEntry = NavigationGroupHeadingTile | NavigationTilePageTile | PanelEntry
 
 type NavigationPageDocument = {
   title?: string
@@ -60,14 +60,11 @@ type NavigationPageDocument = {
   heroEnabled?: boolean
   heroBackgroundColor?: string
   heroImage?: SanityImageSource
-  panels?: PanelEntry[]
   tiles?: TileEntry[]
 }
 
 type ReferencedPage = {
   title?: string
-  listHeading?: string
-  listIngress?: string
   slug?: {current?: string}
 }
 
@@ -129,6 +126,9 @@ const styles: Record<string, CSSProperties> = {
   groupHeading: {
     marginTop: 'var(--spacing-xl)',
   },
+  panel: {
+    marginTop: 'var(--spacing-l)',
+  },
   tileGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
@@ -182,7 +182,7 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
     let cancelled = false
     client
       .fetch<Record<string, ReferencedPage>>(
-        `*[_id in $ids]{"_id": _id, title, listHeading, listIngress, slug} | order(_id) [0...200]`,
+        `*[_id in $ids]{"_id": _id, title, slug} | order(_id) [0...200]`,
         {ids: tileRefs},
       )
       .then((results) => {
@@ -287,9 +287,20 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
         return
       }
 
+      if (tile._type !== 'navigationTilePage') {
+        flushGroup()
+        elements.push(
+          <div key={`panel-${tile._key || index}`} style={styles.panel}>
+            {renderPanel(tile, index)}
+          </div>,
+        )
+        groupKey = tile._key || `panel-${index}`
+        return
+      }
+
       const referenced = tile.page?._ref ? referencedPages[tile.page._ref] : undefined
-      const title = tile.titleOverride || referenced?.listHeading || referenced?.title || 'Navigasjonskort'
-      const ingress = tile.ingressOverride || referenced?.listIngress
+      const title = tile.titleOverride || referenced?.title || 'Navigasjonskort'
+      const ingress = tile.ingressOverride || undefined
       const href = referenced?.slug?.current ? `/${referenced.slug.current}` : '#'
 
       currentGroup.push(
@@ -338,8 +349,6 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
             {page.ingress ? <PortableText value={page.ingress} components={ingressComponents} /> : null}
           </>
         ) : null}
-
-        {page.panels?.map((panel, index) => renderPanel(panel, index))}
 
         {renderTiles()}
       </div>

@@ -62,8 +62,6 @@ type ForsideDocument = {
 type ReferencedPage = {
   _id: string
   title?: string
-  listHeading?: string
-  listIngress?: string
   slug?: {current?: string}
 }
 
@@ -160,7 +158,7 @@ export function ForsidePreview({document}: ForsidePreviewProps) {
     let cancelled = false
     client
       .fetch<ReferencedPage[]>(
-        `*[_id in $ids]{"_id": _id, title, listHeading, listIngress, slug}`,
+        `*[_id in $ids]{"_id": _id, title, slug}`,
         {ids: referenceIds},
       )
       .then((results) => {
@@ -268,8 +266,8 @@ export function ForsidePreview({document}: ForsidePreviewProps) {
   blocks.forEach((block, index) => {
     if (block._type === 'forsideNavigasjonskort') {
       const referenced = block.page?._ref ? referencedPages[block.page._ref] : undefined
-      const title = block.titleOverride || referenced?.listHeading || referenced?.title || 'Navigasjonskort'
-      const description = block.ingressOverride || referenced?.listIngress
+      const title = block.titleOverride || referenced?.title || 'Navigasjonskort'
+      const description = block.ingressOverride || undefined
       const slug = referenced?.slug?.current
       const iconValue = normalizeHomepageIconValue(block.icon)
 

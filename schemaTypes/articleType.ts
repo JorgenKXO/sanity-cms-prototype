@@ -56,14 +56,14 @@ export const articleTextBlock = defineArrayMember({
   },
 })
 
-// Ingressen tillater kun lenker, ingen annen formatering.
+// Ingressen tillater kun ren tekst, uten formatering eller lenker.
 const ingressBlock = defineArrayMember({
   type: 'block',
   styles: [{title: 'Normal', value: 'normal'}],
   lists: [],
   marks: {
     decorators: [],
-    annotations: [linkAnnotation],
+    annotations: [],
   },
 })
 
@@ -96,7 +96,7 @@ export const articleType = defineType({
   type: 'document',
   groups: [
     {name: 'content', title: 'Hovedinnhold', icon: BlockContentIcon},
-    {name: 'navigationSeo', title: 'Navigasjon og SEO', icon: EarthGlobeIcon},
+    {name: 'navigationSeo', title: 'Kategori og SEO', icon: EarthGlobeIcon},
   ],
   fields: [
     defineField({
@@ -116,20 +116,10 @@ export const articleType = defineType({
       name: 'ingress',
       title: 'Ingress',
       description:
-        'Kort innledende avsnitt som vises under tittelen. Lenker er tillatt, men ingen annen formatering (ingen fet/kursiv skrift, overskrifter eller lister).',
+        'Kort innledende avsnitt som vises under tittelen. Kun ren tekst, uten lenker eller formatering.',
       type: 'array',
       of: [ingressBlock],
       validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'kategori',
-      title: 'Kategori',
-      description: 'Hvilken tematisk mappe artikkelen hører til.',
-      type: 'string',
-      options: {
-        list: [...kategoriOptions],
-        layout: 'dropdown',
-      },
     }),
     defineField({
       name: 'breadcrumbs',
@@ -164,21 +154,15 @@ export const articleType = defineType({
       ],
     }),
     defineField({
-      name: 'listHeading',
-      title: 'Navigasjonstittel',
-      description:
-        'Brukes i stedet for tittelen når artikkelen vises som et navigasjonskort på en annen side. La stå tomt for å bruke tittelen.',
+      name: 'kategori',
+      title: 'Kategori',
+      description: 'Hvilken tematisk mappe artikkelen hører til.',
       type: 'string',
       group: 'navigationSeo',
-    }),
-    defineField({
-      name: 'listIngress',
-      title: 'Navigasjonsingress',
-      description:
-        'Brukes som en kort beskrivelse når artikkelen vises som et navigasjonskort på en annen side. La stå tomt for ikke å vise noen ingress på kortet.',
-      type: 'text',
-      rows: 2,
-      group: 'navigationSeo',
+      options: {
+        list: [...kategoriOptions],
+        layout: 'dropdown',
+      },
     }),
     defineField({
       name: 'content',

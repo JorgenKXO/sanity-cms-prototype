@@ -10,16 +10,16 @@ export const navigationTileFields = [
   }),
   defineField({
     name: 'titleOverride',
-    title: 'Overstyr navigasjonstittel',
+    title: 'Overstyr tittel på kortet',
     description:
-      'Valgfritt. Vises i stedet for den lenkede sidens navigasjonstittel, kun i denne kortlisten. La stå tomt for å bruke den lenkede sidens navigasjonstittel (eller tittelen, hvis den ikke har noen).',
+      'Valgfritt. Vises i stedet for tittelen på den lenkede siden, kun på dette kortet. Navigasjonstittel på artikkel- og navigasjonssider fjernes. La stå tomt for å bruke sidens tittel.',
     type: 'string',
   }),
   defineField({
     name: 'ingressOverride',
-    title: 'Overstyr navigasjonsingress',
+    title: 'Ingress på kortet',
     description:
-      'Valgfritt. Vises i stedet for den lenkede sidens navigasjonsingress, kun i denne kortlisten. La stå tomt for å bruke den lenkede sidens navigasjonsingress (eller ingen ingress i det hele tatt, hvis den ikke har noen).',
+      'Valgfritt. Kort tekst som vises på dette kortet. Navigasjonsingress på artikkel- og navigasjonssider fjernes. La stå tomt for å vise kortet uten ingress.',
     type: 'text',
     rows: 2,
   }),

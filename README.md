@@ -65,6 +65,24 @@ The article preview intentionally omits the header, footer, feedback widget, and
 
 The preview's typography and link styling (font stack, colors, weights, sizes) are sampled from skatteetaten.no's live article template, for internal Skatteetaten prototyping. The header, footer, feedback widget, and top-of-page button are still intentionally left out. Article body text is placeholder content — replace it with real content as needed.
 
+## Navigation card reference picker
+
+Navigation cards use Sanity's standard reference picker. Search results for pages
+used by another card on the same navigation page display an **Allerede lagt til**
+badge. The badge is informational: the result remains selectable. The current
+card is excluded from the check, and homepage reference pickers are unchanged.
+
+## Navigation page content
+
+The **Hovedinnhold** list supports navigation cards, group headings, information,
+warning, and crisis panels in editor-defined order. Panels use the existing
+design-system components at full width and separate consecutive card grids,
+with `--spacing-l` above each panel.
+
+The old separate `panels` field is no longer editable or rendered. New panels
+belong in `tiles`, alongside cards and headings. Existing test panels are discarded
+rather than moved into the combined list.
+
 ## Quick visual check without Node.js/Sanity
 
 No terminal, no install, no npm needed. Open `preview/static-preview.html` directly in a browser (double-click the file, or drag it into a browser window) to see the article design. This file does not connect to Sanity and cannot save edits — it is only for checking how the design looks.

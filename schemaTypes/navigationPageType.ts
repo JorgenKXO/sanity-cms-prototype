@@ -10,35 +10,17 @@ import type {ArrayOfObjectsInputProps} from 'sanity'
 
 import {kategoriOptions} from './kategoriOptions'
 import {NavigationTilesArrayFunctions} from '../components/NavigationTilesArrayFunctions'
+import {NavigationTileReferenceInput} from '../components/NavigationTileReferenceInput'
 import {navigationTileFields} from './shared/navigationTileFields'
 
-// Delt med informasjon/rettskilder-boksene: enkel lenke-annotasjon uten fri formatering.
-const linkAnnotation = {
-  name: 'link',
-  title: 'Lenke',
-  type: 'object',
-  fields: [
-    defineField({
-      name: 'href',
-      title: 'Nettadresse',
-      type: 'string',
-      validation: (rule) =>
-        rule.required().uri({
-          allowRelative: true,
-          scheme: ['http', 'https', 'mailto', 'tel'],
-        }),
-    }),
-  ],
-}
-
-// Ingressen tillater kun lenker, ingen annen formatering.
+// Ingressen tillater kun ren tekst, uten formatering eller lenker.
 const ingressBlock = defineArrayMember({
   type: 'block',
   styles: [{title: 'Normal', value: 'normal'}],
   lists: [],
   marks: {
     decorators: [],
-    annotations: [linkAnnotation],
+    annotations: [],
   },
 })
 
@@ -72,7 +54,11 @@ export const navigationTilePageType = defineType({
   title: 'Navigasjonskort',
   type: 'object',
   icon: DocumentIcon,
-  fields: navigationTileFields,
+  fields: navigationTileFields.map((field) =>
+    field.name === 'page'
+      ? {...field, components: {input: NavigationTileReferenceInput}}
+      : field,
+  ),
   preview: {
     select: {title: 'titleOverride', pageTitle: 'page.title', pageType: 'page._type'},
     prepare({title, pageTitle, pageType}) {
@@ -93,7 +79,7 @@ export const navigationPageType = defineType({
   groups: [
     {name: 'hero', title: 'Fremhevet intro', icon: PresentationIcon},
     {name: 'content', title: 'Hovedinnhold', icon: BlockContentIcon},
-    {name: 'navigationSeo', title: 'Navigasjon og SEO', icon: EarthGlobeIcon},
+    {name: 'navigationSeo', title: 'Kategori og SEO', icon: EarthGlobeIcon},
   ],
   fields: [
     defineField({
@@ -113,20 +99,10 @@ export const navigationPageType = defineType({
       name: 'ingress',
       title: 'Ingress',
       description:
-        'Kort innledende tekst som vises under tittelen. Lenker er tillatt, men ingen annen formatering (ingen fet/kursiv skrift, overskrifter eller lister).',
+        'Kort innledende tekst som vises under tittelen. Kun ren tekst, uten lenker eller formatering.',
       type: 'array',
       of: [ingressBlock],
       validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'kategori',
-      title: 'Kategori',
-      description: 'Hvilken tematisk mappe siden hører til.',
-      type: 'string',
-      options: {
-        list: [...kategoriOptions],
-        layout: 'dropdown',
-      },
     }),
     defineField({
       name: 'heroEnabled',
@@ -173,27 +149,18 @@ export const navigationPageType = defineType({
       hidden: ({parent}) => !(parent as {heroEnabled?: boolean} | undefined)?.heroEnabled,
     }),
     defineField({
-      name: 'panels',
-      title: 'Informasjons-, varsel- og krisebokser',
-      description: 'Valgfritt. Vises over gruppene med navigasjonskort.',
-      type: 'array',
-      group: 'content',
-      of: [
-        defineArrayMember({type: 'informasjonPanel'}),
-        defineArrayMember({type: 'varselPanel'}),
-        defineArrayMember({type: 'krisePanel'}),
-      ],
-    }),
-    defineField({
       name: 'tiles',
-      title: 'Navigasjonskort og gruppeoverskrifter',
+      title: 'Hovedinnhold',
       description:
-        'Legg til gruppeoverskrifter for å dele inn navigasjonskortene i seksjoner, og legg til ett eller flere navigasjonskort. Dra elementer for å styre rekkefølgen.',
+        'Legg til navigasjonskort, gruppeoverskrifter, informasjon, varsel og krise. Dra elementene for å velge rekkefølgen. Bokser vises i full bredde mellom gruppene med kort.',
       type: 'array',
       group: 'content',
       of: [
         defineArrayMember({type: 'navigationGroupHeading'}),
         defineArrayMember({type: 'navigationTilePage'}),
+        defineArrayMember({type: 'informasjonPanel'}),
+        defineArrayMember({type: 'varselPanel'}),
+        defineArrayMember({type: 'krisePanel'}),
       ],
       components: {
         input: (inputProps: ArrayOfObjectsInputProps) =>
@@ -205,21 +172,15 @@ export const navigationPageType = defineType({
       validation: (rule) => rule.required().min(1),
     }),
     defineField({
-      name: 'listHeading',
-      title: 'Navigasjonstittel',
-      description:
-        'Brukes i stedet for tittelen når denne siden vises som et navigasjonskort på en annen side. La stå tomt for å bruke tittelen.',
+      name: 'kategori',
+      title: 'Kategori',
+      description: 'Hvilken tematisk mappe siden hører til.',
       type: 'string',
       group: 'navigationSeo',
-    }),
-    defineField({
-      name: 'listIngress',
-      title: 'Navigasjonsingress',
-      description:
-        'Brukes som en kort beskrivelse når denne siden vises som et navigasjonskort på en annen side. La stå tomt for ikke å vise noen ingress på kortet.',
-      type: 'text',
-      rows: 2,
-      group: 'navigationSeo',
+      options: {
+        list: [...kategoriOptions],
+        layout: 'dropdown',
+      },
     }),
     defineField({
       name: 'seoTitle',

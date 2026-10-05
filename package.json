@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "A Sanity Studio CMS prototype with AI/MCP setup notes.",
   "scripts": {
-    "dev": "sanity dev",
+    "dev": "sanity dev --host 127.0.0.1",
     "build": "sanity build",
     "deploy": "sanity deploy",
     "schema:deploy": "sanity schema deploy",

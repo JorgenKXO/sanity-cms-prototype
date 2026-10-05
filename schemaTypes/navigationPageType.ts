@@ -10,6 +10,7 @@ import type {ArrayOfObjectsInputProps} from 'sanity'
 
 import {kategoriOptions} from './kategoriOptions'
 import {NavigationTilesArrayFunctions} from '../components/NavigationTilesArrayFunctions'
+import {navigationTileFields} from './shared/navigationTileFields'
 
 // Delt med informasjon/rettskilder-boksene: enkel lenke-annotasjon uten fri formatering.
 const linkAnnotation = {
@@ -71,30 +72,7 @@ export const navigationTilePageType = defineType({
   title: 'Navigasjonskort',
   type: 'object',
   icon: DocumentIcon,
-  fields: [
-    defineField({
-      name: 'page',
-      title: 'Side',
-      type: 'reference',
-      to: [{type: 'article'}, {type: 'navigationPage'}],
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
-      name: 'titleOverride',
-      title: 'Overstyr navigasjonstittel',
-      description:
-        'Valgfritt. Vises i stedet for den lenkede sidens navigasjonstittel, kun i denne kortlisten. La stå tomt for å bruke den lenkede sidens navigasjonstittel (eller tittelen, hvis den ikke har noen).',
-      type: 'string',
-    }),
-    defineField({
-      name: 'ingressOverride',
-      title: 'Overstyr navigasjonsingress',
-      description:
-        'Valgfritt. Vises i stedet for den lenkede sidens navigasjonsingress, kun i denne kortlisten. La stå tomt for å bruke den lenkede sidens navigasjonsingress (eller ingen ingress i det hele tatt, hvis den ikke har noen).',
-      type: 'text',
-      rows: 2,
-    }),
-  ],
+  fields: navigationTileFields,
   preview: {
     select: {title: 'titleOverride', pageTitle: 'page.title', pageType: 'page._type'},
     prepare({title, pageTitle, pageType}) {

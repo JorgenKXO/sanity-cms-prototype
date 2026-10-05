@@ -1,24 +1,15 @@
 import {PortableText, type PortableTextBlock, type PortableTextComponents} from '@portabletext/react'
 import '@skatteetaten/ds-core-designtokens/index.css'
 import {Link} from '@skatteetaten/ds-buttons'
-import {Panel, type PanelColor, type PanelVariant} from '@skatteetaten/ds-content'
-import {
-  BellIcon,
-  CalendarIcon,
-  ClockIcon,
-  CompletedIcon,
-  HelpOutlineIcon,
-  type IconPropsWithoutSvgPath,
-  type IconProps,
-  InfoIcon,
-  LockIcon,
-} from '@skatteetaten/ds-icons'
+import {Panel} from '@skatteetaten/ds-content'
 import {Breadcrumbs} from '@skatteetaten/ds-navigation'
 import {Heading, List, Paragraph} from '@skatteetaten/ds-typography'
 import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
-import type {CSSProperties, JSX, ReactElement} from 'react'
+import type {CSSProperties, JSX} from 'react'
 import {useClient} from 'sanity'
 import {fixedPanelAppearance} from './fixedPanelAppearance'
+import {InformasjonPanel} from './InformasjonPanel'
+import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
 
 type Breadcrumb = {
@@ -67,41 +58,10 @@ type ArticleDocument = {
   updatedAt?: string
 }
 
-// Fargevalget redaktørene har i "Informasjon"-boksen, oversatt til Panel sine color/variant-props.
-const informasjonColorMap: Record<string, {color: PanelColor; variant: PanelVariant}> = {
-  denim: {color: 'denim', variant: 'filled'},
-  forest: {color: 'forest', variant: 'filled'},
-  'denim-outline': {color: 'denim', variant: 'outline'},
-  'forest-outline': {color: 'forest', variant: 'outline'},
-  white: {color: 'graphite', variant: 'outline'},
-}
-
-// Ikonvalget redaktørene har i "Informasjon"-boksen.
-const informasjonIconMap: Record<string, (props: IconPropsWithoutSvgPath) => JSX.Element> = {
-  info: InfoIcon,
-  help: HelpOutlineIcon,
-  completed: CompletedIcon,
-  calendar: CalendarIcon,
-  clock: ClockIcon,
-  bell: BellIcon,
-  lock: LockIcon,
-}
-
 const panelTitle: Record<PanelBlock['_type'], string> = {
   informasjon: 'Informasjon',
   varsel: 'Varsel',
   krise: 'Krise',
-}
-
-// Panel-komponenten plasserer ikonet øverst i sin egen grid-celle uten å sentrere
-// det mot overskriften. Denne innrykk-verdien dytter ikonet ned slik at det visuelt
-// aligner med overskriftsteksten, slik det gjør i designsystemets eget eksempel.
-const iconAlignmentOffset = '0.3rem'
-
-function withAlignmentOffset(icon: ReactElement): ReactElement<IconProps> {
-  return (
-    <span style={{display: 'inline-block', marginTop: iconAlignmentOffset}}>{icon}</span>
-  ) as unknown as ReactElement<IconProps>
 }
 
 type ArticlePreviewProps = {
@@ -227,15 +187,20 @@ export function ArticlePreview(props: ArticlePreviewProps) {
       )
     }
 
-    // "informasjon", "varsel" eller "krise"
-    const appearance =
-      block._type === 'informasjon'
-        ? informasjonColorMap[block.color || 'denim'] || informasjonColorMap.denim
-        : fixedPanelAppearance[block._type]
-    const Icon =
-      block._type === 'informasjon'
-        ? (block.icon && informasjonIconMap[block.icon]) || undefined
-        : fixedPanelAppearance[block._type].icon
+    if (block._type === 'informasjon') {
+      return (
+        <InformasjonPanel
+          heading={block.heading}
+          color={block.color}
+          icon={block.icon}
+          body={block.text}
+        />
+      )
+    }
+
+    // "varsel" eller "krise"
+    const appearance = fixedPanelAppearance[block._type]
+    const Icon = appearance.icon
 
     return (
       <Panel

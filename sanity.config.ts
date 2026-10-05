@@ -43,7 +43,25 @@ export default defineConfig({
         parameters: [{name: 'kategori', type: 'string'}],
         value: (params: {kategori?: string}) => ({kategori: params.kategori}),
       },
+      {
+        id: 'forside-ny',
+        title: 'Forside',
+        schemaType: 'forside',
+        value: () => ({}),
+      },
     ],
+  },
+  document: {
+    newDocumentOptions: (prev, {creationContext}) => {
+      if (creationContext.type === 'structure' && creationContext.schemaType === 'forside') {
+        return prev.filter((option) => option.templateId === 'forside-ny')
+      }
+
+      return prev.filter(
+        (option) =>
+          option.templateId !== 'forside' && !option.templateId.startsWith('forside-'),
+      )
+    },
   },
   i18n: {
     locales: [{id: 'nb-NO', title: 'Norsk bokmål'}],

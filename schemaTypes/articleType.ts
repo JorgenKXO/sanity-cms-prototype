@@ -40,7 +40,7 @@ const linkAnnotation = {
 }
 
 // Fri tekst til den vanlige "Tekst"-blokken: overskrifter, lister og lenker.
-const articleTextBlock = defineArrayMember({
+export const articleTextBlock = defineArrayMember({
   type: 'block',
   styles: [
     {title: 'Normal', value: 'normal'},

@@ -6,7 +6,11 @@ import {
 } from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
-import {HomepageIconInput, homepageIconOptions} from '../../components/HomepageIconInput'
+import {
+  HomepageIconInput,
+  homepageIconOptions,
+  normalizeHomepageIconValue,
+} from '../../components/HomepageIconInput'
 import {articleTextBlock} from '../articleType'
 import {navigationTileFields} from '../shared/navigationTileFields'
 
@@ -51,7 +55,8 @@ export const forsideNavigasjonskortType = defineType({
   preview: {
     select: {title: 'titleOverride', pageTitle: 'page.title', icon: 'icon'},
     prepare({title, pageTitle, icon}) {
-      const iconTitle = homepageIconOptions.find((option) => option.value === icon)?.title
+      const selectedValue = normalizeHomepageIconValue(icon)
+      const iconTitle = homepageIconOptions.find((option) => option.value === selectedValue)?.title
       return {
         title: title || pageTitle || 'Navigasjonskort',
         subtitle: iconTitle ? `Navigasjonskort · ${iconTitle}` : 'Navigasjonskort',
@@ -177,10 +182,9 @@ export const forsideType = defineType({
     defineField({
       name: 'slug',
       title: 'Nettadresse',
-      description: 'Fast nettadresse for denne forsiden.',
+      description: 'Lag en nettadresse fra hovedtittelen, eller skriv den inn selv.',
       type: 'slug',
       options: {source: 'title'},
-      readOnly: true,
       validation: (rule) => rule.required(),
     }),
     defineField({

@@ -9,7 +9,10 @@ import type {CSSProperties} from 'react'
 import {useEffect, useState} from 'react'
 import {useClient} from 'sanity'
 
-import {homepageIconOptions} from '../components/HomepageIconInput'
+import {
+  homepageIconOptions,
+  normalizeHomepageIconValue,
+} from '../components/HomepageIconInput'
 import {InformasjonPanel} from './InformasjonPanel'
 
 type ForsideOverskrift = {
@@ -268,6 +271,7 @@ export function ForsidePreview({document}: ForsidePreviewProps) {
       const title = block.titleOverride || referenced?.listHeading || referenced?.title || 'Navigasjonskort'
       const description = block.ingressOverride || referenced?.listIngress
       const slug = referenced?.slug?.current
+      const iconValue = normalizeHomepageIconValue(block.icon)
 
       cards.push(
         <NavigationTile
@@ -277,7 +281,7 @@ export function ForsidePreview({document}: ForsidePreviewProps) {
           titleAs="h3"
           description={description}
           size="extraLarge"
-          svgPath={block.icon ? iconPaths[block.icon] : undefined}
+          svgPath={iconValue ? iconPaths[iconValue] : undefined}
         />,
       )
       return

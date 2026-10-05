@@ -44,24 +44,24 @@ export default defineConfig({
         value: (params: {kategori?: string}) => ({kategori: params.kategori}),
       },
       {
-        id: 'forside-person',
-        title: 'Forside – Person',
+        id: 'forside-ny',
+        title: 'Forside',
         schemaType: 'forside',
-        value: () => ({
-          title: 'Person',
-          slug: {_type: 'slug', current: 'person'},
-        }),
-      },
-      {
-        id: 'forside-bedrift',
-        title: 'Forside – Bedrift og organisasjon',
-        schemaType: 'forside',
-        value: () => ({
-          title: 'Bedrift og organisasjon',
-          slug: {_type: 'slug', current: 'bedrift-og-organisasjon'},
-        }),
+        value: () => ({}),
       },
     ],
+  },
+  document: {
+    newDocumentOptions: (prev, {creationContext}) => {
+      if (creationContext.type === 'structure' && creationContext.schemaType === 'forside') {
+        return prev.filter((option) => option.templateId === 'forside-ny')
+      }
+
+      return prev.filter(
+        (option) =>
+          option.templateId !== 'forside' && !option.templateId.startsWith('forside-'),
+      )
+    },
   },
   i18n: {
     locales: [{id: 'nb-NO', title: 'Norsk bokmål'}],

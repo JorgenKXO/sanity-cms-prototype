@@ -72,24 +72,16 @@ const globalerFolder = (S: Parameters<StructureResolver>[0]) =>
         .id('globaler-list')
         .items([
           S.listItem()
-            .title('Person')
-            .id('globaler-person')
+            .title('Forsider')
+            .id('globaler-forsider')
+            .icon(FolderIcon)
             .child(
-              S.document()
-                .schemaType('forside')
-                .documentId('forside-person')
-                .title('Person')
-                .initialValueTemplate('forside-person'),
-            ),
-          S.listItem()
-            .title('Bedrift og organisasjon')
-            .id('globaler-bedrift')
-            .child(
-              S.document()
-                .schemaType('forside')
-                .documentId('forside-bedrift')
-                .title('Bedrift og organisasjon')
-                .initialValueTemplate('forside-bedrift'),
+              S.documentTypeList('forside')
+                .title('Forsider')
+                .id('globaler-forsider-list')
+                .apiVersion('2026-09-10')
+                .filter('_type == "forside"')
+                .initialValueTemplates([S.initialValueTemplateItem('forside-ny')]),
             ),
         ]),
     )

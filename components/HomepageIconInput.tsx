@@ -3,16 +3,26 @@ import {
   BriefcaseSVGpath,
   CalculatorIcon,
   CalculatorSVGpath,
+  CalendarClockIcon,
+  CalendarClockSVGpath,
   CompanyIcon,
   CompanySVGpath,
   EarthIcon,
   EarthSVGpath,
+  EditIcon,
+  EditSVGpath,
   FolkeregisterIcon,
   FolkeregisterSVGpath,
   KronerIcon,
   KronerSVGpath,
+  MvaRegistreringerIcon,
+  MvaRegistreringerSVGpath,
+  NaeringsinntektIcon,
+  NaeringsinntektSVGpath,
   PercentIcon,
   PercentSVGpath,
+  PercentCompanyIcon,
+  PercentCompanySVGpath,
   PersonIcon,
   PersonSVGpath,
   type IconPropsWithoutSvgPath,
@@ -21,25 +31,64 @@ import {useId, type ComponentType, type ReactElement} from 'react'
 import {set, type StringInputProps} from 'sanity'
 
 export const homepageIconOptions = [
-  {title: 'Skatt', value: 'tax', Icon: CalculatorIcon, svgPath: CalculatorSVGpath},
-  {title: 'Avgifter', value: 'duties', Icon: PercentIcon, svgPath: PercentSVGpath},
+  {title: 'Kalkulator', value: 'kalkulator', Icon: CalculatorIcon, svgPath: CalculatorSVGpath},
+  {title: 'Prosent', value: 'prosent', Icon: PercentIcon, svgPath: PercentSVGpath},
+  {
+    title: 'Prosent selskap',
+    value: 'prosent-selskap',
+    Icon: PercentCompanyIcon,
+    svgPath: PercentCompanySVGpath,
+  },
   {
     title: 'Folkeregister',
-    value: 'population-register',
+    value: 'folkeregister',
     Icon: FolkeregisterIcon,
     svgPath: FolkeregisterSVGpath,
   },
-  {title: 'Utland', value: 'foreign', Icon: EarthIcon, svgPath: EarthSVGpath},
-  {title: 'Betaling', value: 'payment', Icon: KronerIcon, svgPath: KronerSVGpath},
-  {title: 'Bedrift', value: 'company', Icon: CompanyIcon, svgPath: CompanySVGpath},
-  {title: 'Arbeid', value: 'work', Icon: BriefcaseIcon, svgPath: BriefcaseSVGpath},
+  {title: 'Jordklode', value: 'jordklode', Icon: EarthIcon, svgPath: EarthSVGpath},
+  {title: 'Kroner', value: 'kroner', Icon: KronerIcon, svgPath: KronerSVGpath},
+  {
+    title: 'Næringsinntekt',
+    value: 'naeringsinntekt',
+    Icon: NaeringsinntektIcon,
+    svgPath: NaeringsinntektSVGpath,
+  },
+  {title: 'Selskap', value: 'selskap', Icon: CompanyIcon, svgPath: CompanySVGpath},
+  {title: 'Stresskoffert', value: 'stresskoffert', Icon: BriefcaseIcon, svgPath: BriefcaseSVGpath},
   {title: 'Person', value: 'person', Icon: PersonIcon, svgPath: PersonSVGpath},
+  {title: 'Rediger', value: 'rediger', Icon: EditIcon, svgPath: EditSVGpath},
+  {
+    title: 'Kalenderklokke',
+    value: 'kalenderklokke',
+    Icon: CalendarClockIcon,
+    svgPath: CalendarClockSVGpath,
+  },
+  {
+    title: 'MVA-registreringer',
+    value: 'mva-registreringer',
+    Icon: MvaRegistreringerIcon,
+    svgPath: MvaRegistreringerSVGpath,
+  },
 ] satisfies {
   title: string
   value: string
   Icon: ComponentType<IconPropsWithoutSvgPath>
   svgPath: ReactElement
 }[]
+
+const legacyIconValues: Record<string, string> = {
+  tax: 'kalkulator',
+  duties: 'prosent',
+  'population-register': 'folkeregister',
+  foreign: 'jordklode',
+  payment: 'kroner',
+  company: 'selskap',
+  work: 'stresskoffert',
+}
+
+export function normalizeHomepageIconValue(value: string | undefined) {
+  return value ? legacyIconValues[value] ?? value : value
+}
 
 const inputStyles = {
   options: {
@@ -69,6 +118,7 @@ const inputStyles = {
 
 export function HomepageIconInput({value, onChange, readOnly}: StringInputProps) {
   const groupId = useId()
+  const selectedValue = normalizeHomepageIconValue(value)
 
   return (
     <fieldset disabled={readOnly} style={{border: 0, margin: 0, padding: 0}}>
@@ -87,7 +137,7 @@ export function HomepageIconInput({value, onChange, readOnly}: StringInputProps)
               type="radio"
               name={groupId}
               value={optionValue}
-              checked={value === optionValue}
+              checked={selectedValue === optionValue}
               onChange={() => onChange(set(optionValue))}
             />
             <Icon size="large" />

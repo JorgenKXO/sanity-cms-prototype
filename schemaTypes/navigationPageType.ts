@@ -6,10 +6,8 @@ import {
   PresentationIcon,
 } from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
-import type {ArrayOfObjectsInputProps} from 'sanity'
-
 import {kategoriOptions} from './kategoriOptions'
-import {NavigationTilesArrayFunctions} from '../components/NavigationTilesArrayFunctions'
+import {NavigationContentInput} from '../components/NavigationContentInput'
 import {NavigationTileReferenceInput} from '../components/NavigationTileReferenceInput'
 import {navigationTileFields} from './shared/navigationTileFields'
 
@@ -36,7 +34,6 @@ export const navigationGroupHeadingType = defineType({
     defineField({
       name: 'title',
       title: 'Gruppeoverskrift',
-      description: 'Vises som overskrift over navigasjonskortene som følger under denne.',
       type: 'string',
       validation: (rule) => rule.required(),
     }),
@@ -71,6 +68,37 @@ export const navigationTilePageType = defineType({
   },
 })
 
+export const navigationGroupType = defineType({
+  name: 'navigationGroup',
+  title: 'Gruppe navigasjonskort',
+  type: 'object',
+  icon: MasterDetailIcon,
+  fields: [
+    defineField({
+      name: 'title',
+      title: 'Overskrift (valgfritt)',
+      type: 'string',
+    }),
+    defineField({
+      name: 'tiles',
+      title: 'Navigasjonskort',
+      type: 'array',
+      of: [defineArrayMember({type: 'navigationTilePage'})],
+      validation: (rule) => rule.required().min(1),
+    }),
+  ],
+  preview: {
+    select: {title: 'title', tiles: 'tiles'},
+    prepare({title, tiles}) {
+      const count = Array.isArray(tiles) ? tiles.length : 0
+      return {
+        title: title || 'Gruppe navigasjonskort',
+        subtitle: `${count} navigasjonskort`,
+      }
+    },
+  },
+})
+
 export const navigationPageType = defineType({
   name: 'navigationPage',
   title: 'Navigasjonsside',
@@ -98,8 +126,6 @@ export const navigationPageType = defineType({
     defineField({
       name: 'ingress',
       title: 'Ingress',
-      description:
-        'Kort innledende tekst som vises under tittelen. Kun ren tekst, uten lenker eller formatering.',
       type: 'array',
       of: [ingressBlock],
       validation: (rule) => rule.required(),
@@ -107,8 +133,7 @@ export const navigationPageType = defineType({
     defineField({
       name: 'heroEnabled',
       title: 'Fremhevet intro',
-      description:
-        'Gir mulighet for bakgrunnsfarge og bruk av bilde. Brukes for alle sider som er tydelige landingssider eller startpunkt for et tema',
+      description: 'Intro med bakgrunnsfarge og valgfritt bilde.',
       type: 'boolean',
       group: 'hero',
       initialValue: false,
@@ -141,8 +166,7 @@ export const navigationPageType = defineType({
     defineField({
       name: 'heroImage',
       title: 'Bilde/illustrasjon',
-      description:
-        'Vises til høyre for tittel og ingress i den fremhevede introen. Bildet blir vist som dekorativt (med tom alt-tekst) for skjermlesere.',
+      description: 'Dekorativt bilde, skjult for skjermlesere.',
       type: 'image',
       group: 'hero',
       options: {hotspot: true},
@@ -151,30 +175,30 @@ export const navigationPageType = defineType({
     defineField({
       name: 'tiles',
       title: 'Hovedinnhold',
-      description:
-        'Legg til navigasjonskort, gruppeoverskrifter, informasjon, varsel og krise. Dra elementene for å velge rekkefølgen. Bokser vises i full bredde mellom gruppene med kort.',
       type: 'array',
       group: 'content',
       of: [
-        defineArrayMember({type: 'navigationGroupHeading'}),
-        defineArrayMember({type: 'navigationTilePage'}),
+        defineArrayMember({type: 'navigationGroup'}),
+        defineArrayMember({
+          type: 'navigationGroupHeading',
+          deprecated: {reason: 'Bruk Gruppe navigasjonskort.'},
+        }),
+        defineArrayMember({
+          type: 'navigationTilePage',
+          deprecated: {reason: 'Legg kortet i en Gruppe navigasjonskort.'},
+        }),
         defineArrayMember({type: 'informasjonPanel'}),
         defineArrayMember({type: 'varselPanel'}),
         defineArrayMember({type: 'krisePanel'}),
       ],
       components: {
-        input: (inputProps: ArrayOfObjectsInputProps) =>
-          inputProps.renderDefault({
-            ...inputProps,
-            arrayFunctions: NavigationTilesArrayFunctions,
-          }),
+        input: NavigationContentInput,
       },
       validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: 'kategori',
       title: 'Kategori',
-      description: 'Hvilken tematisk mappe siden hører til.',
       type: 'string',
       group: 'navigationSeo',
       options: {

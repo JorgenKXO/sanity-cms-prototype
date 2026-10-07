@@ -106,7 +106,7 @@ export const informasjonPanelType = defineType({
       name: 'icon',
       title: 'Ikon',
       type: 'string',
-      description: 'Valgfritt. Velg et ikon fra Skatteetatens designsystem som skal vises ved siden av overskriften.',
+      description: 'Valgfritt.',
       options: {
         list: [
           {title: 'Informasjon', value: 'info'},

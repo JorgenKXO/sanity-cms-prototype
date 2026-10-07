@@ -68,19 +68,25 @@ The preview's typography and link styling (font stack, colors, weights, sizes) a
 ## Navigation card reference picker
 
 Navigation cards use Sanity's standard reference picker. Search results for pages
-used by another card on the same navigation page display an **Allerede lagt til**
+used by another card in any group on the same navigation page display an **Allerede lagt til**
 badge. The badge is informational: the result remains selectable. The current
 card is excluded from the check, and homepage reference pickers are unchanged.
 
 ## Navigation page content
 
-The **Hovedinnhold** list supports navigation cards, group headings, information,
-warning, and crisis panels in editor-defined order. Panels use the existing
-design-system components at full width and separate consecutive card grids,
-with `--spacing-l` above each panel.
+Add **Gruppe navigasjonskort** to **Hovedinnhold**, optionally enter an
+**Overskrift**, and add **Navigasjonskort** one at a time inside the group.
+Each group requires at least one card. Groups and information, warning, and
+crisis panels can be reordered in the top-level list. Panels use the existing
+design-system components at full width, with `--spacing-l` above each panel.
+Groups with headings render card titles as h3; groups without headings use h2.
+
+Existing top-level cards and group headings remain editable and render as before,
+but are no longer offered in the add menus. Existing content is not automatically
+migrated or changed in the dataset.
 
 The old separate `panels` field is no longer editable or rendered. New panels
-belong in `tiles`, alongside cards and headings. Existing test panels are discarded
+belong in `tiles`, alongside navigation groups. Existing test panels are discarded
 rather than moved into the combined list.
 
 ## Quick visual check without Node.js/Sanity

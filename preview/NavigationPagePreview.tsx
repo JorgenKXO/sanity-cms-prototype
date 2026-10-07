@@ -12,6 +12,7 @@ import {fixedPanelAppearance} from './fixedPanelAppearance'
 import {InformasjonPanel} from './InformasjonPanel'
 import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
+import {navigationTileReferences} from '../schemaTypes/shared/navigationTileReferences'
 
 type RettskilderPanelBlock = {
   _key?: string
@@ -52,7 +53,14 @@ type NavigationTilePageTile = {
   ingressOverride?: string
 }
 
-type TileEntry = NavigationGroupHeadingTile | NavigationTilePageTile | PanelEntry
+type NavigationGroup = {
+  _key?: string
+  _type: 'navigationGroup'
+  title?: string
+  tiles?: NavigationTilePageTile[]
+}
+
+type TileEntry = NavigationGroup | NavigationGroupHeadingTile | NavigationTilePageTile | PanelEntry
 
 type NavigationPageDocument = {
   title?: string
@@ -168,10 +176,7 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
   const builder = imageUrlBuilder(client)
   const [referencedPages, setReferencedPages] = useState<Record<string, ReferencedPage>>({})
 
-  const tileRefs = (page?.tiles || [])
-    .filter((tile): tile is NavigationTilePageTile => tile._type === 'navigationTilePage')
-    .map((tile) => tile.page?._ref)
-    .filter((ref): ref is string => Boolean(ref))
+  const tileRefs = [...new Set(navigationTileReferences(page?.tiles))]
 
   useEffect(() => {
     if (tileRefs.length === 0) {
@@ -262,6 +267,20 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
     let currentGroup: JSX.Element[] = []
     let groupKey = 'default'
 
+    function renderCard(tile: NavigationTilePageTile, index: number, hasHeading = true) {
+      const referenced = tile.page?._ref ? referencedPages[tile.page._ref] : undefined
+      return (
+        <NavigationTile
+          key={tile._key || index}
+          href={referenced?.slug?.current ? `/${referenced.slug.current}` : '#'}
+          title={tile.titleOverride || referenced?.title || 'Navigasjonskort'}
+          titleAs={hasHeading ? 'h3' : 'h2'}
+          description={tile.ingressOverride || undefined}
+          size="medium"
+        />
+      )
+    }
+
     function flushGroup() {
       if (currentGroup.length > 0) {
         elements.push(
@@ -274,6 +293,24 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
     }
 
     tiles.forEach((tile, index) => {
+      if (tile._type === 'navigationGroup') {
+        flushGroup()
+        elements.push(
+          <div key={`group-${tile._key || index}`}>
+            {tile.title ? (
+              <div style={styles.groupHeading}>
+                <Heading as="h2" level={2}>{tile.title}</Heading>
+              </div>
+            ) : null}
+            <div style={styles.tileGrid}>
+              {tile.tiles?.map((card, cardIndex) => renderCard(card, cardIndex, Boolean(tile.title)))}
+            </div>
+          </div>,
+        )
+        groupKey = `after-${tile._key || index}`
+        return
+      }
+
       if (tile._type === 'navigationGroupHeading') {
         flushGroup()
         groupKey = tile._key || `heading-${index}`
@@ -298,21 +335,7 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
         return
       }
 
-      const referenced = tile.page?._ref ? referencedPages[tile.page._ref] : undefined
-      const title = tile.titleOverride || referenced?.title || 'Navigasjonskort'
-      const ingress = tile.ingressOverride || undefined
-      const href = referenced?.slug?.current ? `/${referenced.slug.current}` : '#'
-
-      currentGroup.push(
-        <NavigationTile
-          key={tile._key || index}
-          href={href}
-          title={title}
-          titleAs="h3"
-          description={ingress}
-          size="medium"
-        />,
-      )
+      currentGroup.push(renderCard(tile, index))
     })
 
     flushGroup()

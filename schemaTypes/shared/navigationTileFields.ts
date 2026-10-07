@@ -11,15 +11,13 @@ export const navigationTileFields = [
   defineField({
     name: 'titleOverride',
     title: 'Overstyr tittel på kortet',
-    description:
-      'Valgfritt. Vises i stedet for tittelen på den lenkede siden, kun på dette kortet. Navigasjonstittel på artikkel- og navigasjonssider fjernes. La stå tomt for å bruke sidens tittel.',
+    description: 'Tomt felt bruker sidens tittel.',
     type: 'string',
   }),
   defineField({
     name: 'ingressOverride',
     title: 'Ingress på kortet',
-    description:
-      'Valgfritt. Kort tekst som vises på dette kortet. Navigasjonsingress på artikkel- og navigasjonssider fjernes. La stå tomt for å vise kortet uten ingress.',
+    description: 'Valgfritt. Vises kun på dette kortet.',
     type: 'text',
     rows: 2,
   }),

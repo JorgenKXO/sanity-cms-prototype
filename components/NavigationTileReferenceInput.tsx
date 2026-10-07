@@ -3,6 +3,7 @@ import type {ReferenceSchemaType, ReferenceValue} from '@sanity/types'
 import {useCallback, useMemo} from 'react'
 import type {ObjectInputProps} from 'sanity'
 import {useFormValue} from 'sanity'
+import {navigationTileReferences} from '../schemaTypes/shared/navigationTileReferences'
 
 type Props = ObjectInputProps<ReferenceValue, ReferenceSchemaType>
 
@@ -17,23 +18,14 @@ function normalizeId(id: string) {
 export function NavigationTileReferenceInput(props: Props) {
   const tiles = useFormValue(['tiles'])
   const itemSegment = props.path[props.path.length - 2]
-  const itemKey = isRecord(itemSegment) ? itemSegment._key : undefined
+  const itemKey =
+    isRecord(itemSegment) && typeof itemSegment._key === 'string' ? itemSegment._key : undefined
   const {renderPreview} = props
 
   const existingPageIds = useMemo(() => {
     const ids = new Set<string>()
-    if (!Array.isArray(tiles)) return ids
-
-    for (const tile of tiles) {
-      if (
-        isRecord(tile) &&
-        tile._type === 'navigationTilePage' &&
-        tile._key !== itemKey &&
-        isRecord(tile.page) &&
-        typeof tile.page._ref === 'string'
-      ) {
-        ids.add(normalizeId(tile.page._ref))
-      }
+    for (const ref of navigationTileReferences(tiles, itemKey)) {
+      ids.add(normalizeId(ref))
     }
     return ids
   }, [itemKey, tiles])

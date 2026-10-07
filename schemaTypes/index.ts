@@ -1,6 +1,7 @@
 import {articleType} from './articleType'
 import {
   navigationGroupHeadingType,
+  navigationGroupType,
   navigationPageType,
   navigationTilePageType,
 } from './navigationPageType'
@@ -18,6 +19,7 @@ export const schemaTypes = [
   articleType,
   navigationPageType,
   navigationGroupHeadingType,
+  navigationGroupType,
   navigationTilePageType,
   rettskilderPanelType,
   informasjonPanelType,

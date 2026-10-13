@@ -65,6 +65,15 @@ The article preview intentionally omits the header, footer, feedback widget, and
 
 The preview's typography and link styling (font stack, colors, weights, sizes) are sampled from skatteetaten.no's live article template, for internal Skatteetaten prototyping. The header, footer, feedback widget, and top-of-page button are still intentionally left out. Article body text is placeholder content — replace it with real content as needed.
 
+## Sections in articles
+
+Add **Seksjon** to **Innhold** to group content under an optional heading and
+optional icon. A section accepts the same blocks as the article itself (text,
+image, information, warning, crisis and legal-source panels), but not other
+sections. If an article contains any section, all top-level content must be
+sections; validation blocks publishing otherwise. The preview draws a green line
+above each section.
+
 ## Navigation card reference picker
 
 Navigation cards use Sanity's standard reference picker. Search results for pages

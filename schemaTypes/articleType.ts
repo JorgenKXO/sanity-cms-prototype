@@ -5,6 +5,7 @@ import {
   ImageIcon,
   InfoOutlineIcon,
   TextIcon,
+  ThLargeIcon,
   WarningOutlineIcon,
 } from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
@@ -90,6 +91,214 @@ const blockNameField = defineField({
   type: 'string',
 })
 
+const iconOptions = [
+  {title: 'Informasjon', value: 'info'},
+  {title: 'Hjelp', value: 'help'},
+  {title: 'Fullført', value: 'completed'},
+  {title: 'Frist/dato', value: 'calendar'},
+  {title: 'Tid', value: 'clock'},
+  {title: 'Varsel', value: 'bell'},
+  {title: 'Personvern/sikkerhet', value: 'lock'},
+] as const
+
+// Innholdsblokkene som kan brukes direkte på artikkelen og inne i en seksjon.
+// Funksjon slik at hver array får sine egne definisjoner.
+const contentMembers = () => [
+  defineArrayMember({
+    name: 'tekst',
+    title: 'Tekst',
+    type: 'object',
+    icon: TextIcon,
+    fields: [
+      blockNameField,
+      defineField({
+        name: 'text',
+        title: 'Tekst',
+        description: 'Rik tekst med overskrifter, lister og lenker.',
+        type: 'array',
+        of: [articleTextBlock],
+        validation: (rule) => rule.required(),
+      }),
+    ],
+    preview: {
+      select: {blockName: 'blockName', blocks: 'text'},
+      prepare({blockName, blocks}) {
+        return {
+          title: blockName || blockText(blocks) || 'Tekst',
+          subtitle: 'Tekst',
+        }
+      },
+    },
+  }),
+  defineArrayMember({
+    name: 'bilde',
+    title: 'Bilde',
+    type: 'object',
+    icon: ImageIcon,
+    fields: [
+      blockNameField,
+      defineField({
+        name: 'image',
+        title: 'Bilde',
+        type: 'image',
+        options: {hotspot: true},
+        validation: (rule) => rule.required(),
+      }),
+      defineField({
+        name: 'isDecorative',
+        title: 'Dekorativt bilde',
+        type: 'boolean',
+        description:
+          'Slå på hvis bildet er rent dekorativt og ikke formidler informasjon som er viktig for innholdet. Skjermlesere hopper da over bildet, og alternativ tekst er ikke nødvendig.',
+        initialValue: false,
+      }),
+      defineField({
+        name: 'alt',
+        title: 'Alternativ tekst',
+        description: 'Beskriv hva bildet viser, slik at skjermlesere kan formidle innholdet til brukeren.',
+        type: 'string',
+        hidden: ({parent}) => Boolean(parent?.isDecorative),
+        validation: (rule) =>
+          rule.custom((value, context) => {
+            const parent = context.parent as {isDecorative?: boolean} | undefined
+            if (parent?.isDecorative) {
+              return true
+            }
+            return value ? true : 'Legg til alternativ tekst, eller merk bildet som dekorativt.'
+          }),
+      }),
+    ],
+    preview: {
+      select: {media: 'image', alt: 'alt', isDecorative: 'isDecorative', blockName: 'blockName'},
+      prepare({media, alt, isDecorative, blockName}) {
+        return {
+          title: blockName || (isDecorative ? 'Bilde (dekorativt)' : alt || 'Bilde'),
+          media,
+        }
+      },
+    },
+  }),
+  defineArrayMember({
+    name: 'informasjon',
+    title: 'Informasjon',
+    type: 'object',
+    icon: InfoOutlineIcon,
+    fields: [
+      blockNameField,
+      defineField({
+        name: 'heading',
+        title: 'Overskrift',
+        type: 'string',
+      }),
+      defineField({
+        name: 'color',
+        title: 'Bakgrunnsfarge',
+        type: 'string',
+        options: {
+          list: [
+            {title: 'Blå bakgrunn', value: 'denim'},
+            {title: 'Grønn bakgrunn', value: 'forest'},
+            {title: 'Hvit bakgrunn med blå ramme', value: 'denim-outline'},
+            {title: 'Hvit bakgrunn med grønn ramme', value: 'forest-outline'},
+            {title: 'Hvit bakgrunn', value: 'white'},
+          ],
+          layout: 'dropdown',
+        },
+        initialValue: 'denim',
+        validation: (rule) => rule.required(),
+      }),
+      defineField({
+        name: 'icon',
+        title: 'Ikon',
+        type: 'string',
+        description:
+          'Valgfritt. Velg et ikon fra Skatteetatens designsystem som skal vises ved siden av overskriften.',
+        options: {list: [...iconOptions], layout: 'dropdown'},
+      }),
+      defineField({
+        name: 'text',
+        title: 'Innhold',
+        description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
+        type: 'array',
+        of: [panelTextBlock],
+        validation: (rule) => rule.required(),
+      }),
+    ],
+    preview: {
+      select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
+      prepare({blockName, title, blocks}) {
+        return {
+          title: blockName || title || 'Informasjon',
+          subtitle: blockText(blocks),
+        }
+      },
+    },
+  }),
+  defineArrayMember({
+    name: 'varsel',
+    title: 'Varsel',
+    type: 'object',
+    icon: ErrorOutlineIcon,
+    fields: [
+      blockNameField,
+      defineField({
+        name: 'heading',
+        title: 'Overskrift',
+        type: 'string',
+      }),
+      defineField({
+        name: 'text',
+        title: 'Innhold',
+        description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
+        type: 'array',
+        of: [panelTextBlock],
+        validation: (rule) => rule.required(),
+      }),
+    ],
+    preview: {
+      select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
+      prepare({blockName, title, blocks}) {
+        return {
+          title: blockName || title || 'Varsel',
+          subtitle: blockText(blocks),
+        }
+      },
+    },
+  }),
+  defineArrayMember({
+    name: 'krise',
+    title: 'Krise',
+    type: 'object',
+    icon: WarningOutlineIcon,
+    fields: [
+      blockNameField,
+      defineField({
+        name: 'heading',
+        title: 'Overskrift',
+        type: 'string',
+      }),
+      defineField({
+        name: 'text',
+        title: 'Innhold',
+        description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
+        type: 'array',
+        of: [panelTextBlock],
+        validation: (rule) => rule.required(),
+      }),
+    ],
+    preview: {
+      select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
+      prepare({blockName, title, blocks}) {
+        return {
+          title: blockName || title || 'Krise',
+          subtitle: blockText(blocks),
+        }
+      },
+    },
+  }),
+  defineArrayMember({type: 'rettskilderPanel'}),
+]
+
 export const articleType = defineType({
   name: 'article',
   title: 'Artikkel',
@@ -172,211 +381,55 @@ export const articleType = defineType({
       group: 'content',
       of: [
         defineArrayMember({
-          name: 'tekst',
-          title: 'Tekst',
+          name: 'seksjon',
+          title: 'Seksjon',
           type: 'object',
-          icon: TextIcon,
-          fields: [
-            blockNameField,
-            defineField({
-              name: 'text',
-              title: 'Tekst',
-              description: 'Rik tekst med overskrifter, lister og lenker.',
-              type: 'array',
-              of: [articleTextBlock],
-              validation: (rule) => rule.required(),
-            }),
-          ],
-          preview: {
-            select: {blockName: 'blockName', blocks: 'text'},
-            prepare({blockName, blocks}) {
-              return {
-                title: blockName || blockText(blocks) || 'Tekst',
-                subtitle: 'Tekst',
-              }
-            },
-          },
-        }),
-        defineArrayMember({
-          name: 'bilde',
-          title: 'Bilde',
-          type: 'object',
-          icon: ImageIcon,
-          fields: [
-            blockNameField,
-            defineField({
-              name: 'image',
-              title: 'Bilde',
-              type: 'image',
-              options: {hotspot: true},
-              validation: (rule) => rule.required(),
-            }),
-            defineField({
-              name: 'isDecorative',
-              title: 'Dekorativt bilde',
-              type: 'boolean',
-              description:
-                'Slå på hvis bildet er rent dekorativt og ikke formidler informasjon som er viktig for innholdet. Skjermlesere hopper da over bildet, og alternativ tekst er ikke nødvendig.',
-              initialValue: false,
-            }),
-            defineField({
-              name: 'alt',
-              title: 'Alternativ tekst',
-              description: 'Beskriv hva bildet viser, slik at skjermlesere kan formidle innholdet til brukeren.',
-              type: 'string',
-              hidden: ({parent}) => Boolean(parent?.isDecorative),
-              validation: (rule) =>
-                rule.custom((value, context) => {
-                  const parent = context.parent as {isDecorative?: boolean} | undefined
-                  if (parent?.isDecorative) {
-                    return true
-                  }
-                  return value ? true : 'Legg til alternativ tekst, eller merk bildet som dekorativt.'
-                }),
-            }),
-          ],
-          preview: {
-            select: {media: 'image', alt: 'alt', isDecorative: 'isDecorative', blockName: 'blockName'},
-            prepare({media, alt, isDecorative, blockName}) {
-              return {
-                title: blockName || (isDecorative ? 'Bilde (dekorativt)' : alt || 'Bilde'),
-                media,
-              }
-            },
-          },
-        }),
-        defineArrayMember({
-          name: 'informasjon',
-          title: 'Informasjon',
-          type: 'object',
-          icon: InfoOutlineIcon,
+          icon: ThLargeIcon,
           fields: [
             blockNameField,
             defineField({
               name: 'heading',
-              title: 'Overskrift',
+              title: 'Overskrift (valgfritt)',
               type: 'string',
-            }),
-            defineField({
-              name: 'color',
-              title: 'Bakgrunnsfarge',
-              type: 'string',
-              options: {
-                list: [
-                  {title: 'Blå bakgrunn', value: 'denim'},
-                  {title: 'Grønn bakgrunn', value: 'forest'},
-                  {title: 'Hvit bakgrunn med blå ramme', value: 'denim-outline'},
-                  {title: 'Hvit bakgrunn med grønn ramme', value: 'forest-outline'},
-                  {title: 'Hvit bakgrunn', value: 'white'},
-                ],
-                layout: 'dropdown',
-              },
-              initialValue: 'denim',
-              validation: (rule) => rule.required(),
             }),
             defineField({
               name: 'icon',
-              title: 'Ikon',
+              title: 'Ikon (valgfritt)',
               type: 'string',
-              description:
-                'Valgfritt. Velg et ikon fra Skatteetatens designsystem som skal vises ved siden av overskriften.',
-              options: {
-                list: [
-                  {title: 'Informasjon', value: 'info'},
-                  {title: 'Hjelp', value: 'help'},
-                  {title: 'Fullført', value: 'completed'},
-                  {title: 'Frist/dato', value: 'calendar'},
-                  {title: 'Tid', value: 'clock'},
-                  {title: 'Varsel', value: 'bell'},
-                  {title: 'Personvern/sikkerhet', value: 'lock'},
-                ],
-                layout: 'dropdown',
-              },
+              description: 'Velg et ikon fra Skatteetatens designsystem som skal vises ved seksjonen.',
+              options: {list: [...iconOptions], layout: 'dropdown'},
             }),
             defineField({
-              name: 'text',
+              name: 'content',
               title: 'Innhold',
-              description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
+              description: 'Samme typer innhold som direkte på artikkelen, bortsett fra seksjoner.',
               type: 'array',
-              of: [panelTextBlock],
-              validation: (rule) => rule.required(),
+              of: contentMembers(),
+              validation: (rule) => rule.required().min(1),
             }),
           ],
           preview: {
-            select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
-            prepare({blockName, title, blocks}) {
+            select: {blockName: 'blockName', title: 'heading', content: 'content'},
+            prepare({blockName, title, content}) {
+              const count = Array.isArray(content) ? content.length : 0
               return {
-                title: blockName || title || 'Informasjon',
-                subtitle: blockText(blocks),
+                title: blockName || title || 'Seksjon',
+                subtitle: `Seksjon · ${count} ${count === 1 ? 'blokk' : 'blokker'}`,
               }
             },
           },
         }),
-        defineArrayMember({
-          name: 'varsel',
-          title: 'Varsel',
-          type: 'object',
-          icon: ErrorOutlineIcon,
-          fields: [
-            blockNameField,
-            defineField({
-              name: 'heading',
-              title: 'Overskrift',
-              type: 'string',
-            }),
-            defineField({
-              name: 'text',
-              title: 'Innhold',
-              description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
-              type: 'array',
-              of: [panelTextBlock],
-              validation: (rule) => rule.required(),
-            }),
-          ],
-          preview: {
-            select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
-            prepare({blockName, title, blocks}) {
-              return {
-                title: blockName || title || 'Varsel',
-                subtitle: blockText(blocks),
-              }
-            },
-          },
-        }),
-        defineArrayMember({
-          name: 'krise',
-          title: 'Krise',
-          type: 'object',
-          icon: WarningOutlineIcon,
-          fields: [
-            blockNameField,
-            defineField({
-              name: 'heading',
-              title: 'Overskrift',
-              type: 'string',
-            }),
-            defineField({
-              name: 'text',
-              title: 'Innhold',
-              description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
-              type: 'array',
-              of: [panelTextBlock],
-              validation: (rule) => rule.required(),
-            }),
-          ],
-          preview: {
-            select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
-            prepare({blockName, title, blocks}) {
-              return {
-                title: blockName || title || 'Krise',
-                subtitle: blockText(blocks),
-              }
-            },
-          },
-        }),
-        defineArrayMember({type: 'rettskilderPanel'}),
+        ...contentMembers(),
       ],
-      validation: (rule) => rule.required().min(1),
+      validation: (rule) =>
+        rule.required().min(1).custom((blocks) => {
+          const types = Array.isArray(blocks) ? blocks.map((block) => (block as {_type?: string})._type) : []
+          const hasSection = types.includes('seksjon')
+          const hasOther = types.some((type) => type !== 'seksjon')
+          return hasSection && hasOther
+            ? 'Når artikkelen inneholder seksjoner, må alt innhold ligge i seksjoner. Flytt eller fjern blokkene utenfor seksjonene.'
+            : true
+        }),
     }),
     defineField({
       name: 'updatedAt',

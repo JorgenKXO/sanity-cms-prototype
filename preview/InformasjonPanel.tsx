@@ -25,7 +25,7 @@ const colorMap: Record<string, {color: PanelColor; variant: PanelVariant}> = {
   white: {color: 'graphite', variant: 'outline'},
 }
 
-const iconMap: Record<string, (props: IconPropsWithoutSvgPath) => JSX.Element> = {
+export const iconMap: Record<string, (props: IconPropsWithoutSvgPath) => JSX.Element> = {
   info: InfoIcon,
   help: HelpOutlineIcon,
   completed: CompletedIcon,

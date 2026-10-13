@@ -8,7 +8,7 @@ import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
 import type {CSSProperties, JSX} from 'react'
 import {useClient} from 'sanity'
 import {fixedPanelAppearance} from './fixedPanelAppearance'
-import {InformasjonPanel} from './InformasjonPanel'
+import {InformasjonPanel, iconMap as sectionIconMap} from './InformasjonPanel'
 import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
 
@@ -48,7 +48,17 @@ type RettskilderPanelBlock = {
   body?: PortableTextBlock[]
 }
 
-type ArticleContentBlock = TekstBlock | BildeBlock | PanelBlock | RettskilderPanelBlock
+type InnholdBlock = TekstBlock | BildeBlock | PanelBlock | RettskilderPanelBlock
+
+type SeksjonBlock = {
+  _key?: string
+  _type: 'seksjon'
+  heading?: string
+  icon?: string
+  content?: InnholdBlock[]
+}
+
+type ArticleContentBlock = InnholdBlock | SeksjonBlock
 
 type ArticleDocument = {
   title?: string
@@ -94,6 +104,16 @@ const styles: Record<string, CSSProperties> = {
   },
   empty: {
     padding: 'var(--spacing-xl)',
+  },
+  section: {
+    borderTop: '2px solid var(--palette-forest-70)',
+    paddingTop: 'var(--spacing-m)',
+    marginTop: 'var(--spacing-xl)',
+  },
+  sectionHeading: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--spacing-xs)',
   },
   image: {
     display: 'block',
@@ -152,7 +172,7 @@ export function ArticlePreview(props: ArticlePreviewProps) {
 
   const breadcrumbs = article.breadcrumbs?.filter((item) => item.label) || []
 
-  function renderContentBlock(block: ArticleContentBlock) {
+  function renderContentBlock(block: InnholdBlock) {
     if (block._type === 'tekst') {
       return block.text ? <PortableText value={block.text} components={components} /> : null
     }
@@ -217,6 +237,30 @@ export function ArticlePreview(props: ArticlePreviewProps) {
     )
   }
 
+  function renderTopLevelBlock(block: ArticleContentBlock) {
+    if (block._type !== 'seksjon') {
+      return renderContentBlock(block)
+    }
+
+    const Icon = block.icon ? sectionIconMap[block.icon] : undefined
+
+    return (
+      <section style={styles.section} aria-label={block.heading || undefined}>
+        {block.heading ? (
+          <div style={styles.sectionHeading}>
+            {Icon ? <Icon /> : null}
+            <Heading as="h2" level={2}>{block.heading}</Heading>
+          </div>
+        ) : Icon ? (
+          <Icon />
+        ) : null}
+        {block.content?.map((child, index) => (
+          <div key={child._key || index}>{renderContentBlock(child)}</div>
+        ))}
+      </section>
+    )
+  }
+
   return (
     <main style={styles.shell}>
       <div style={styles.page}>
@@ -236,7 +280,7 @@ export function ArticlePreview(props: ArticlePreviewProps) {
           <Heading as="h1" level={1}>{article.title || 'Untitled article'}</Heading>
           {article.ingress ? <PortableText value={article.ingress} components={ingressComponents} /> : null}
           {article.content?.map((block, index) => (
-            <div key={block._key || index}>{renderContentBlock(block)}</div>
+            <div key={block._key || index}>{renderTopLevelBlock(block)}</div>
           ))}
         </article>
       </div>

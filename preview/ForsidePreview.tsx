@@ -15,12 +15,6 @@ import {
 } from '../components/HomepageIconInput'
 import {InformasjonPanel} from './InformasjonPanel'
 
-type ForsideOverskrift = {
-  _key?: string
-  _type: 'forsideOverskrift'
-  title?: string
-}
-
 type ForsideNavigasjonskort = {
   _key?: string
   _type: 'forsideNavigasjonskort'
@@ -28,6 +22,13 @@ type ForsideNavigasjonskort = {
   titleOverride?: string
   ingressOverride?: string
   icon?: string
+}
+
+type ForsideNavigasjonsgruppe = {
+  _key?: string
+  _type: 'forsideNavigasjonsgruppe'
+  title?: string
+  tiles?: ForsideNavigasjonskort[]
 }
 
 type InformasjonBlokk = {
@@ -51,11 +52,12 @@ type BildeOgTekstBlokk = {
   color?: string
 }
 
-type ForsideBlock = ForsideOverskrift | ForsideNavigasjonskort | InformasjonBlokk | BildeOgTekstBlokk
+type ForsideBlock = ForsideNavigasjonsgruppe | InformasjonBlokk | BildeOgTekstBlokk
 
 type ForsideDocument = {
   title?: string
   hideTitle?: boolean
+  screenReaderTitle?: string
   content?: ForsideBlock[]
 }
 
@@ -142,8 +144,8 @@ export function ForsidePreview({document}: ForsidePreviewProps) {
   const referenceIds = [
     ...new Set(
       (page?.content || [])
-        .filter((block): block is ForsideNavigasjonskort => block._type === 'forsideNavigasjonskort')
-        .map((block) => block.page?._ref)
+        .flatMap((block) => (block._type === 'forsideNavigasjonsgruppe' ? block.tiles || [] : []))
+        .map((card) => card.page?._ref)
         .filter((id): id is string => Boolean(id)),
     ),
   ]
@@ -187,12 +189,38 @@ export function ForsidePreview({document}: ForsidePreviewProps) {
     homepageIconOptions.map(({value, svgPath}) => [value, svgPath]),
   )
 
-  function renderBlock(block: Exclude<ForsideBlock, ForsideNavigasjonskort>, index: number) {
-    if (block._type === 'forsideOverskrift') {
+  function renderCard(card: ForsideNavigasjonskort, index: number, hasGroupTitle: boolean) {
+    const referenced = card.page?._ref ? referencedPages[card.page._ref] : undefined
+    const slug = referenced?.slug?.current
+    const iconValue = normalizeHomepageIconValue(card.icon)
+
+    return (
+      <NavigationTile
+        key={card._key || index}
+        href={slug ? `/${slug}` : '#'}
+        title={card.titleOverride || referenced?.title || 'Navigasjonskort'}
+        titleAs={hasGroupTitle ? 'h3' : 'h2'}
+        description={card.ingressOverride || undefined}
+        size="extraLarge"
+        svgPath={iconValue ? iconPaths[iconValue] : undefined}
+      />
+    )
+  }
+
+  function renderBlock(block: ForsideBlock, index: number) {
+    if (block._type === 'forsideNavigasjonsgruppe') {
+      const hasGroupTitle = Boolean(block.title)
       return (
-        <Heading key={block._key || index} as="h2" level={2}>
-          {block.title || 'Overskrift'}
-        </Heading>
+        <section key={block._key || index} style={{marginTop: 'var(--spacing-l)'}}>
+          {hasGroupTitle ? (
+            <Heading as="h2" level={2}>
+              {block.title}
+            </Heading>
+          ) : null}
+          <div className="frontpage-card-grid">
+            {(block.tiles || []).map((card, cardIndex) => renderCard(card, cardIndex, hasGroupTitle))}
+          </div>
+        </section>
       )
     }
 
@@ -248,50 +276,8 @@ export function ForsidePreview({document}: ForsidePreviewProps) {
     return null
   }
 
-  const blocks = page.content || []
-  const renderedBlocks: JSX.Element[] = []
-  let cards: JSX.Element[] = []
-
-  function flushCards() {
-    if (cards.length > 0) {
-      renderedBlocks.push(
-        <div key={`cards-${cards[0].key}`} className="frontpage-card-grid">
-          {cards}
-        </div>,
-      )
-      cards = []
-    }
-  }
-
-  blocks.forEach((block, index) => {
-    if (block._type === 'forsideNavigasjonskort') {
-      const referenced = block.page?._ref ? referencedPages[block.page._ref] : undefined
-      const title = block.titleOverride || referenced?.title || 'Navigasjonskort'
-      const description = block.ingressOverride || undefined
-      const slug = referenced?.slug?.current
-      const iconValue = normalizeHomepageIconValue(block.icon)
-
-      cards.push(
-        <NavigationTile
-          key={block._key || index}
-          href={slug ? `/${slug}` : '#'}
-          title={title}
-          titleAs="h3"
-          description={description}
-          size="extraLarge"
-          svgPath={iconValue ? iconPaths[iconValue] : undefined}
-        />,
-      )
-      return
-    }
-
-    flushCards()
-    const rendered = renderBlock(block, index)
-    if (rendered) {
-      renderedBlocks.push(rendered)
-    }
-  })
-  flushCards()
+  const renderedBlocks = (page.content || []).map(renderBlock)
+  const headingText = page.hideTitle ? page.screenReaderTitle || 'Forside' : page.title || 'Forside'
 
   return (
     <main style={styles.shell}>
@@ -332,7 +318,7 @@ export function ForsidePreview({document}: ForsidePreviewProps) {
       `}</style>
       <div style={styles.page}>
         <Heading as="h1" level={1} className={page.hideTitle ? 'sr-readonly' : undefined}>
-          {page.title || 'Forside'}
+          {headingText}
         </Heading>
         {referenceError ? (
           <Paragraph role="alert">

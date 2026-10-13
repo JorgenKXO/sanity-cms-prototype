@@ -47,7 +47,7 @@ export default defineConfig({
         id: 'forside-ny',
         title: 'Forside',
         schemaType: 'forside',
-        value: () => ({}),
+        value: () => ({screenReaderTitle: 'Forside'}),
       },
     ],
   },

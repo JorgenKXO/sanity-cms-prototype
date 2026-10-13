@@ -27,7 +27,9 @@ import {
   PersonSVGpath,
   type IconPropsWithoutSvgPath,
 } from '@skatteetaten/ds-icons'
-import {useId, type ComponentType, type ReactElement} from 'react'
+import {ChevronDownIcon} from '@sanity/icons'
+import {Box, Button, Flex, Menu, MenuButton, MenuItem, Text} from '@sanity/ui'
+import type {ComponentType, ReactElement} from 'react'
 import {set, type StringInputProps} from 'sanity'
 
 export const homepageIconOptions = [
@@ -90,61 +92,51 @@ export function normalizeHomepageIconValue(value: string | undefined) {
   return value ? legacyIconValues[value] ?? value : value
 }
 
-const inputStyles = {
-  options: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(8rem, 1fr))',
-    gap: '0.5rem',
-  },
-  option: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.25rem',
-    minHeight: '5rem',
-    padding: '0.5rem',
-    border: '1px solid currentColor',
-    borderRadius: '0.25rem',
-    background: 'transparent',
-    color: 'inherit',
-    cursor: 'pointer',
-  },
-  selected: {
-    outline: '2px solid currentColor',
-    outlineOffset: '1px',
-  },
-}
-
-export function HomepageIconInput({value, onChange, readOnly}: StringInputProps) {
-  const groupId = useId()
+export function HomepageIconInput({id, value, onChange, readOnly}: StringInputProps) {
   const selectedValue = normalizeHomepageIconValue(value)
+  const selected = homepageIconOptions.find((option) => option.value === selectedValue)
 
   return (
-    <fieldset disabled={readOnly} style={{border: 0, margin: 0, padding: 0}}>
-      <legend>Velg ikon</legend>
-      <div style={inputStyles.options}>
-        {homepageIconOptions.map(({title, value: optionValue, Icon}) => (
-          <label
-            key={optionValue}
-            style={{
-              ...inputStyles.option,
-              ...(value === optionValue ? inputStyles.selected : {}),
-              ...(readOnly ? {cursor: 'not-allowed'} : {}),
-            }}
-          >
-            <input
-              type="radio"
-              name={groupId}
-              value={optionValue}
-              checked={selectedValue === optionValue}
-              onChange={() => onChange(set(optionValue))}
-            />
-            <Icon size="large" />
-            <span>{title}</span>
-          </label>
-        ))}
-      </div>
-    </fieldset>
+    <MenuButton
+      id={`${id}-menu`}
+      button={
+        <Button
+          id={id}
+          mode="ghost"
+          padding={3}
+          width="fill"
+          justify="flex-start"
+          disabled={readOnly}
+          aria-label={selected ? `Ikon: ${selected.title}` : 'Velg ikon'}
+        >
+          <Flex align="center" gap={3}>
+            {selected ? <selected.Icon size="medium" /> : null}
+            <Box flex={1}>
+              <Text muted={!selected}>{selected?.title ?? 'Velg ikon'}</Text>
+            </Box>
+            <Text>
+              <ChevronDownIcon />
+            </Text>
+          </Flex>
+        </Button>
+      }
+      menu={
+        <Menu>
+          {homepageIconOptions.map(({title, value: optionValue, Icon}) => (
+            <MenuItem
+              key={optionValue}
+              pressed={selectedValue === optionValue}
+              onClick={() => onChange(set(optionValue))}
+            >
+              <Flex align="center" gap={3}>
+                <Icon size="medium" />
+                <Text>{title}</Text>
+              </Flex>
+            </MenuItem>
+          ))}
+        </Menu>
+      }
+      popover={{matchReferenceWidth: true, portal: true, placement: 'bottom-start'}}
+    />
   )
 }

@@ -2,7 +2,7 @@ import {
   BlockContentIcon,
   DocumentIcon,
   ImageIcon,
-  TextIcon,
+  MasterDetailIcon,
 } from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
@@ -11,26 +11,8 @@ import {
   homepageIconOptions,
   normalizeHomepageIconValue,
 } from '../../components/HomepageIconInput'
-import {articleTextBlock} from '../articleType'
+import {articleTextBlock} from '../articleContentBlocks'
 import {navigationTileFields} from '../shared/navigationTileFields'
-
-export const forsideOverskriftType = defineType({
-  name: 'forsideOverskrift',
-  title: 'Overskrift',
-  type: 'object',
-  icon: TextIcon,
-  fields: [
-    defineField({
-      name: 'title',
-      title: 'Overskrift',
-      type: 'string',
-      validation: (rule) => rule.required(),
-    }),
-  ],
-  preview: {
-    select: {title: 'title'},
-  },
-})
 
 export const forsideNavigasjonskortType = defineType({
   name: 'forsideNavigasjonskort',
@@ -46,7 +28,6 @@ export const forsideNavigasjonskortType = defineType({
       description: 'Velg et ikon fra Skatteetatens forsider.',
       options: {
         list: homepageIconOptions.map(({title, value}) => ({title, value})),
-        layout: 'dropdown',
       },
       components: {input: HomepageIconInput},
       validation: (rule) => rule.required(),
@@ -60,6 +41,37 @@ export const forsideNavigasjonskortType = defineType({
       return {
         title: title || pageTitle || 'Navigasjonskort',
         subtitle: iconTitle ? `Navigasjonskort · ${iconTitle}` : 'Navigasjonskort',
+      }
+    },
+  },
+})
+
+export const forsideNavigasjonsgruppeType = defineType({
+  name: 'forsideNavigasjonsgruppe',
+  title: 'Gruppe navigasjonskort',
+  type: 'object',
+  icon: MasterDetailIcon,
+  fields: [
+    defineField({
+      name: 'title',
+      title: 'Overskrift (valgfritt)',
+      type: 'string',
+    }),
+    defineField({
+      name: 'tiles',
+      title: 'Navigasjonskort',
+      type: 'array',
+      of: [defineArrayMember({type: 'forsideNavigasjonskort'})],
+      validation: (rule) => rule.required().min(1),
+    }),
+  ],
+  preview: {
+    select: {title: 'title', tiles: 'tiles'},
+    prepare({title, tiles}) {
+      const count = Array.isArray(tiles) ? tiles.length : 0
+      return {
+        title: title || 'Gruppe navigasjonskort',
+        subtitle: `${count} navigasjonskort`,
       }
     },
   },
@@ -174,10 +186,24 @@ export const forsideType = defineType({
     defineField({
       name: 'hideTitle',
       title: 'Skjul hovedtittel visuelt',
-      description:
-        'Hovedtittelen beholdes som en overskrift for skjermlesere, men skjules visuelt.',
+      description: 'Skjuler hovedtittelen visuelt. Skjermlesere får tittelen nedenfor.',
       type: 'boolean',
       initialValue: false,
+    }),
+    defineField({
+      name: 'screenReaderTitle',
+      title: 'Tittel for skjermlesere',
+      description: 'Leses opp av skjermlesere i stedet for hovedtittelen.',
+      type: 'string',
+      initialValue: 'Forside',
+      hidden: ({parent}) => !(parent as {hideTitle?: boolean} | undefined)?.hideTitle,
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const parent = context.parent as {hideTitle?: boolean} | undefined
+          return parent?.hideTitle && !value?.trim()
+            ? 'Legg inn en tittel for skjermlesere når hovedtittelen er skjult.'
+            : true
+        }),
     }),
     defineField({
       name: 'slug',
@@ -193,8 +219,7 @@ export const forsideType = defineType({
       description: 'Legg til og ordne innholdsblokker på forsiden.',
       type: 'array',
       of: [
-        defineArrayMember({type: 'forsideOverskrift'}),
-        defineArrayMember({type: 'forsideNavigasjonskort'}),
+        defineArrayMember({type: 'forsideNavigasjonsgruppe'}),
         defineArrayMember({type: 'informasjonPanel'}),
         defineArrayMember({type: 'bildeOgTekstPanel'}),
       ],

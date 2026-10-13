@@ -9,8 +9,8 @@ import {informasjonPanelType, krisePanelType, rettskilderPanelType, varselPanelT
 import {siteSettingsType} from './siteSettingsType'
 import {
   bildeOgTekstPanelType,
+  forsideNavigasjonsgruppeType,
   forsideNavigasjonskortType,
-  forsideOverskriftType,
   forsideType,
 } from './globaler/forsideType'
 
@@ -26,7 +26,7 @@ export const schemaTypes = [
   varselPanelType,
   krisePanelType,
   forsideType,
-  forsideOverskriftType,
+  forsideNavigasjonsgruppeType,
   forsideNavigasjonskortType,
   bildeOgTekstPanelType,
 ]

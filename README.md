@@ -89,6 +89,17 @@ The old separate `panels` field is no longer editable or rendered. New panels
 belong in `tiles`, alongside navigation groups. Existing test panels are discarded
 rather than moved into the combined list.
 
+## Forside content
+
+Add **Gruppe navigasjonskort** to **Innhold** on a forside, optionally enter an
+**Overskrift**, and add **Navigasjonskort** inside the group. Each card requires
+an icon, chosen from a dropdown with icon previews. Groups with headings render
+card titles as h3; groups without headings use h2. Top-level navigation cards and
+headings are no longer supported on forsider.
+
+When **Skjul hovedtittel visuelt** is on, **Tittel for skjermlesere** (prefilled
+with "Forside") is used as the visually hidden h1 instead of the main title.
+
 ## Quick visual check without Node.js/Sanity
 
 No terminal, no install, no npm needed. Open `preview/static-preview.html` directly in a browser (double-click the file, or drag it into a browser window) to see the article design. This file does not connect to Sanity and cannot save edits — it is only for checking how the design looks.

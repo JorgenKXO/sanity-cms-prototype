@@ -106,14 +106,29 @@ const styles: Record<string, CSSProperties> = {
     padding: 'var(--spacing-xl)',
   },
   section: {
-    borderTop: '2px solid var(--palette-forest-70)',
-    paddingTop: 'var(--spacing-m)',
-    marginTop: 'var(--spacing-xl)',
+    borderTop: '2px solid var(--palette-forest-50)',
+    padding: 'var(--spacing-xxl) 0 var(--spacing-l)',
+    display: 'flex',
+    gap: 'var(--spacing-xl)',
+    alignItems: 'flex-start',
   },
-  sectionHeading: {
+  sectionLast: {
+    borderBottom: '2px solid var(--palette-forest-50)',
+  },
+  sectionIcon: {
+    flex: '0 0 3.5rem',
+    width: '3.5rem',
+    height: '3.5rem',
+    borderRadius: '50%',
+    background: 'var(--palette-graphite-100)',
+    color: 'var(--palette-graphite-0)',
     display: 'flex',
     alignItems: 'center',
-    gap: 'var(--spacing-xs)',
+    justifyContent: 'center',
+  },
+  sectionBody: {
+    flex: '1 1 0',
+    minWidth: 0,
   },
   image: {
     display: 'block',
@@ -237,7 +252,7 @@ export function ArticlePreview(props: ArticlePreviewProps) {
     )
   }
 
-  function renderTopLevelBlock(block: ArticleContentBlock) {
+  function renderTopLevelBlock(block: ArticleContentBlock, isLastSection: boolean) {
     if (block._type !== 'seksjon') {
       return renderContentBlock(block)
     }
@@ -245,18 +260,21 @@ export function ArticlePreview(props: ArticlePreviewProps) {
     const Icon = block.icon ? sectionIconMap[block.icon] : undefined
 
     return (
-      <section style={styles.section} aria-label={block.heading || undefined}>
-        {block.heading ? (
-          <div style={styles.sectionHeading}>
-            {Icon ? <Icon /> : null}
-            <Heading as="h2" level={2}>{block.heading}</Heading>
+      <section
+        style={isLastSection ? {...styles.section, ...styles.sectionLast} : styles.section}
+        aria-label={block.heading || undefined}
+      >
+        {Icon ? (
+          <div style={styles.sectionIcon} aria-hidden="true">
+            <Icon size="large" />
           </div>
-        ) : Icon ? (
-          <Icon />
         ) : null}
-        {block.content?.map((child, index) => (
-          <div key={child._key || index}>{renderContentBlock(child)}</div>
-        ))}
+        <div style={styles.sectionBody}>
+          {block.heading ? <Heading as="h2" level={2}>{block.heading}</Heading> : null}
+          {block.content?.map((child, index) => (
+            <div key={child._key || index}>{renderContentBlock(child)}</div>
+          ))}
+        </div>
       </section>
     )
   }
@@ -279,8 +297,10 @@ export function ArticlePreview(props: ArticlePreviewProps) {
         <article style={styles.article}>
           <Heading as="h1" level={1}>{article.title || 'Untitled article'}</Heading>
           {article.ingress ? <PortableText value={article.ingress} components={ingressComponents} /> : null}
-          {article.content?.map((block, index) => (
-            <div key={block._key || index}>{renderTopLevelBlock(block)}</div>
+          {article.content?.map((block, index, blocks) => (
+            <div key={block._key || index}>
+              {renderTopLevelBlock(block, blocks[index + 1]?._type !== 'seksjon')}
+            </div>
           ))}
         </article>
       </div>

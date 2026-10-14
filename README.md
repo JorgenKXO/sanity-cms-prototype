@@ -65,6 +65,24 @@ The article preview intentionally omits the header, footer, feedback widget, and
 
 The preview's typography and link styling (font stack, colors, weights, sizes) are sampled from skatteetaten.no's live article template, for internal Skatteetaten prototyping. The header, footer, feedback widget, and top-of-page button are still intentionally left out. Article body text is placeholder content — replace it with real content as needed.
 
+## Delt innhold i artikler
+
+Opprett et **Delt innhold**-dokument fra Studio-menyen, gi det et redaktørvennlig
+navn, og legg til tekst-, informasjons- og bildeblokker. I en artikkel kan du
+sette inn en referanse til dokumentet blant de vanlige lokale innholdsblokkene.
+Redigerer du det delte dokumentet og publiserer endringen, gjelder den for alle
+artiklene som refererer til det.
+
+Fanen **Brukes på** viser artiklene som refererer til dokumentet. Listen og
+antallet beregnes fra gjeldende referanser; de lagres ikke som egne datafelt.
+Dette unngår at brukerstedene blir utdaterte hvis en referanse flyttes eller
+fjernes.
+
+Artikkelforhåndsvisningen i Studio henter også innholdet fra refererte dokumenter.
+Dette repoet inneholder ikke produksjonsfrontendens sidebygger eller ruting, så
+den må også oppdateres separat for å vise delt innhold på det publiserte
+nettstedet. Delt innhold er en innholdsressurs, ikke en egen nettside.
+
 ## Navigation card reference picker
 
 Navigation cards use Sanity's standard reference picker. Search results for pages

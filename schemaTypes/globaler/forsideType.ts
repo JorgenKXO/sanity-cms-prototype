@@ -11,7 +11,7 @@ import {
   homepageIconOptions,
   normalizeHomepageIconValue,
 } from '../../components/HomepageIconInput'
-import {articleTextBlock} from '../articleType'
+import {articleTextBlock} from '../articleContentBlocks'
 import {navigationTileFields} from '../shared/navigationTileFields'
 
 export const forsideNavigasjonskortType = defineType({

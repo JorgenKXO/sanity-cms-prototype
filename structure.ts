@@ -1,9 +1,17 @@
-import {EditIcon, EarthGlobeIcon, EyeOpenIcon, FolderIcon, MasterDetailIcon} from '@sanity/icons'
+import {
+  BlockContentIcon,
+  EditIcon,
+  EarthGlobeIcon,
+  EyeOpenIcon,
+  FolderIcon,
+  MasterDetailIcon,
+} from '@sanity/icons'
 import type {DefaultDocumentNodeResolver, StructureResolver} from 'sanity/structure'
 
 import {ArticlePreview} from './preview/ArticlePreview'
 import {NavigationPagePreview} from './preview/NavigationPagePreview'
 import {ForsidePreview} from './preview/ForsidePreview'
+import {SharedContentUsage} from './preview/SharedContentUsage'
 import {kategoriOptions} from './schemaTypes/kategoriOptions'
 
 export const defaultDocumentNode: DefaultDocumentNodeResolver = (S, {schemaType}) => {
@@ -25,6 +33,13 @@ export const defaultDocumentNode: DefaultDocumentNodeResolver = (S, {schemaType}
     return S.document().views([
       S.view.form().icon(EditIcon),
       S.view.component(ForsidePreview).title('Forhåndsvisning av forside').icon(EyeOpenIcon),
+    ])
+  }
+
+  if (schemaType === 'sharedContent') {
+    return S.document().views([
+      S.view.form().icon(EditIcon),
+      S.view.component(SharedContentUsage).title('Brukes på').icon(MasterDetailIcon),
     ])
   }
 
@@ -59,6 +74,19 @@ const allNavigationPages = (S: Parameters<StructureResolver>[0]) =>
         .schemaType('navigationPage')
         .apiVersion('2026-09-10')
         .filter('_type == "navigationPage"'),
+    )
+
+const allSharedContent = (S: Parameters<StructureResolver>[0]) =>
+  S.listItem()
+    .title('Delt innhold')
+    .id('allSharedContent')
+    .icon(BlockContentIcon)
+    .child(
+      S.documentTypeList('sharedContent')
+        .title('Delt innhold')
+        .id('allSharedContent-list')
+        .apiVersion('2026-09-10')
+        .filter('_type == "sharedContent"'),
     )
 
 const globalerFolder = (S: Parameters<StructureResolver>[0]) =>
@@ -158,6 +186,7 @@ export const deskStructure: StructureResolver = (S) =>
       allArticles(S),
       allNavigationPages(S),
       globalerFolder(S),
+      allSharedContent(S),
       S.divider(),
       ...kategoriFolders(S),
       S.divider(),

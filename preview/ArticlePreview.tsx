@@ -6,6 +6,7 @@ import {Breadcrumbs} from '@skatteetaten/ds-navigation'
 import {Heading, List, Paragraph} from '@skatteetaten/ds-typography'
 import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
 import type {CSSProperties, JSX} from 'react'
+import {useEffect, useState} from 'react'
 import {useClient} from 'sanity'
 import {fixedPanelAppearance} from './fixedPanelAppearance'
 import {InformasjonPanel} from './InformasjonPanel'
@@ -32,12 +33,19 @@ type BildeBlock = {
   isDecorative?: boolean
 }
 
-type PanelBlock = {
+type InformasjonBlock = {
   _key?: string
-  _type: 'informasjon' | 'varsel' | 'krise'
+  _type: 'informasjon'
   heading?: string
   color?: string
   icon?: string
+  text?: PortableTextBlock[]
+}
+
+type PanelBlock = {
+  _key?: string
+  _type: 'varsel' | 'krise'
+  heading?: string
   text?: PortableTextBlock[]
 }
 
@@ -48,7 +56,19 @@ type RettskilderPanelBlock = {
   body?: PortableTextBlock[]
 }
 
-type ArticleContentBlock = TekstBlock | BildeBlock | PanelBlock | RettskilderPanelBlock
+type SharedContentBlock = TekstBlock | BildeBlock | InformasjonBlock
+type SharedContentReference = {_key?: string; _type: 'reference'; _ref: string}
+type ArticleContentBlock =
+  | SharedContentBlock
+  | PanelBlock
+  | RettskilderPanelBlock
+  | SharedContentReference
+
+type SharedContentDocument = {
+  _id: string
+  title?: string
+  content?: SharedContentBlock[]
+}
 
 type ArticleDocument = {
   title?: string
@@ -59,7 +79,6 @@ type ArticleDocument = {
 }
 
 const panelTitle: Record<PanelBlock['_type'], string> = {
-  informasjon: 'Informasjon',
   varsel: 'Varsel',
   krise: 'Krise',
 }
@@ -145,6 +164,55 @@ export function ArticlePreview(props: ArticlePreviewProps) {
   const article = props.document?.displayed
   const client = useClient({apiVersion: '2026-09-10'})
   const builder = imageUrlBuilder(client)
+  const [sharedContentById, setSharedContentById] = useState<Record<string, SharedContentDocument>>({})
+  const [sharedContentError, setSharedContentError] = useState<string>()
+  const [isLoadingSharedContent, setIsLoadingSharedContent] = useState(false)
+
+  const sharedContentIds = [
+    ...new Set(
+      (article?.content || [])
+        .filter((block): block is SharedContentReference => block._type === 'reference')
+        .map((reference) => reference._ref),
+    ),
+  ]
+  const sharedContentIdsKey = JSON.stringify(sharedContentIds)
+
+  useEffect(() => {
+    if (sharedContentIds.length === 0) {
+      setSharedContentById({})
+      setSharedContentError(undefined)
+      setIsLoadingSharedContent(false)
+      return
+    }
+
+    let cancelled = false
+    setSharedContentById({})
+    setIsLoadingSharedContent(true)
+    setSharedContentError(undefined)
+    client
+      .withConfig({perspective: 'drafts'})
+      .fetch<SharedContentDocument[]>(
+        `*[_id in $ids]{_id, title, content}`,
+        {ids: sharedContentIds},
+      )
+      .then((results) => {
+        if (cancelled) return
+        setSharedContentById(Object.fromEntries(results.map((result) => [result._id, result])))
+        setIsLoadingSharedContent(false)
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return
+        setSharedContentById({})
+        setSharedContentError(error instanceof Error ? error.message : 'Ukjent feil')
+        setIsLoadingSharedContent(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+    // Keep the request stable while Sanity recreates the reference array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, sharedContentIdsKey])
 
   if (!article) {
     return <div style={styles.empty}>No article content to preview yet.</div>
@@ -153,6 +221,27 @@ export function ArticlePreview(props: ArticlePreviewProps) {
   const breadcrumbs = article.breadcrumbs?.filter((item) => item.label) || []
 
   function renderContentBlock(block: ArticleContentBlock) {
+    if (block._type === 'reference') {
+      const sharedContent = sharedContentById[block._ref]
+      if (!sharedContent) {
+        return sharedContentError
+          ? null
+          : (
+              <p role="status">
+                {isLoadingSharedContent
+                  ? 'Laster delt innhold …'
+                  : 'Referert delt innhold ble ikke funnet.'}
+              </p>
+            )
+      }
+
+      return sharedContent.content?.map((sharedBlock, index) => (
+        <div key={sharedBlock._key || `${sharedContent._id}-${index}`}>
+          {renderContentBlock(sharedBlock)}
+        </div>
+      ))
+    }
+
     if (block._type === 'tekst') {
       return block.text ? <PortableText value={block.text} components={components} /> : null
     }
@@ -235,6 +324,9 @@ export function ArticlePreview(props: ArticlePreviewProps) {
         <article style={styles.article}>
           <Heading as="h1" level={1}>{article.title || 'Untitled article'}</Heading>
           {article.ingress ? <PortableText value={article.ingress} components={ingressComponents} /> : null}
+          {sharedContentError ? (
+            <p role="alert">Kunne ikke hente delt innhold: {sharedContentError}</p>
+          ) : null}
           {article.content?.map((block, index) => (
             <div key={block._key || index}>{renderContentBlock(block)}</div>
           ))}

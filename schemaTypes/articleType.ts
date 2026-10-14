@@ -2,6 +2,7 @@ import {
   BlockContentIcon,
   EarthGlobeIcon,
   ErrorOutlineIcon,
+  ThLargeIcon,
   WarningOutlineIcon,
 } from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
@@ -29,6 +30,91 @@ const ingressBlock = defineArrayMember({
     annotations: [],
   },
 })
+
+const iconOptions = [
+  {title: 'Informasjon', value: 'info'},
+  {title: 'Hjelp', value: 'help'},
+  {title: 'Fullført', value: 'completed'},
+  {title: 'Frist/dato', value: 'calendar'},
+  {title: 'Tid', value: 'clock'},
+  {title: 'Varsel', value: 'bell'},
+  {title: 'Personvern/sikkerhet', value: 'lock'},
+] as const
+
+// Innholdsblokkene som kan brukes direkte på artikkelen og inne i en seksjon.
+// Funksjon slik at hver array får sine egne definisjoner.
+const contentMembers = () => [
+    defineArrayMember({type: 'tekst'}),
+    defineArrayMember({type: 'bilde'}),
+    defineArrayMember({type: 'informasjon'}),
+    defineArrayMember({
+      type: 'reference',
+      to: [{type: 'sharedContent'}],
+    }),
+    defineArrayMember({
+      name: 'varsel',
+      title: 'Varsel',
+      type: 'object',
+      icon: ErrorOutlineIcon,
+      fields: [
+        blockNameField,
+        defineField({
+          name: 'heading',
+          title: 'Overskrift',
+          type: 'string',
+        }),
+        defineField({
+          name: 'text',
+          title: 'Innhold',
+          description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
+          type: 'array',
+          of: [panelTextBlock],
+          validation: (rule) => rule.required(),
+        }),
+      ],
+      preview: {
+        select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
+        prepare({blockName, title, blocks}) {
+          return {
+            title: blockName || title || 'Varsel',
+            subtitle: blockText(blocks),
+          }
+        },
+      },
+    }),
+    defineArrayMember({
+      name: 'krise',
+      title: 'Krise',
+      type: 'object',
+      icon: WarningOutlineIcon,
+      fields: [
+        blockNameField,
+        defineField({
+          name: 'heading',
+          title: 'Overskrift',
+          type: 'string',
+        }),
+        defineField({
+          name: 'text',
+          title: 'Innhold',
+          description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
+          type: 'array',
+          of: [panelTextBlock],
+          validation: (rule) => rule.required(),
+        }),
+      ],
+      preview: {
+        select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
+        prepare({blockName, title, blocks}) {
+          return {
+            title: blockName || title || 'Krise',
+            subtitle: blockText(blocks),
+          }
+        },
+      },
+    }),
+    defineArrayMember({type: 'rettskilderPanel'}),
+]
 
 export const articleType = defineType({
   name: 'article',
@@ -111,78 +197,56 @@ export const articleType = defineType({
       type: 'array',
       group: 'content',
       of: [
-        defineArrayMember({type: 'tekst'}),
-        defineArrayMember({type: 'bilde'}),
-        defineArrayMember({type: 'informasjon'}),
         defineArrayMember({
-          type: 'reference',
-          to: [{type: 'sharedContent'}],
-        }),
-        defineArrayMember({
-          name: 'varsel',
-          title: 'Varsel',
+          name: 'seksjon',
+          title: 'Seksjon',
           type: 'object',
-          icon: ErrorOutlineIcon,
+          icon: ThLargeIcon,
           fields: [
             blockNameField,
             defineField({
               name: 'heading',
-              title: 'Overskrift',
+              title: 'Overskrift (valgfritt)',
               type: 'string',
             }),
             defineField({
-              name: 'text',
+              name: 'icon',
+              title: 'Ikon (valgfritt)',
+              type: 'string',
+              description: 'Velg et ikon fra Skatteetatens designsystem som skal vises ved seksjonen.',
+              options: {list: [...iconOptions], layout: 'dropdown'},
+            }),
+            defineField({
+              name: 'content',
               title: 'Innhold',
-              description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
+              description: 'Samme typer innhold som direkte på artikkelen, bortsett fra seksjoner.',
               type: 'array',
-              of: [panelTextBlock],
-              validation: (rule) => rule.required(),
+              of: contentMembers(),
+              validation: (rule) => rule.required().min(1),
             }),
           ],
           preview: {
-            select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
-            prepare({blockName, title, blocks}) {
+            select: {blockName: 'blockName', title: 'heading', content: 'content'},
+            prepare({blockName, title, content}) {
+              const count = Array.isArray(content) ? content.length : 0
               return {
-                title: blockName || title || 'Varsel',
-                subtitle: blockText(blocks),
+                title: blockName || title || 'Seksjon',
+                subtitle: `Seksjon · ${count} ${count === 1 ? 'blokk' : 'blokker'}`,
               }
             },
           },
         }),
-        defineArrayMember({
-          name: 'krise',
-          title: 'Krise',
-          type: 'object',
-          icon: WarningOutlineIcon,
-          fields: [
-            blockNameField,
-            defineField({
-              name: 'heading',
-              title: 'Overskrift',
-              type: 'string',
-            }),
-            defineField({
-              name: 'text',
-              title: 'Innhold',
-              description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
-              type: 'array',
-              of: [panelTextBlock],
-              validation: (rule) => rule.required(),
-            }),
-          ],
-          preview: {
-            select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
-            prepare({blockName, title, blocks}) {
-              return {
-                title: blockName || title || 'Krise',
-                subtitle: blockText(blocks),
-              }
-            },
-          },
-        }),
-        defineArrayMember({type: 'rettskilderPanel'}),
+        ...contentMembers(),
       ],
-      validation: (rule) => rule.required().min(1),
+      validation: (rule) =>
+        rule.required().min(1).custom((blocks) => {
+          const types = Array.isArray(blocks) ? blocks.map((block) => (block as {_type?: string})._type) : []
+          const hasSection = types.includes('seksjon')
+          const hasOther = types.some((type) => type !== 'seksjon')
+          return hasSection && hasOther
+            ? 'Når artikkelen inneholder seksjoner, må alt innhold ligge i seksjoner. Flytt eller fjern blokkene utenfor seksjonene.'
+            : true
+        }),
     }),
     defineField({
       name: 'updatedAt',

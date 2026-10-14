@@ -83,6 +83,15 @@ Dette repoet inneholder ikke produksjonsfrontendens sidebygger eller ruting, så
 den må også oppdateres separat for å vise delt innhold på det publiserte
 nettstedet. Delt innhold er en innholdsressurs, ikke en egen nettside.
 
+## Sections in articles
+
+Add **Seksjon** to **Innhold** to group content under an optional heading and
+optional icon. A section accepts the same blocks as the article itself (text,
+image, information, warning, crisis and legal-source panels), but not other
+sections. If an article contains any section, all top-level content must be
+sections; validation blocks publishing otherwise. The preview draws a green line
+above each section (and below the last one), with the icon in a black circle to the left of the heading and content.
+
 ## Navigation card reference picker
 
 Navigation cards use Sanity's standard reference picker. Search results for pages

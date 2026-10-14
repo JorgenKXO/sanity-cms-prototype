@@ -9,7 +9,7 @@ import type {CSSProperties, JSX} from 'react'
 import {useEffect, useState} from 'react'
 import {useClient} from 'sanity'
 import {fixedPanelAppearance} from './fixedPanelAppearance'
-import {InformasjonPanel} from './InformasjonPanel'
+import {InformasjonPanel, iconMap as sectionIconMap} from './InformasjonPanel'
 import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
 
@@ -58,11 +58,21 @@ type RettskilderPanelBlock = {
 
 type SharedContentBlock = TekstBlock | BildeBlock | InformasjonBlock
 type SharedContentReference = {_key?: string; _type: 'reference'; _ref: string}
-type ArticleContentBlock =
+type InnholdBlock =
   | SharedContentBlock
   | PanelBlock
   | RettskilderPanelBlock
   | SharedContentReference
+
+type SeksjonBlock = {
+  _key?: string
+  _type: 'seksjon'
+  heading?: string
+  icon?: string
+  content?: InnholdBlock[]
+}
+
+type ArticleContentBlock = InnholdBlock | SeksjonBlock
 
 type SharedContentDocument = {
   _id: string
@@ -113,6 +123,31 @@ const styles: Record<string, CSSProperties> = {
   },
   empty: {
     padding: 'var(--spacing-xl)',
+  },
+  section: {
+    borderTop: '2px solid var(--palette-forest-50)',
+    padding: 'var(--spacing-xxl) 0 var(--spacing-l)',
+    display: 'flex',
+    gap: 'var(--spacing-xl)',
+    alignItems: 'flex-start',
+  },
+  sectionLast: {
+    borderBottom: '2px solid var(--palette-forest-50)',
+  },
+  sectionIcon: {
+    flex: '0 0 3.5rem',
+    width: '3.5rem',
+    height: '3.5rem',
+    borderRadius: '50%',
+    background: 'var(--palette-graphite-100)',
+    color: 'var(--palette-graphite-0)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionBody: {
+    flex: '1 1 0',
+    minWidth: 0,
   },
   image: {
     display: 'block',
@@ -171,6 +206,7 @@ export function ArticlePreview(props: ArticlePreviewProps) {
   const sharedContentIds = [
     ...new Set(
       (article?.content || [])
+        .flatMap((block) => (block._type === 'seksjon' ? block.content || [] : [block]))
         .filter((block): block is SharedContentReference => block._type === 'reference')
         .map((reference) => reference._ref),
     ),
@@ -220,7 +256,7 @@ export function ArticlePreview(props: ArticlePreviewProps) {
 
   const breadcrumbs = article.breadcrumbs?.filter((item) => item.label) || []
 
-  function renderContentBlock(block: ArticleContentBlock) {
+  function renderContentBlock(block: InnholdBlock) {
     if (block._type === 'reference') {
       const sharedContent = sharedContentById[block._ref]
       if (!sharedContent) {
@@ -306,8 +342,36 @@ export function ArticlePreview(props: ArticlePreviewProps) {
     )
   }
 
+  function renderTopLevelBlock(block: ArticleContentBlock, isLastSection: boolean) {
+    if (block._type !== 'seksjon') {
+      return renderContentBlock(block)
+    }
+
+    const Icon = block.icon ? sectionIconMap[block.icon] : undefined
+
+    return (
+      <section
+        style={isLastSection ? {...styles.section, ...styles.sectionLast} : styles.section}
+        aria-label={block.heading || undefined}
+      >
+        {Icon ? (
+          <div className="section-icon-circle" style={styles.sectionIcon} aria-hidden="true">
+            <Icon size="large" />
+          </div>
+        ) : null}
+        <div style={styles.sectionBody}>
+          {block.heading ? <Heading as="h2" level={2}>{block.heading}</Heading> : null}
+          {block.content?.map((child, index) => (
+            <div key={child._key || index}>{renderContentBlock(child)}</div>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
   return (
     <main style={styles.shell}>
+      <style>{'.section-icon-circle svg { fill: var(--palette-graphite-0); }'}</style>
       <div style={styles.page}>
         {breadcrumbs.length > 0 ? (
           <Breadcrumbs>
@@ -327,8 +391,10 @@ export function ArticlePreview(props: ArticlePreviewProps) {
           {sharedContentError ? (
             <p role="alert">Kunne ikke hente delt innhold: {sharedContentError}</p>
           ) : null}
-          {article.content?.map((block, index) => (
-            <div key={block._key || index}>{renderContentBlock(block)}</div>
+          {article.content?.map((block, index, blocks) => (
+            <div key={block._key || index}>
+              {renderTopLevelBlock(block, blocks[index + 1]?._type !== 'seksjon')}
+            </div>
           ))}
         </article>
       </div>

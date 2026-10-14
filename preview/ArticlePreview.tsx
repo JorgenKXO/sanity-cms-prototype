@@ -265,7 +265,7 @@ export function ArticlePreview(props: ArticlePreviewProps) {
         aria-label={block.heading || undefined}
       >
         {Icon ? (
-          <div style={styles.sectionIcon} aria-hidden="true">
+          <div className="section-icon-circle" style={styles.sectionIcon} aria-hidden="true">
             <Icon size="large" />
           </div>
         ) : null}
@@ -281,6 +281,7 @@ export function ArticlePreview(props: ArticlePreviewProps) {
 
   return (
     <main style={styles.shell}>
+      <style>{'.section-icon-circle svg { fill: var(--palette-graphite-0); }'}</style>
       <div style={styles.page}>
         {breadcrumbs.length > 0 ? (
           <Breadcrumbs>

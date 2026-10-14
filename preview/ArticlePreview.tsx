@@ -1,4 +1,8 @@
-import {PortableText, type PortableTextBlock, type PortableTextComponents} from '@portabletext/react'
+import {
+  PortableText,
+  type PortableTextBlock,
+  type PortableTextComponents,
+} from '@portabletext/react'
 import '@skatteetaten/ds-core-designtokens/index.css'
 import {Link} from '@skatteetaten/ds-buttons'
 import {Panel} from '@skatteetaten/ds-content'
@@ -8,7 +12,7 @@ import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
 import type {CSSProperties, JSX} from 'react'
 import {useClient} from 'sanity'
 import {fixedPanelAppearance} from './fixedPanelAppearance'
-import {InformasjonPanel} from './InformasjonPanel'
+import {InformasjonPanel, sectionIconMap} from './InformasjonPanel'
 import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
 
@@ -50,12 +54,18 @@ type RettskilderPanelBlock = {
 
 type ArticleContentBlock = TekstBlock | BildeBlock | PanelBlock | RettskilderPanelBlock
 
-type ArticleDocument = {
+export type ArticleDocument = {
   title?: string
   ingress?: PortableTextBlock[]
   breadcrumbs?: Breadcrumb[]
   content?: ArticleContentBlock[]
   updatedAt?: string
+  sections?: {
+    _key: string
+    heading?: string
+    icon?: string
+    content?: ArticleContentBlock[]
+  }[]
 }
 
 const panelTitle: Record<PanelBlock['_type'], string> = {
@@ -64,7 +74,7 @@ const panelTitle: Record<PanelBlock['_type'], string> = {
   krise: 'Krise',
 }
 
-type ArticlePreviewProps = {
+export type ArticlePreviewProps = {
   document?: {
     displayed?: ArticleDocument
   }
@@ -92,6 +102,13 @@ const styles: Record<string, CSSProperties> = {
   article: {
     maxWidth: 'var(--semantic-responsive-article)',
   },
+  section: {
+    borderTop: '2px solid var(--palette-forest-50)',
+    padding: 'var(--spacing-xxl) 0 var(--spacing-l)',
+  },
+  sectionLast: {
+    borderBottom: '2px solid var(--palette-forest-50)',
+  },
   empty: {
     padding: 'var(--spacing-xl)',
   },
@@ -104,11 +121,19 @@ const styles: Record<string, CSSProperties> = {
   },
 }
 
-const components: PortableTextComponents = {
+const components = {
   block: {
     normal: ({children}) => <Paragraph hasSpacing>{children}</Paragraph>,
-    h2: ({children}) => <Heading as="h2" level={2}>{children}</Heading>,
-    h3: ({children}) => <Heading as="h3" level={3}>{children}</Heading>,
+    h2: ({children}) => (
+      <Heading as="h2" level={2}>
+        {children}
+      </Heading>
+    ),
+    h3: ({children}) => (
+      <Heading as="h3" level={3}>
+        {children}
+      </Heading>
+    ),
   },
   marks: {
     link: ({children, value}) => {
@@ -118,19 +143,31 @@ const components: PortableTextComponents = {
     },
   },
   list: {
-    bullet: ({children}) => <List as="ul" hasSpacing>{children}</List>,
-    number: ({children}) => <List as="ol" hasSpacing>{children}</List>,
+    bullet: ({children}) => (
+      <List as="ul" hasSpacing>
+        {children}
+      </List>
+    ),
+    number: ({children}) => (
+      <List as="ol" hasSpacing>
+        {children}
+      </List>
+    ),
   },
   listItem: {
     bullet: ({children}) => <List.Element>{children}</List.Element>,
     number: ({children}) => <List.Element>{children}</List.Element>,
   },
-}
+} satisfies PortableTextComponents
 
 // Ingressen tillater kun lenker, ingen annen formatering – egen renderer uten overskrifter/lister.
 const ingressComponents: PortableTextComponents = {
   block: {
-    normal: ({children}) => <Paragraph variant="ingress" hasSpacing>{children}</Paragraph>,
+    normal: ({children}) => (
+      <Paragraph variant="ingress" hasSpacing>
+        {children}
+      </Paragraph>
+    ),
   },
   marks: {
     link: ({children, value}) => {
@@ -141,7 +178,7 @@ const ingressComponents: PortableTextComponents = {
   },
 }
 
-export function ArticlePreview(props: ArticlePreviewProps) {
+export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boolean}) {
   const article = props.document?.displayed
   const client = useClient({apiVersion: '2026-09-10'})
   const builder = imageUrlBuilder(client)
@@ -152,9 +189,40 @@ export function ArticlePreview(props: ArticlePreviewProps) {
 
   const breadcrumbs = article.breadcrumbs?.filter((item) => item.label) || []
 
-  function renderContentBlock(block: ArticleContentBlock) {
+  function renderContentBlock(block: ArticleContentBlock, nested = false) {
+    const contentComponents: PortableTextComponents = nested
+      ? {
+          ...components,
+          block: {
+            ...components.block,
+            h2: ({children}) => (
+              <Heading as="h3" level={3}>
+                {children}
+              </Heading>
+            ),
+            h3: ({children}) => (
+              <Heading as="h4" level={3}>
+                {children}
+              </Heading>
+            ),
+          },
+        }
+      : components
+    const panelComponents: PortableTextComponents = nested
+      ? {
+          ...components,
+          block: {
+            ...components.block,
+            h3: ({children}) => (
+              <Heading as="h4" level={3}>
+                {children}
+              </Heading>
+            ),
+          },
+        }
+      : components
     if (block._type === 'tekst') {
-      return block.text ? <PortableText value={block.text} components={components} /> : null
+      return block.text ? <PortableText value={block.text} components={contentComponents} /> : null
     }
 
     if (block._type === 'bilde') {
@@ -162,27 +230,21 @@ export function ArticlePreview(props: ArticlePreviewProps) {
         return null
       }
       const src = builder.image(block.image).width(960).fit('max').auto('format').url()
-      return (
-        <img
-          src={src}
-          alt={block.isDecorative ? '' : block.alt || ''}
-          style={styles.image}
-        />
-      )
+      return <img src={src} alt={block.isDecorative ? '' : block.alt || ''} style={styles.image} />
     }
 
     if (block._type === 'rettskilderPanel') {
       return (
         <Panel
           title={block.heading || 'Rettskilder'}
-          titleAs="h2"
+          titleAs={nested ? 'h3' : 'h2'}
           color="graphite"
           variant="filled"
           padding="m"
           spacing="l"
           renderIcon={() => withAlignmentOffset(<SectionSignIcon />)}
         >
-          {block.body ? <PortableText value={block.body} components={components} /> : null}
+          {block.body ? <PortableText value={block.body} components={panelComponents} /> : null}
         </Panel>
       )
     }
@@ -194,6 +256,7 @@ export function ArticlePreview(props: ArticlePreviewProps) {
           color={block.color}
           icon={block.icon}
           body={block.text}
+          titleAs={nested ? 'h3' : 'h2'}
         />
       )
     }
@@ -205,14 +268,14 @@ export function ArticlePreview(props: ArticlePreviewProps) {
     return (
       <Panel
         title={block.heading || panelTitle[block._type]}
-        titleAs="h2"
+        titleAs={nested ? 'h3' : 'h2'}
         color={appearance.color}
         variant={appearance.variant}
         padding="m"
         spacing="l"
         renderIcon={Icon ? () => withAlignmentOffset(<Icon />) : undefined}
       >
-        {block.text ? <PortableText value={block.text} components={components} /> : null}
+        {block.text ? <PortableText value={block.text} components={panelComponents} /> : null}
       </Panel>
     )
   }
@@ -233,11 +296,45 @@ export function ArticlePreview(props: ArticlePreviewProps) {
         ) : null}
 
         <article style={styles.article}>
-          <Heading as="h1" level={1}>{article.title || 'Untitled article'}</Heading>
-          {article.ingress ? <PortableText value={article.ingress} components={ingressComponents} /> : null}
-          {article.content?.map((block, index) => (
-            <div key={block._key || index}>{renderContentBlock(block)}</div>
-          ))}
+          <Heading as="h1" level={1}>
+            {article.title || 'Untitled article'}
+          </Heading>
+          {article.ingress ? (
+            <PortableText value={article.ingress} components={ingressComponents} />
+          ) : null}
+          {props.isSectionPage
+            ? article.sections?.map((section, index, sections) => {
+                const Icon = section.icon ? sectionIconMap[section.icon] : undefined
+                return (
+                  <section
+                    key={section._key}
+                    style={
+                      index === sections.length - 1
+                        ? {...styles.section, ...styles.sectionLast}
+                        : styles.section
+                    }
+                  >
+                    {Icon && (
+                      <span aria-hidden="true">
+                        <Icon />
+                      </span>
+                    )}
+                    {section.heading && (
+                      <Heading as="h2" level={2}>
+                        {section.heading}
+                      </Heading>
+                    )}
+                    {section.content?.map((block) => (
+                      <div key={block._key}>
+                        {renderContentBlock(block, Boolean(section.heading))}
+                      </div>
+                    ))}
+                  </section>
+                )
+              })
+            : article.content?.map((block, index) => (
+                <div key={block._key || index}>{renderContentBlock(block)}</div>
+              ))}
         </article>
       </div>
     </main>

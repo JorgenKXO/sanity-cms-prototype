@@ -65,6 +65,41 @@ The article preview intentionally omits the header, footer, feedback widget, and
 
 The preview's typography and link styling (font stack, colors, weights, sizes) are sampled from skatteetaten.no's live article template, for internal Skatteetaten prototyping. The header, footer, feedback widget, and top-of-page button are still intentionally left out. Article body text is placeholder content — replace it with real content as needed.
 
+## Seksjonssider (alternativ prototype)
+
+Opprett **Seksjonsside** fra **Alle seksjonssider** eller en kategorimappe.
+Fyll inn tittel, nettadresse og ingress, og bruk **Legg til seksjon**.
+Hver seksjons navn, valgfrie overskrift, valgfrie ikon og innhold redigeres
+direkte på siden, uten en seksjonsdialog. Innholdsblokkene bruker fortsatt
+vanlig blokkredigering.
+
+Siden må ha 1–10 seksjoner, med minst én innholdsblokk i hver seksjon før
+publisering. Bruk **Flytt opp**, **Flytt ned** og **Slett seksjon** for å
+organisere innholdet. Seksjonene støtter tekst, bilde, informasjon, varsel,
+krise og rettskilder, men ikke seksjoner inni seksjoner.
+
+Fanen **Forhåndsvisning av seksjonsside** bruker artikkeloppsettet.
+Seksjonene har grønne skillelinjer over og mellom seg, samt under siste seksjon,
+med samme `--palette-forest-50` som den tidligere seksjonsprototypen.
+Seksjonsnavn vises bare i Studio. Prototypen støtter foreløpig ikke
+**Delt innhold** eller seksjonssider som mål for navigasjonskort.
+Eksisterende artikler og dokumenter endres ikke automatisk.
+
+Designsystemets lokale MDX-kilder var ikke tilgjengelige ved implementeringen.
+Forhåndsvisningen gjenbruker eksisterende komponenter, semantiske tokens og
+artikkelmal; installerte komponenttyper brukes som dokumentasjonsfallback.
+
+For sammenligning kan denne arbeidsgrenen kjøres på en egen port:
+
+```sh
+npm run dev -- --port 3334
+```
+
+Bruk `http://localhost:3334`, som må være tillatt med credentials som
+utviklingsvert/CORS-origin i Sanity-prosjektet. Studio trenger ikke registreres
+eller deployes for lokal testing. Begge lokale Studio-instansene bruker samme
+datasett når miljøvariablene er like; innholdsendringer deles mellom dem.
+
 ## Navigation card reference picker
 
 Navigation cards use Sanity's standard reference picker. Search results for pages

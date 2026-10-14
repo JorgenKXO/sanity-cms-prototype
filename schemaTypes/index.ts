@@ -1,4 +1,5 @@
 import {articleType} from './articleType'
+import {pageSectionType, sectionPageType} from './sectionPageType'
 import {
   navigationGroupHeadingType,
   navigationGroupType,
@@ -17,6 +18,8 @@ import {
 export const schemaTypes = [
   siteSettingsType,
   articleType,
+  pageSectionType,
+  sectionPageType,
   navigationPageType,
   navigationGroupHeadingType,
   navigationGroupType,

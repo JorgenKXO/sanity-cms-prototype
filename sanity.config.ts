@@ -30,6 +30,13 @@ export default defineConfig({
     templates: (prev): Template[] => [
       ...prev,
       {
+        id: 'sectionPage-with-kategori',
+        title: 'Seksjonsside med kategori',
+        schemaType: 'sectionPage',
+        parameters: [{name: 'kategori', type: 'string'}],
+        value: (params: {kategori?: string}) => ({kategori: params.kategori}),
+      },
+      {
         id: 'article-with-kategori',
         title: 'Artikkel med kategori',
         schemaType: 'article',
@@ -64,6 +71,6 @@ export default defineConfig({
     },
   },
   i18n: {
-    locales: [{id: 'nb-NO', title: 'Norsk bokmål'}],
+    locales: [{id: 'nb-NO', title: 'Norsk bokmål', weekInfo: {firstDay: 1, weekend: [6, 7], minimalDays: 4}}],
   },
 })

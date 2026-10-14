@@ -1,4 +1,5 @@
 import {articleType} from './articleType'
+import {pageSectionType, sectionPageType} from './sectionPageType'
 import {
   articleImageContentBlockType,
   articleInformationContentBlockType,
@@ -27,6 +28,8 @@ export const schemaTypes = [
   articleInformationContentBlockType,
   sharedContentType,
   articleType,
+  pageSectionType,
+  sectionPageType,
   navigationPageType,
   navigationGroupHeadingType,
   navigationGroupType,

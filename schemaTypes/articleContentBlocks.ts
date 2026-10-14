@@ -1,4 +1,4 @@
-import {ImageIcon, InfoOutlineIcon, TextIcon} from '@sanity/icons'
+import {ErrorOutlineIcon, ImageIcon, InfoOutlineIcon, TextIcon, WarningOutlineIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
 type PortableTextBlockPreview = {
@@ -19,7 +19,7 @@ export const linkAnnotation = {
     defineField({
       name: 'href',
       title: 'Nettadresse',
-      type: 'string',
+      type: 'url',
       validation: (rule) =>
         rule.required().uri({
           allowRelative: true,
@@ -208,3 +208,82 @@ export const articleInformationContentBlockType = defineType({
     },
   },
 })
+
+export const sectionIconOptions = [
+  {title: 'Informasjon', value: 'info'},
+  {title: 'Hjelp', value: 'help'},
+  {title: 'Fullført', value: 'completed'},
+  {title: 'Frist/dato', value: 'calendar'},
+  {title: 'Tid', value: 'clock'},
+  {title: 'Varsel', value: 'bell'},
+  {title: 'Personvern/sikkerhet', value: 'lock'},
+]
+
+export const articleContentBlocks = [
+  defineArrayMember({type: 'tekst'}),
+  defineArrayMember({type: 'bilde'}),
+  defineArrayMember({type: 'informasjon'}),
+defineArrayMember({
+    name: 'varsel',
+    title: 'Varsel',
+    type: 'object',
+    icon: ErrorOutlineIcon,
+    fields: [
+      blockNameField,
+      defineField({
+        name: 'heading',
+        title: 'Overskrift',
+        type: 'string',
+      }),
+      defineField({
+        name: 'text',
+        title: 'Innhold',
+        description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
+        type: 'array',
+        of: [panelTextBlock],
+        validation: (rule) => rule.required(),
+      }),
+    ],
+    preview: {
+      select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
+      prepare({blockName, title, blocks}) {
+        return {
+          title: blockName || title || 'Varsel',
+          subtitle: blockText(blocks),
+        }
+      },
+    },
+  }),
+defineArrayMember({
+    name: 'krise',
+    title: 'Krise',
+    type: 'object',
+    icon: WarningOutlineIcon,
+    fields: [
+      blockNameField,
+      defineField({
+        name: 'heading',
+        title: 'Overskrift',
+        type: 'string',
+      }),
+      defineField({
+        name: 'text',
+        title: 'Innhold',
+        description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
+        type: 'array',
+        of: [panelTextBlock],
+        validation: (rule) => rule.required(),
+      }),
+    ],
+    preview: {
+      select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
+      prepare({blockName, title, blocks}) {
+        return {
+          title: blockName || title || 'Krise',
+          subtitle: blockText(blocks),
+        }
+      },
+    },
+  }),
+defineArrayMember({type: 'rettskilderPanel'}),
+]

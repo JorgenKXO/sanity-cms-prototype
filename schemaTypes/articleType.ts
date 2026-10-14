@@ -1,13 +1,12 @@
 import {
   BlockContentIcon,
   EarthGlobeIcon,
-  ErrorOutlineIcon,
   ThLargeIcon,
-  WarningOutlineIcon,
 } from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {articleContentBlocks, blockNameField, sectionIconOptions} from './articleContentBlocks'
+export {articleTextBlock} from './articleContentBlocks'
 
-import {blockNameField, panelTextBlock} from './articleContentBlocks'
 import {kategoriOptions} from './kategoriOptions'
 
 type PortableTextBlockPreview = {
@@ -31,89 +30,12 @@ const ingressBlock = defineArrayMember({
   },
 })
 
-const iconOptions = [
-  {title: 'Informasjon', value: 'info'},
-  {title: 'Hjelp', value: 'help'},
-  {title: 'Fullført', value: 'completed'},
-  {title: 'Frist/dato', value: 'calendar'},
-  {title: 'Tid', value: 'clock'},
-  {title: 'Varsel', value: 'bell'},
-  {title: 'Personvern/sikkerhet', value: 'lock'},
-] as const
-
 // Innholdsblokkene som kan brukes direkte på artikkelen og inne i en seksjon.
 // Funksjon slik at hver array får sine egne definisjoner.
 const contentMembers = () => [
-    defineArrayMember({type: 'tekst'}),
-    defineArrayMember({type: 'bilde'}),
-    defineArrayMember({type: 'informasjon'}),
-    defineArrayMember({
-      type: 'reference',
-      to: [{type: 'sharedContent'}],
-    }),
-    defineArrayMember({
-      name: 'varsel',
-      title: 'Varsel',
-      type: 'object',
-      icon: ErrorOutlineIcon,
-      fields: [
-        blockNameField,
-        defineField({
-          name: 'heading',
-          title: 'Overskrift',
-          type: 'string',
-        }),
-        defineField({
-          name: 'text',
-          title: 'Innhold',
-          description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
-          type: 'array',
-          of: [panelTextBlock],
-          validation: (rule) => rule.required(),
-        }),
-      ],
-      preview: {
-        select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
-        prepare({blockName, title, blocks}) {
-          return {
-            title: blockName || title || 'Varsel',
-            subtitle: blockText(blocks),
-          }
-        },
-      },
-    }),
-    defineArrayMember({
-      name: 'krise',
-      title: 'Krise',
-      type: 'object',
-      icon: WarningOutlineIcon,
-      fields: [
-        blockNameField,
-        defineField({
-          name: 'heading',
-          title: 'Overskrift',
-          type: 'string',
-        }),
-        defineField({
-          name: 'text',
-          title: 'Innhold',
-          description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
-          type: 'array',
-          of: [panelTextBlock],
-          validation: (rule) => rule.required(),
-        }),
-      ],
-      preview: {
-        select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
-        prepare({blockName, title, blocks}) {
-          return {
-            title: blockName || title || 'Krise',
-            subtitle: blockText(blocks),
-          }
-        },
-      },
-    }),
-    defineArrayMember({type: 'rettskilderPanel'}),
+  ...articleContentBlocks.slice(0, 3),
+  defineArrayMember({type: 'reference', to: [{type: 'sharedContent'}]}),
+  ...articleContentBlocks.slice(3),
 ]
 
 export const articleType = defineType({
@@ -165,7 +87,7 @@ export const articleType = defineType({
             defineField({
               name: 'href',
               title: 'Nettadresse',
-              type: 'string',
+              type: 'url',
               validation: (rule) =>
                 rule.uri({
                   allowRelative: true,
@@ -214,7 +136,7 @@ export const articleType = defineType({
               title: 'Ikon (valgfritt)',
               type: 'string',
               description: 'Velg et ikon fra Skatteetatens designsystem som skal vises ved seksjonen.',
-              options: {list: [...iconOptions], layout: 'dropdown'},
+              options: {list: sectionIconOptions, layout: 'dropdown'},
             }),
             defineField({
               name: 'content',

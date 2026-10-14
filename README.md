@@ -92,6 +92,45 @@ sections. If an article contains any section, all top-level content must be
 sections; validation blocks publishing otherwise. The preview draws a green line
 above each section (and below the last one), with the icon in a black circle to the left of the heading and content.
 
+## Seksjonssider (alternativ prototype)
+
+Opprett **Seksjonsside** fra **Alle seksjonssider** eller en kategorimappe.
+Fyll inn tittel, nettadresse og ingress, og bruk **Legg til seksjon**.
+Hver seksjons navn, valgfrie overskrift, valgfrie ikon og innhold redigeres
+direkte på siden, uten en seksjonsdialog. Innholdsblokkene bruker fortsatt
+vanlig blokkredigering.
+
+Siden må ha 1–10 seksjoner, med minst én innholdsblokk i hver seksjon før
+publisering. Bruk **Flytt opp**, **Flytt ned** og **Slett seksjon** for å
+organisere innholdet. Seksjonene støtter tekst, bilde, informasjon, varsel,
+krise og rettskilder, men ikke seksjoner inni seksjoner.
+
+Fanen **Forhåndsvisning av seksjonsside** bruker artikkeloppsettet.
+Seksjonene har grønne skillelinjer over og mellom seg, samt under siste seksjon,
+med samme `--palette-forest-50` som den tidligere seksjonsprototypen.
+Seksjonsnavn vises bare i Studio. Prototypen støtter foreløpig ikke
+**Delt innhold** eller seksjonssider som mål for navigasjonskort.
+Eksisterende artikler og dokumenter endres ikke automatisk.
+
+Begge måtene finnes på `master`: bruk **Artikkel → Innhold → Seksjon** for
+seksjonsblokker og **Seksjonsside → Seksjoner** for den åpne redigeringen.
+Artikler beholder også støtte for delt innhold, inkludert inne i seksjonsblokker.
+
+Designsystemets lokale MDX-kilder var ikke tilgjengelige ved implementeringen.
+Forhåndsvisningen gjenbruker eksisterende komponenter, semantiske tokens og
+artikkelmal; installerte komponenttyper brukes som dokumentasjonsfallback.
+
+For sammenligning kan denne arbeidsgrenen kjøres på en egen port:
+
+```sh
+npm run dev -- --port 3334
+```
+
+Bruk `http://localhost:3334`, som må være tillatt med credentials som
+utviklingsvert/CORS-origin i Sanity-prosjektet. Studio trenger ikke registreres
+eller deployes for lokal testing. Begge lokale Studio-instansene bruker samme
+datasett når miljøvariablene er like; innholdsendringer deles mellom dem.
+
 ## Navigation card reference picker
 
 Navigation cards use Sanity's standard reference picker. Search results for pages

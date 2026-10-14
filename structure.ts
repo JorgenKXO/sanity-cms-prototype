@@ -9,12 +9,19 @@ import {
 import type {DefaultDocumentNodeResolver, StructureResolver} from 'sanity/structure'
 
 import {ArticlePreview} from './preview/ArticlePreview'
+import {SectionPagePreview} from './preview/SectionPagePreview'
 import {NavigationPagePreview} from './preview/NavigationPagePreview'
 import {ForsidePreview} from './preview/ForsidePreview'
 import {SharedContentUsage} from './preview/SharedContentUsage'
 import {kategoriOptions} from './schemaTypes/kategoriOptions'
 
 export const defaultDocumentNode: DefaultDocumentNodeResolver = (S, {schemaType}) => {
+  if (schemaType === 'sectionPage') {
+    return S.document().views([
+      S.view.form().icon(EditIcon),
+      S.view.component(SectionPagePreview).title('Forhåndsvisning av seksjonsside').icon(EyeOpenIcon),
+    ])
+  }
   if (schemaType === 'article') {
     return S.document().views([
       S.view.form().icon(EditIcon),
@@ -59,6 +66,26 @@ const allArticles = (S: Parameters<StructureResolver>[0]) =>
         .schemaType('article')
         .apiVersion('2026-09-10')
         .filter('_type == "article"'),
+    )
+
+const sectionPages = (S: Parameters<StructureResolver>[0], title = 'Alle seksjonssider',
+  category?: {suffix: string; value?: string}) =>
+  S.listItem()
+    .title(title)
+    .id(`sectionPages-${category?.suffix || 'all'}`)
+    .icon(FolderIcon)
+    .child(
+      S.documentList()
+        .title(title)
+        .schemaType('sectionPage')
+        .apiVersion('2026-09-10')
+        .filter(`_type == "sectionPage"${category
+          ? category.value ? ' && kategori == $kategori' : ' && !defined(kategori)'
+          : ''}`)
+        .params(category?.value ? {kategori: category.value} : {})
+        .initialValueTemplates(category?.value
+          ? [S.initialValueTemplateItem('sectionPage-with-kategori', {kategori: category.value})]
+          : [S.initialValueTemplateItem('sectionPage')]),
     )
 
 // Alle navigasjonssider i én flat liste, uavhengig av kategori.
@@ -134,6 +161,7 @@ function kategoriFolder(
         .title(title)
         .id(`kategori-${idSuffix}-list`)
         .items([
+          sectionPages(S, 'Seksjonssider', {suffix: idSuffix, value}),
           S.listItem()
             .title('Artikler')
             .id(`kategori-${idSuffix}-artikler`)
@@ -184,6 +212,7 @@ export const deskStructure: StructureResolver = (S) =>
     .title('Innhold')
     .items([
       allArticles(S),
+      sectionPages(S),
       allNavigationPages(S),
       globalerFolder(S),
       allSharedContent(S),

@@ -4,7 +4,7 @@ import {
   type PortableTextComponents,
 } from '@portabletext/react'
 import '@skatteetaten/ds-core-designtokens/index.css'
-import {Link} from '@skatteetaten/ds-buttons'
+import {Button, Link, MegaButton} from '@skatteetaten/ds-buttons'
 import {Panel} from '@skatteetaten/ds-content'
 import {Breadcrumbs} from '@skatteetaten/ds-navigation'
 import {Heading, List, Paragraph} from '@skatteetaten/ds-typography'
@@ -46,6 +46,16 @@ type InformasjonBlock = {
   text?: PortableTextBlock[]
 }
 
+type ArticleButtonBlock = {
+  _key?: string
+  _type: 'knapp'
+  label?: string
+  appearance?: 'secondary' | 'primary' | 'mega'
+  linkType?: 'external' | 'internal'
+  url?: string
+  page?: {_ref?: string}
+}
+
 type PanelBlock = {
   _key?: string
   _type: 'varsel' | 'krise'
@@ -64,6 +74,7 @@ type SharedContentBlock = TekstBlock | BildeBlock | InformasjonBlock
 type SharedContentReference = {_key?: string; _type: 'reference'; _ref: string}
 type InnholdBlock =
   | SharedContentBlock
+  | ArticleButtonBlock
   | PanelBlock
   | RettskilderPanelBlock
   | SharedContentReference
@@ -82,6 +93,11 @@ type SharedContentDocument = {
   _id: string
   title?: string
   content?: SharedContentBlock[]
+}
+
+type ButtonDestination = {
+  _id: string
+  slug?: {current?: string}
 }
 
 export type ArticleDocument = {
@@ -170,6 +186,9 @@ const styles: Record<string, CSSProperties> = {
     margin: 'var(--spacing-m) 0',
     borderRadius: '4px',
   },
+  button: {
+    padding: 'var(--spacing-s) 0',
+  },
 }
 
 const components = {
@@ -236,6 +255,9 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
   const [sharedContentById, setSharedContentById] = useState<Record<string, SharedContentDocument>>({})
   const [sharedContentError, setSharedContentError] = useState<string>()
   const [isLoadingSharedContent, setIsLoadingSharedContent] = useState(false)
+  const [buttonDestinationsById, setButtonDestinationsById] = useState<Record<string, ButtonDestination>>({})
+  const [buttonDestinationError, setButtonDestinationError] = useState<string>()
+  const [isLoadingButtonDestinations, setIsLoadingButtonDestinations] = useState(false)
 
   const sharedContentIds = [
     ...new Set(
@@ -246,6 +268,18 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
     ),
   ]
   const sharedContentIdsKey = JSON.stringify(sharedContentIds)
+
+  const buttonDestinationIds = [
+    ...new Set(
+      (article?.content || [])
+        .flatMap((block) => (block._type === 'seksjon' ? block.content || [] : [block]))
+        .filter((block): block is ArticleButtonBlock => block._type === 'knapp')
+        .filter((block) => block.linkType === 'internal')
+        .map((block) => block.page?._ref)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ]
+  const buttonDestinationIdsKey = JSON.stringify(buttonDestinationIds)
 
   useEffect(() => {
     if (sharedContentIds.length === 0) {
@@ -283,6 +317,43 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
     // Keep the request stable while Sanity recreates the reference array.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client, sharedContentIdsKey])
+
+  useEffect(() => {
+    if (buttonDestinationIds.length === 0) {
+      setButtonDestinationsById({})
+      setButtonDestinationError(undefined)
+      setIsLoadingButtonDestinations(false)
+      return
+    }
+
+    let cancelled = false
+    setButtonDestinationsById({})
+    setButtonDestinationError(undefined)
+    setIsLoadingButtonDestinations(true)
+    client
+      .withConfig({perspective: 'drafts'})
+      .fetch<ButtonDestination[]>(
+        `*[_id in $ids]{_id, slug}`,
+        {ids: buttonDestinationIds},
+      )
+      .then((results) => {
+        if (cancelled) return
+        setButtonDestinationsById(Object.fromEntries(results.map((result) => [result._id, result])))
+        setIsLoadingButtonDestinations(false)
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return
+        setButtonDestinationsById({})
+        setButtonDestinationError(error instanceof Error ? error.message : 'Ukjent feil')
+        setIsLoadingButtonDestinations(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+    // Keep the request stable while Sanity recreates the reference array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client, buttonDestinationIdsKey])
 
   if (!article) {
     return <div style={styles.empty}>No article content to preview yet.</div>
@@ -353,6 +424,64 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
       }
       const src = builder.image(block.image).width(960).fit('max').auto('format').url()
       return <img src={src} alt={block.isDecorative ? '' : block.alt || ''} style={styles.image} />
+    }
+
+    if (block._type === 'knapp') {
+      if (!block.label) {
+        return <p role="status">Legg til lenketekst for å forhåndsvise knappen.</p>
+      }
+
+      let href: string | undefined
+      if (block.linkType === 'external') {
+        if (!block.url) {
+          return <p role="status">Legg til nettadressen for å forhåndsvise knappen.</p>
+        }
+        href = block.url
+      } else if (block.linkType === 'internal') {
+        const pageId = block.page?._ref
+        if (buttonDestinationError) {
+          return <p role="alert">Kunne ikke hente lenkemålet: {buttonDestinationError}</p>
+        }
+        const destination = pageId ? buttonDestinationsById[pageId] : undefined
+        if (!destination?.slug?.current) {
+          return (
+            <p role={isLoadingButtonDestinations ? 'status' : 'alert'}>
+              {isLoadingButtonDestinations
+                ? 'Laster lenkemål …'
+                : 'Lenkemålet ble ikke funnet eller mangler nettadresse.'}
+            </p>
+          )
+        }
+        href = `/${destination.slug.current}`
+      } else {
+        return <p role="status">Velg en lenketype for å forhåndsvise knappen.</p>
+      }
+
+      if (!href) return <p role="alert">Lenkemålet mangler nettadresse.</p>
+      if (block.appearance === 'mega') {
+        return (
+          <div style={styles.button}>
+            <MegaButton href={href} isExternal={block.linkType === 'external'}>
+              {block.label}
+            </MegaButton>
+          </div>
+        )
+      }
+      if (block.appearance === 'primary' || block.appearance === 'secondary') {
+        return (
+          <div style={styles.button}>
+            <Button
+              href={href}
+              variant={block.appearance}
+              isExternal={block.linkType === 'external'}
+            >
+              {block.label}
+            </Button>
+          </div>
+        )
+      }
+
+      return <p role="alert">Velg et utseende for knappen.</p>
     }
 
     if (block._type === 'rettskilderPanel') {

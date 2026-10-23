@@ -87,7 +87,7 @@ nettstedet. Delt innhold er en innholdsressurs, ikke en egen nettside.
 
 Add **Seksjon** to **Innhold** to group content under an optional heading and
 optional icon. A section accepts the same blocks as the article itself (text,
-image, information, warning, crisis and legal-source panels), but not other
+image, information, buttons, warning, crisis and legal-source panels), but not other
 sections. If an article contains any section, all top-level content must be
 sections; validation blocks publishing otherwise. The preview draws a green line
 above each section (and below the last one), with the icon in a black circle to the left of the heading and content.
@@ -102,7 +102,7 @@ vanlig blokkredigering.
 
 Siden må ha 1–10 seksjoner, med minst én innholdsblokk i hver seksjon før
 publisering. Bruk **Flytt opp**, **Flytt ned** og **Slett seksjon** for å
-organisere innholdet. Seksjonene støtter tekst, bilde, informasjon, varsel,
+organisere innholdet. Seksjonene støtter tekst, bilde, informasjon, knapp, varsel,
 krise og rettskilder, men ikke seksjoner inni seksjoner.
 
 Fanen **Forhåndsvisning av seksjonsside** bruker artikkeloppsettet.
@@ -111,6 +111,19 @@ med samme `--palette-forest-50` som den tidligere seksjonsprototypen.
 Seksjonsnavn vises bare i Studio. Prototypen støtter foreløpig ikke
 **Delt innhold** eller seksjonssider som mål for navigasjonskort.
 Eksisterende artikler og dokumenter endres ikke automatisk.
+
+## Knapper i artikler og seksjoner
+
+Legg til **Knapp** i innholdet på en artikkel eller i en seksjon.
+Skriv inn **Lenketekst**, velg **Sekundærknapp**, **Primærknapp** eller
+**Megaknapp**, og velg lenketype. Eksterne lenker bruker en HTTP(S)-adresse.
+Interne lenker refererer til en artikkel, seksjonsside eller navigasjonsside.
+Forhåndsvisningen bruker målsidens nettadresse (slug).
+
+Knappene vises med designsystemets `Button` og `MegaButton`, med luft over
+og under hver knapp. Bruk megaknapp til én tydelig hovedhandling.
+Dette gjelder Studio-forhåndsvisningen; en separat publiseringsfrontend må
+også støtte innholdsblokken `knapp`.
 
 Begge måtene finnes på `master`: bruk **Artikkel → Innhold → Seksjon** for
 seksjonsblokker og **Seksjonsside → Seksjoner** for den åpne redigeringen.

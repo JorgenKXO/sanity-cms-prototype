@@ -100,6 +100,32 @@ test('preserves regular article headings and does not add section borders', () =
   assert.ok(!html.includes('<section'))
 })
 
+test('renders secondary, primary and mega article buttons as links', () => {
+  const appearances = [
+    {appearance: 'secondary', className: 'button_secondary'},
+    {appearance: 'primary', className: 'button_primary'},
+    {appearance: 'mega', className: 'MegaButton'},
+  ]
+
+  for (const {appearance, className} of appearances) {
+    const html = render(ArticlePreview, {
+      title: 'Artikkel med knapp',
+      content: [{
+        _key: `button-${appearance}`,
+        _type: 'knapp',
+        label: 'Les mer',
+        appearance,
+        linkType: 'external',
+        url: 'https://example.no/side',
+      }],
+    })
+    assert.ok(html.includes('href="https://example.no/side"'), html)
+    assert.ok(html.includes('Les mer'), html)
+    assert.ok(html.includes(className), html)
+    assert.ok(html.includes('padding:var(--spacing-s) 0'), html)
+  }
+})
+
 test('preserves article section blocks, circle icons and shared references', () => {
   const html = render(ArticlePreview, {
     title: 'Artikkel med seksjoner',

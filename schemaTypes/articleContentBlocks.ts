@@ -1,4 +1,11 @@
-import {ErrorOutlineIcon, ImageIcon, InfoOutlineIcon, TextIcon, WarningOutlineIcon} from '@sanity/icons'
+import {
+  ArrowRightIcon,
+  ErrorOutlineIcon,
+  ImageIcon,
+  InfoOutlineIcon,
+  TextIcon,
+  WarningOutlineIcon,
+} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 
 type PortableTextBlockPreview = {
@@ -209,6 +216,98 @@ export const articleInformationContentBlockType = defineType({
   },
 })
 
+export const articleButtonContentBlockType = defineType({
+  name: 'knapp',
+  title: 'Knapp',
+  type: 'object',
+  icon: ArrowRightIcon,
+  fields: [
+    blockNameField,
+    defineField({
+      name: 'label',
+      title: 'Lenketekst',
+      type: 'string',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'appearance',
+      title: 'Utseende',
+      description:
+        'Bruk megaknapp for én tydelig hovedhandling. Velg primær- eller sekundærknapp for øvrige lenker.',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Sekundærknapp', value: 'secondary'},
+          {title: 'Primærknapp', value: 'primary'},
+          {title: 'Megaknapp', value: 'mega'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'secondary',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'linkType',
+      title: 'Lenketype',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Ekstern nettside', value: 'external'},
+          {title: 'Sanity-side', value: 'internal'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'external',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'url',
+      title: 'Nettadresse',
+      type: 'url',
+      hidden: ({parent}) => parent?.linkType !== 'external',
+      validation: (rule) =>
+        rule
+          .uri({scheme: ['http', 'https']})
+          .custom((value, context) => {
+            const parent = context.parent as {linkType?: string} | undefined
+            if (parent?.linkType !== 'external' || value) return true
+            return 'Legg til nettadressen.'
+          }),
+    }),
+    defineField({
+      name: 'page',
+      title: 'Side',
+      type: 'reference',
+      to: [{type: 'article'}, {type: 'sectionPage'}, {type: 'navigationPage'}],
+      hidden: ({parent}) => parent?.linkType !== 'internal',
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const parent = context.parent as {linkType?: string} | undefined
+          if (parent?.linkType !== 'internal' || value) return true
+          return 'Velg en Sanity-side.'
+        }),
+    }),
+  ],
+  preview: {
+    select: {blockName: 'blockName', label: 'label', appearance: 'appearance'},
+    prepare({blockName, label, appearance}: {
+      blockName?: string
+      label?: string
+      appearance?: string
+    }) {
+      const appearanceTitles: Record<string, string> = {
+        secondary: 'Sekundærknapp',
+        primary: 'Primærknapp',
+        mega: 'Megaknapp',
+      }
+      return {
+        title: blockName || label || 'Knapp',
+        subtitle: appearanceTitles[appearance || ''] || 'Knapp',
+      }
+    },
+  },
+})
+
 export const sectionIconOptions = [
   {title: 'Informasjon', value: 'info'},
   {title: 'Hjelp', value: 'help'},
@@ -223,6 +322,7 @@ export const articleContentBlocks = [
   defineArrayMember({type: 'tekst'}),
   defineArrayMember({type: 'bilde'}),
   defineArrayMember({type: 'informasjon'}),
+  defineArrayMember({type: 'knapp'}),
 defineArrayMember({
     name: 'varsel',
     title: 'Varsel',

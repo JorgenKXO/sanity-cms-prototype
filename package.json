@@ -16,6 +16,7 @@
     "@sanity/image-url": "^2.1.1",
     "@sanity/ui": "^3.5.5",
     "@sanity/vision": "^5.20.0",
+    "@skatteetaten/ds-buttons": "^2.10.0",
     "@skatteetaten/ds-content": "^2.10.0",
     "@skatteetaten/ds-core-designtokens": "^2.10.0",
     "@skatteetaten/ds-icons": "^2.10.0",

@@ -15,14 +15,22 @@ await build({
     contents: `
       import {articleType} from './schemaTypes/articleType'
       import {pageSectionType, sectionPageType} from './schemaTypes/sectionPageType'
+      import {defineType} from 'sanity'
       import {rettskilderPanelType} from './schemaTypes/panelTypes'
       import {
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
+        articleButtonContentBlockType,
       } from './schemaTypes/articleContentBlocks'
       import {sharedContentType} from './schemaTypes/sharedContentType'
+      const navigationPageTestType = defineType({
+        name: 'navigationPage',
+        type: 'document',
+        fields: [{name: 'title', type: 'string'}],
+      })
       export const schemaTypes = [
         articleType, pageSectionType, sectionPageType, rettskilderPanelType,
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
+        articleButtonContentBlockType, navigationPageTestType,
         sharedContentType,
       ]
     `,
@@ -128,7 +136,7 @@ test('requires section content, but name, heading and icon are optional', async 
   }
 })
 
-test('reuses all six article blocks and does not offer nested sections or shared content', () => {
+test('reuses all article blocks and does not offer nested sections or shared content', () => {
   const article = schemaTypes.find((type) => type.name === 'article')
   const sectionType = schemaTypes.find((type) => type.name === 'pageSection')
   const articleBlocks = article.fields.find((field) => field.name === 'content').of
@@ -138,7 +146,7 @@ test('reuses all six article blocks and does not offer nested sections or shared
   assert.deepEqual(articleBlocks, sectionBlocks)
   assert.deepEqual(
     sectionBlocks.map((block) => block.name || block.type),
-    ['tekst', 'bilde', 'informasjon', 'varsel', 'krise', 'rettskilderPanel'],
+    ['tekst', 'bilde', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel'],
   )
   assert.equal(sectionType.options.collapsible, false)
   const page = schemaTypes.find((type) => type.name === 'sectionPage')
@@ -146,6 +154,45 @@ test('reuses all six article blocks and does not offer nested sections or shared
     typeof page.fields.find((field) => field.name === 'sections').components.input,
     'function',
   )
+})
+
+test('requires button label and the selected link destination', async () => {
+  const validButton = {
+    _key: 'button',
+    _type: 'knapp',
+    label: 'Gå videre',
+    appearance: 'secondary',
+    linkType: 'external',
+    url: 'https://example.no',
+  }
+  const validateButton = async (button) =>
+    (
+      await validateDocument({
+        document: document([{...section(1), content: [button]}]),
+        workspace,
+        environment: 'cli',
+        getDocumentExists: async () => true,
+      })
+    ).filter((marker) => marker.level === 'error')
+
+  assert.deepEqual(await validateButton(validButton), [])
+  assert.ok((await validateButton({...validButton, label: undefined}))
+    .some((marker) => marker.path.includes('label')))
+  assert.ok((await validateButton({...validButton, url: undefined}))
+    .some((marker) => marker.path.includes('url')))
+  assert.ok((await validateButton({...validButton, url: 'ftp://example.no'}))
+    .some((marker) => marker.path.includes('url')))
+  assert.deepEqual(await validateButton({
+    ...validButton,
+    linkType: 'internal',
+    url: undefined,
+    page: {_type: 'reference', _ref: 'article-target'},
+  }), [])
+  assert.ok((await validateButton({
+    ...validButton,
+    linkType: 'internal',
+    url: undefined,
+  })).some((marker) => marker.path.includes('page')))
 })
 
 test('validates image alternative text inside sections', async () => {

@@ -1,6 +1,7 @@
 import {articleType} from './articleType'
 import {pageSectionType, sectionPageType} from './sectionPageType'
 import {
+  articleBlockquoteContentBlockType,
   articleButtonContentBlockType,
   articleImageContentBlockType,
   articleInformationContentBlockType,
@@ -28,6 +29,7 @@ export const schemaTypes = [
   articleImageContentBlockType,
   articleInformationContentBlockType,
   articleButtonContentBlockType,
+  articleBlockquoteContentBlockType,
   sharedContentType,
   articleType,
   pageSectionType,

@@ -3,6 +3,7 @@ import {
   type PortableTextBlock,
   type PortableTextComponents,
 } from '@portabletext/react'
+import {OpenClose} from '@skatteetaten/ds-collections'
 import '@skatteetaten/ds-core-designtokens/index.css'
 import {Button, Link, MegaButton} from '@skatteetaten/ds-buttons'
 import {Panel} from '@skatteetaten/ds-content'
@@ -56,6 +57,14 @@ type ArticleButtonBlock = {
   page?: {_ref?: string}
 }
 
+type ArticleOpenCloseBlock = {
+  _key?: string
+  _type: 'openClose'
+  title?: string
+  size?: 'small' | 'medium' | 'large'
+  content?: PortableTextBlock[]
+}
+
 type PanelBlock = {
   _key?: string
   _type: 'varsel' | 'krise'
@@ -75,6 +84,7 @@ type SharedContentReference = {_key?: string; _type: 'reference'; _ref: string}
 type InnholdBlock =
   | SharedContentBlock
   | ArticleButtonBlock
+  | ArticleOpenCloseBlock
   | PanelBlock
   | RettskilderPanelBlock
   | SharedContentReference
@@ -418,6 +428,22 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
       return block.text ? <PortableText value={block.text} components={contentComponents} /> : null
     }
 
+    if (block._type === 'openClose') {
+      if (!block.title) {
+        return <p role="status">Legg til en overskrift for å forhåndsvise Åpne/Lukke.</p>
+      }
+
+      return (
+        <OpenClose title={block.title} size={block.size} titleAs={nested ? 'h3' : 'h2'}>
+          {block.content ? (
+            <PortableText value={block.content} components={contentComponents} />
+          ) : (
+            <p role="status">Legg til innhold i Åpne/Lukke.</p>
+          )}
+        </OpenClose>
+      )
+    }
+
     if (block._type === 'bilde') {
       if (!block.image) {
         return null
@@ -551,7 +577,9 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
         <div style={styles.sectionBody}>
           {block.heading ? <Heading as="h2" level={2}>{block.heading}</Heading> : null}
           {block.content?.map((child, index) => (
-            <div key={child._key || index}>{renderContentBlock(child)}</div>
+            <div key={child._key || index}>
+              {renderContentBlock(child, Boolean(block.heading))}
+            </div>
           ))}
         </div>
       </section>

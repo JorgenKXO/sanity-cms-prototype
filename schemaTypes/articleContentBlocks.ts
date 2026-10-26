@@ -1,5 +1,6 @@
 import {
   ArrowRightIcon,
+  ChevronDownIcon,
   ErrorOutlineIcon,
   ImageIcon,
   InfoOutlineIcon,
@@ -308,6 +309,58 @@ export const articleButtonContentBlockType = defineType({
   },
 })
 
+export const articleOpenCloseContentBlockType = defineType({
+  name: 'openClose',
+  title: 'Åpne/Lukke',
+  type: 'object',
+  icon: ChevronDownIcon,
+  fields: [
+    blockNameField,
+    defineField({
+      name: 'title',
+      title: 'Overskrift',
+      type: 'string',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'size',
+      title: 'Størrelse',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Liten', value: 'small'},
+          {title: 'Middels', value: 'medium'},
+          {title: 'Stor', value: 'large'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'large',
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'content',
+      title: 'Innhold',
+      type: 'array',
+      of: [articleTextBlock],
+      validation: (rule) => rule.required().min(1),
+    }),
+  ],
+  preview: {
+    select: {blockName: 'blockName', title: 'title', size: 'size'},
+    prepare({blockName, title, size}) {
+      const sizeTitles: Record<string, string> = {
+        small: 'Liten',
+        medium: 'Middels',
+        large: 'Stor',
+      }
+      return {
+        title: blockName || title || 'Åpne/Lukke',
+        subtitle: `Åpne/Lukke · ${sizeTitles[size || ''] || 'Velg størrelse'}`,
+      }
+    },
+  },
+})
+
 export const sectionIconOptions = [
   {title: 'Informasjon', value: 'info'},
   {title: 'Hjelp', value: 'help'},
@@ -386,4 +439,5 @@ defineArrayMember({
     },
   }),
 defineArrayMember({type: 'rettskilderPanel'}),
+defineArrayMember({type: 'openClose'}),
 ]

@@ -5,6 +5,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url'
 import {build} from 'esbuild'
 import {firstValueFrom, of} from 'rxjs'
 import {createClient} from '@sanity/client'
+import {ChevronDownIcon} from '@sanity/icons'
 import {resolveConfig, validateDocument} from 'sanity'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
@@ -19,7 +20,7 @@ await build({
       import {rettskilderPanelType} from './schemaTypes/panelTypes'
       import {
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
-        articleButtonContentBlockType,
+        articleButtonContentBlockType, articleOpenCloseContentBlockType,
       } from './schemaTypes/articleContentBlocks'
       import {sharedContentType} from './schemaTypes/sharedContentType'
       const navigationPageTestType = defineType({
@@ -30,7 +31,7 @@ await build({
       export const schemaTypes = [
         articleType, pageSectionType, sectionPageType, rettskilderPanelType,
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
-        articleButtonContentBlockType, navigationPageTestType,
+        articleButtonContentBlockType, articleOpenCloseContentBlockType, navigationPageTestType,
         sharedContentType,
       ]
     `,
@@ -146,13 +147,53 @@ test('reuses all article blocks and does not offer nested sections or shared con
   assert.deepEqual(articleBlocks, sectionBlocks)
   assert.deepEqual(
     sectionBlocks.map((block) => block.name || block.type),
-    ['tekst', 'bilde', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel'],
+    ['tekst', 'bilde', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel', 'openClose'],
   )
   assert.equal(sectionType.options.collapsible, false)
   const page = schemaTypes.find((type) => type.name === 'sectionPage')
   assert.equal(
     typeof page.fields.find((field) => field.name === 'sections').components.input,
     'function',
+  )
+})
+
+test('supports OpenClose with a required heading and content and all three sizes', async () => {
+  const openClose = {
+    _key: 'open-close',
+    _type: 'openClose',
+    title: 'Les mer',
+    size: 'medium',
+    content: text().text,
+  }
+  const validateOpenClose = async (value) =>
+    (
+      await validateDocument({
+        document: document([{...section(1), content: [value]}]),
+        workspace,
+        environment: 'cli',
+      })
+    ).filter((marker) => marker.level === 'error')
+
+  assert.deepEqual(await validateOpenClose(openClose), [])
+  for (const field of ['title', 'size', 'content']) {
+    const result = await validateOpenClose({...openClose, [field]: undefined})
+    assert.ok(result.some((marker) => marker.path.includes(field)), JSON.stringify(result))
+  }
+
+  const openCloseSchema = schemaTypes.find((type) => type.name === 'openClose')
+  assert.equal(openCloseSchema.title, 'Åpne/Lukke')
+  assert.equal(openCloseSchema.icon, ChevronDownIcon)
+  assert.deepEqual(openCloseSchema.preview.prepare({size: 'medium'}), {
+    title: 'Åpne/Lukke',
+    subtitle: 'Åpne/Lukke · Middels',
+  })
+  assert.equal(openCloseSchema.preview.prepare({
+    blockName: 'Internt navn', title: 'Les mer', size: 'small',
+  }).title, 'Internt navn')
+  assert.equal(openCloseSchema.preview.prepare({title: 'Les mer', size: 'large'}).title, 'Les mer')
+  assert.deepEqual(
+    openCloseSchema.fields.find((field) => field.name === 'size').options.list.map(({value}) => value),
+    ['small', 'medium', 'large'],
   )
 })
 

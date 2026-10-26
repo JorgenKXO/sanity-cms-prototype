@@ -20,6 +20,7 @@ await build({
       import {
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType,
+        articleBlockquoteContentBlockType,
       } from './schemaTypes/articleContentBlocks'
       import {sharedContentType} from './schemaTypes/sharedContentType'
       const navigationPageTestType = defineType({
@@ -31,6 +32,7 @@ await build({
         articleType, pageSectionType, sectionPageType, rettskilderPanelType,
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType, navigationPageTestType,
+        articleBlockquoteContentBlockType,
         sharedContentType,
       ]
     `,
@@ -146,7 +148,7 @@ test('reuses all article blocks and does not offer nested sections or shared con
   assert.deepEqual(articleBlocks, sectionBlocks)
   assert.deepEqual(
     sectionBlocks.map((block) => block.name || block.type),
-    ['tekst', 'bilde', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel'],
+    ['tekst', 'bilde', 'sitat', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel'],
   )
   assert.equal(sectionType.options.collapsible, false)
   const page = schemaTypes.find((type) => type.name === 'sectionPage')
@@ -154,6 +156,20 @@ test('reuses all article blocks and does not offer nested sections or shared con
     typeof page.fields.find((field) => field.name === 'sections').components.input,
     'function',
   )
+})
+
+test('requires quote content but allows an optional source and default border color', async () => {
+  const quote = {_key: 'quote', _type: 'sitat', text: text().text}
+  assert.deepEqual(await errors([{...section(1), content: [quote]}]), [])
+  assert.deepEqual(await errors([{
+    ...section(1), content: [{...quote, source: 'Skatteetaten', borderColor: 'forest'}],
+  }]), [])
+  for (const content of [undefined, []]) {
+    const result = await errors([{
+      ...section(1), content: [{...quote, text: content}],
+    }])
+    assert.ok(result.some((marker) => marker.path.includes('text')), JSON.stringify(result))
+  }
 })
 
 test('requires button label and the selected link destination', async () => {

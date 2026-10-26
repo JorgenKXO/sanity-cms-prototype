@@ -100,6 +100,44 @@ test('preserves regular article headings and does not add section borders', () =
   assert.ok(!html.includes('<section'))
 })
 
+test('renders semantic quotes with rich text, all border colors and an optional source', () => {
+  const quote = {
+    _key: 'quote',
+    _type: 'sitat',
+    text: [{
+      _key: 'paragraph', _type: 'block', style: 'normal',
+      markDefs: [{_key: 'link', _type: 'link', href: 'https://example.no'}],
+      children: [
+        {_key: 'bold', _type: 'span', text: 'Klarhet', marks: ['strong']},
+        {_key: 'italic', _type: 'span', text: ' og forståelse', marks: ['em']},
+        {_key: 'link', _type: 'span', text: 'Les mer', marks: ['link']},
+      ],
+    }],
+    source: 'Skatteetaten',
+    blockName: 'Skjult sitatnavn',
+  }
+  for (const borderColor of [undefined, 'ochre', 'forest', 'denim', 'graphite']) {
+    const html = render(ArticlePreview, {title: 'Artikkel', content: [{...quote, borderColor}]})
+    assert.ok(html.includes('<blockquote'), html)
+    assert.ok(html.includes(`data-border-color="${borderColor || 'ochre'}"`), html)
+    assert.ok(html.includes('<strong>Klarhet</strong>'), html)
+    assert.ok(html.includes('<em> og forståelse</em>'), html)
+    assert.ok(html.includes('href="https://example.no"'), html)
+    assert.ok(html.indexOf('Skatteetaten') > html.indexOf('</blockquote>'), html)
+    assert.ok(!html.includes('Skjult sitatnavn'), html)
+  }
+  const html = render(SectionPagePreview, {
+    title: 'Seksjonsside', sections: [{_key: 'section', content: [{...quote, source: undefined}]}],
+  })
+  assert.ok(html.includes('<blockquote'), html)
+  assert.ok(!html.includes('Skatteetaten'), html)
+  for (const content of [undefined, []]) {
+    const empty = render(ArticlePreview, {title: 'Artikkel', content: [{...quote, text: content}]})
+    assert.ok(!empty.includes('<blockquote'), empty)
+    assert.ok(!empty.includes('Skatteetaten'), empty)
+  }
+})
+
 test('renders secondary, primary and mega article buttons as links', () => {
   const appearances = [
     {appearance: 'secondary', className: 'button_secondary'},

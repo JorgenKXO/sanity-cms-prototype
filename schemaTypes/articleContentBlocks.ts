@@ -148,6 +148,60 @@ export const articleImageContentBlockType = defineType({
   },
 })
 
+export const articleBlockquoteContentBlockType = defineType({
+  name: 'sitat',
+  title: 'Sitat',
+  type: 'object',
+  icon: TextIcon,
+  fields: [
+    blockNameField,
+    defineField({
+      name: 'text',
+      title: 'Sitat',
+      type: 'array',
+      of: [defineArrayMember({
+        type: 'block',
+        styles: [{title: 'Normal', value: 'normal'}],
+        lists: [],
+        marks: {
+          decorators: [{title: 'Fet', value: 'strong'}, {title: 'Kursiv', value: 'em'}],
+          annotations: [linkAnnotation],
+        },
+      })],
+      validation: (rule) => rule.required().min(1),
+    }),
+    defineField({
+      name: 'source',
+      title: 'Kilde (valgfritt)',
+      type: 'string',
+    }),
+    defineField({
+      name: 'borderColor',
+      title: 'Farge på venstre strek',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Gul', value: 'ochre'},
+          {title: 'Grønn', value: 'forest'},
+          {title: 'Blå', value: 'denim'},
+          {title: 'Grå', value: 'graphite'},
+        ],
+        layout: 'dropdown',
+      },
+      initialValue: 'ochre',
+    }),
+  ],
+  preview: {
+    select: {blockName: 'blockName', blocks: 'text', source: 'source'},
+    prepare({blockName, blocks, source}) {
+      return {
+        title: blockName || blockText(blocks) || 'Sitat',
+        subtitle: source || 'Sitat',
+      }
+    },
+  },
+})
+
 export const articleInformationContentBlockType = defineType({
   name: 'informasjon',
   title: 'Informasjon',
@@ -321,6 +375,7 @@ export const sectionIconOptions = [
 export const articleContentBlocks = [
   defineArrayMember({type: 'tekst'}),
   defineArrayMember({type: 'bilde'}),
+  defineArrayMember({type: 'sitat'}),
   defineArrayMember({type: 'informasjon'}),
   defineArrayMember({type: 'knapp'}),
 defineArrayMember({

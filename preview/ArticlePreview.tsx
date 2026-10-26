@@ -7,7 +7,7 @@ import '@skatteetaten/ds-core-designtokens/index.css'
 import {Button, Link, MegaButton} from '@skatteetaten/ds-buttons'
 import {Panel} from '@skatteetaten/ds-content'
 import {Breadcrumbs} from '@skatteetaten/ds-navigation'
-import {Heading, List, Paragraph} from '@skatteetaten/ds-typography'
+import {Blockquote, Heading, List, Paragraph} from '@skatteetaten/ds-typography'
 import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
 import type {CSSProperties, JSX} from 'react'
 import {useEffect, useState} from 'react'
@@ -56,6 +56,14 @@ type ArticleButtonBlock = {
   page?: {_ref?: string}
 }
 
+type BlockquoteBlock = {
+  _key?: string
+  _type: 'sitat'
+  text?: PortableTextBlock[]
+  source?: string
+  borderColor?: 'ochre' | 'forest' | 'denim' | 'graphite'
+}
+
 type PanelBlock = {
   _key?: string
   _type: 'varsel' | 'krise'
@@ -74,6 +82,7 @@ type SharedContentBlock = TekstBlock | BildeBlock | InformasjonBlock
 type SharedContentReference = {_key?: string; _type: 'reference'; _ref: string}
 type InnholdBlock =
   | SharedContentBlock
+  | BlockquoteBlock
   | ArticleButtonBlock
   | PanelBlock
   | RettskilderPanelBlock
@@ -424,6 +433,19 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
       }
       const src = builder.image(block.image).width(960).fit('max').auto('format').url()
       return <img src={src} alt={block.isDecorative ? '' : block.alt || ''} style={styles.image} />
+    }
+
+    if (block._type === 'sitat') {
+      if (!block.text?.length) return null
+
+      return (
+        <>
+          <Blockquote borderColor={block.borderColor || 'ochre'} hasSpacing>
+            <PortableText value={block.text} components={contentComponents} />
+          </Blockquote>
+          {block.source ? <Paragraph hasSpacing>{block.source}</Paragraph> : null}
+        </>
+      )
     }
 
     if (block._type === 'knapp') {

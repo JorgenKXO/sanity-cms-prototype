@@ -8,7 +8,7 @@ import '@skatteetaten/ds-core-designtokens/index.css'
 import {Button, Link, MegaButton} from '@skatteetaten/ds-buttons'
 import {Panel} from '@skatteetaten/ds-content'
 import {Breadcrumbs} from '@skatteetaten/ds-navigation'
-import {Heading, List, Paragraph} from '@skatteetaten/ds-typography'
+import {Blockquote, Heading, List, Paragraph} from '@skatteetaten/ds-typography'
 import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
 import type {CSSProperties, JSX} from 'react'
 import {useEffect, useState} from 'react'
@@ -65,6 +65,14 @@ type ArticleOpenCloseBlock = {
   content?: PortableTextBlock[]
 }
 
+type BlockquoteBlock = {
+  _key?: string
+  _type: 'sitat'
+  text?: PortableTextBlock[]
+  source?: string
+  borderColor?: 'ochre' | 'forest' | 'denim' | 'graphite'
+}
+
 type PanelBlock = {
   _key?: string
   _type: 'varsel' | 'krise'
@@ -83,6 +91,7 @@ type SharedContentBlock = TekstBlock | BildeBlock | InformasjonBlock
 type SharedContentReference = {_key?: string; _type: 'reference'; _ref: string}
 type InnholdBlock =
   | SharedContentBlock
+  | BlockquoteBlock
   | ArticleButtonBlock
   | ArticleOpenCloseBlock
   | PanelBlock
@@ -452,6 +461,19 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
       return <img src={src} alt={block.isDecorative ? '' : block.alt || ''} style={styles.image} />
     }
 
+    if (block._type === 'sitat') {
+      if (!block.text?.length) return null
+
+      return (
+        <>
+          <Blockquote borderColor={block.borderColor || 'ochre'} hasSpacing>
+            <PortableText value={block.text} components={contentComponents} />
+          </Blockquote>
+          {block.source ? <Paragraph hasSpacing>{block.source}</Paragraph> : null}
+        </>
+      )
+    }
+
     if (block._type === 'knapp') {
       if (!block.label) {
         return <p role="status">Legg til lenketekst for å forhåndsvise knappen.</p>
@@ -578,7 +600,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
           {block.heading ? <Heading as="h2" level={2}>{block.heading}</Heading> : null}
           {block.content?.map((child, index) => (
             <div key={child._key || index}>
-              {renderContentBlock(child, Boolean(block.heading))}
+              {renderContentBlock(child, child._type === 'openClose' && Boolean(block.heading))}
             </div>
           ))}
         </div>

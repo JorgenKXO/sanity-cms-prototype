@@ -21,6 +21,7 @@ await build({
       import {
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType, articleOpenCloseContentBlockType,
+        articleBlockquoteContentBlockType,
       } from './schemaTypes/articleContentBlocks'
       import {sharedContentType} from './schemaTypes/sharedContentType'
       const navigationPageTestType = defineType({
@@ -32,6 +33,7 @@ await build({
         articleType, pageSectionType, sectionPageType, rettskilderPanelType,
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType, articleOpenCloseContentBlockType, navigationPageTestType,
+        articleBlockquoteContentBlockType,
         sharedContentType,
       ]
     `,
@@ -147,7 +149,7 @@ test('reuses all article blocks and does not offer nested sections or shared con
   assert.deepEqual(articleBlocks, sectionBlocks)
   assert.deepEqual(
     sectionBlocks.map((block) => block.name || block.type),
-    ['tekst', 'bilde', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel', 'openClose'],
+    ['tekst', 'bilde', 'sitat', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel', 'openClose'],
   )
   assert.equal(sectionType.options.collapsible, false)
   const page = schemaTypes.find((type) => type.name === 'sectionPage')
@@ -195,6 +197,20 @@ test('supports OpenClose with a required heading and content and all three sizes
     openCloseSchema.fields.find((field) => field.name === 'size').options.list.map(({value}) => value),
     ['small', 'medium', 'large'],
   )
+})
+
+test('requires quote content but allows an optional source and default border color', async () => {
+  const quote = {_key: 'quote', _type: 'sitat', text: text().text}
+  assert.deepEqual(await errors([{...section(1), content: [quote]}]), [])
+  assert.deepEqual(await errors([{
+    ...section(1), content: [{...quote, source: 'Skatteetaten', borderColor: 'forest'}],
+  }]), [])
+  for (const content of [undefined, []]) {
+    const result = await errors([{
+      ...section(1), content: [{...quote, text: content}],
+    }])
+    assert.ok(result.some((marker) => marker.path.includes('text')), JSON.stringify(result))
+  }
 })
 
 test('requires button label and the selected link destination', async () => {

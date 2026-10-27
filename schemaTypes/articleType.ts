@@ -4,7 +4,11 @@ import {
   ThLargeIcon,
 } from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
-import {articleContentBlocks, blockNameField, sectionIconOptions} from './articleContentBlocks'
+import {
+  articleContentBlocks,
+  blockNameField,
+  sectionIconOptions,
+} from './articleContentBlocks'
 export {articleTextBlock} from './articleContentBlocks'
 
 import {kategoriOptions} from './kategoriOptions'
@@ -36,6 +40,7 @@ const contentMembers = () => [
   ...articleContentBlocks.slice(0, 3),
   defineArrayMember({type: 'reference', to: [{type: 'sharedContent'}]}),
   ...articleContentBlocks.slice(3),
+  defineArrayMember({type: 'accordionGroup'}),
 ]
 
 export const articleType = defineType({

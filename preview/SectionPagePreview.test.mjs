@@ -164,6 +164,35 @@ test('renders secondary, primary and mega article buttons as links', () => {
   }
 })
 
+test('renders accordion groups with large accordions and their nested rich text', () => {
+  const html = render(ArticlePreview, {
+    title: 'Artikkel med accordioner',
+    content: [{
+      _key: 'accordion-group',
+      _type: 'accordionGroup',
+      accordions: [
+        {
+          _key: 'accordion-one',
+          title: 'Første spørsmål',
+          content: [{
+            _key: 'paragraph',
+            _type: 'block',
+            style: 'normal',
+            markDefs: [],
+            children: [{_key: 'span', _type: 'span', text: 'Første svar', marks: []}],
+          }],
+        },
+        { _key: 'accordion-two', title: 'Andre spørsmål', content: [] },
+      ],
+    }],
+  })
+
+  assert.ok(html.includes('Første spørsmål'), html)
+  assert.ok(html.includes('Andre spørsmål'), html)
+  assert.ok(html.includes('Første svar'), html)
+  assert.ok(html.includes('large'), html)
+})
+
 test('preserves article section blocks, circle icons and shared references', () => {
   const html = render(ArticlePreview, {
     title: 'Artikkel med seksjoner',

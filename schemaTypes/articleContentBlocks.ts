@@ -415,6 +415,61 @@ export const articleOpenCloseContentBlockType = defineType({
   },
 })
 
+export const articleAccordionGroupContentBlockType = defineType({
+  name: 'accordionGroup',
+  title: 'Accordion-gruppe',
+  type: 'object',
+  icon: ChevronDownIcon,
+  fields: [
+    blockNameField,
+    defineField({
+      name: 'accordions',
+      title: 'Accordioner',
+      description: 'Legg til accordionene som skal inngå i gruppen.',
+      type: 'array',
+      of: [
+        defineArrayMember({
+          name: 'accordion',
+          title: 'Accordion',
+          type: 'object',
+          fields: [
+            defineField({
+              name: 'title',
+              title: 'Overskrift',
+              type: 'string',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'content',
+              title: 'Innhold',
+              type: 'array',
+              of: [articleTextBlock],
+              validation: (rule) => rule.required().min(1),
+            }),
+          ],
+          preview: {
+            select: {title: 'title'},
+            prepare({title}) {
+              return {title: title || 'Accordion'}
+            },
+          },
+        }),
+      ],
+      validation: (rule) => rule.required().min(1),
+    }),
+  ],
+  preview: {
+    select: {blockName: 'blockName', accordions: 'accordions'},
+    prepare({blockName, accordions}) {
+      const count = Array.isArray(accordions) ? accordions.length : 0
+      return {
+        title: blockName || 'Accordion-gruppe',
+        subtitle: `${count} ${count === 1 ? 'accordion' : 'accordions'}`,
+      }
+    },
+  },
+})
+
 export const sectionIconOptions = [
   {title: 'Informasjon', value: 'info'},
   {title: 'Hjelp', value: 'help'},

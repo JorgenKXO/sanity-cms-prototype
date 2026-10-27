@@ -21,6 +21,7 @@ await build({
       import {
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType, articleOpenCloseContentBlockType,
+        articleAccordionGroupContentBlockType,
         articleBlockquoteContentBlockType,
       } from './schemaTypes/articleContentBlocks'
       import {sharedContentType} from './schemaTypes/sharedContentType'
@@ -33,6 +34,7 @@ await build({
         articleType, pageSectionType, sectionPageType, rettskilderPanelType,
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType, articleOpenCloseContentBlockType, navigationPageTestType,
+        articleAccordionGroupContentBlockType,
         articleBlockquoteContentBlockType,
         sharedContentType,
       ]
@@ -139,14 +141,21 @@ test('requires section content, but name, heading and icon are optional', async 
   }
 })
 
-test('reuses all article blocks and does not offer nested sections or shared content', () => {
+test('offers the accordion group on articles but not section pages', () => {
   const article = schemaTypes.find((type) => type.name === 'article')
   const sectionType = schemaTypes.find((type) => type.name === 'pageSection')
+  const directArticleBlocks = article.fields.find((field) => field.name === 'content').of
+    .filter((block) => block.name !== 'seksjon' && block.type !== 'reference')
   const articleBlocks = article.fields.find((field) => field.name === 'content').of
     .find((block) => block.name === 'seksjon').fields
     .find((field) => field.name === 'content').of.filter((block) => block.type !== 'reference')
   const sectionBlocks = sectionType.fields.find((field) => field.name === 'content').of
-  assert.deepEqual(articleBlocks, sectionBlocks)
+  assert.ok(directArticleBlocks.some((block) => block.type === 'accordionGroup'))
+  assert.ok(articleBlocks.some((block) => block.type === 'accordionGroup'))
+  assert.deepEqual(
+    articleBlocks.map((block) => block.type === 'accordionGroup' ? block.type : block.name || block.type),
+    [...sectionBlocks.map((block) => block.name || block.type), 'accordionGroup'],
+  )
   assert.deepEqual(
     sectionBlocks.map((block) => block.name || block.type),
     ['tekst', 'bilde', 'sitat', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel', 'openClose'],
@@ -157,6 +166,22 @@ test('reuses all article blocks and does not offer nested sections or shared con
     typeof page.fields.find((field) => field.name === 'sections').components.input,
     'function',
   )
+})
+
+test('defines accordion groups with required nested accordions and no size setting', () => {
+  const accordionGroup = schemaTypes.find((type) => type.name === 'accordionGroup')
+  const accordionsField = accordionGroup.fields.find((field) => field.name === 'accordions')
+  const accordion = accordionsField.of[0]
+
+  assert.equal(accordionGroup.title, 'Accordion-gruppe')
+  assert.equal(accordionGroup.fields.some((field) => field.name === 'size'), false)
+  assert.deepEqual(
+    accordion.fields.map((field) => field.name),
+    ['title', 'content'],
+  )
+  assert.equal(accordionGroup.preview.prepare({accordions: [{}, {}]}).subtitle, '2 accordions')
+  assert.equal(accordionGroup.preview.prepare({accordions: [{}]}).subtitle, '1 accordion')
+  assert.equal(accordionsField.validation({required: () => ({min: () => 'validated'})}), 'validated')
 })
 
 test('supports OpenClose with a required heading and content and all three sizes', async () => {

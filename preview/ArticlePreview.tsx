@@ -3,7 +3,7 @@ import {
   type PortableTextBlock,
   type PortableTextComponents,
 } from '@portabletext/react'
-import {OpenClose} from '@skatteetaten/ds-collections'
+import {Accordion, OpenClose} from '@skatteetaten/ds-collections'
 import '@skatteetaten/ds-core-designtokens/index.css'
 import {Button, Link, MegaButton} from '@skatteetaten/ds-buttons'
 import {Panel} from '@skatteetaten/ds-content'
@@ -65,6 +65,17 @@ type ArticleOpenCloseBlock = {
   content?: PortableTextBlock[]
 }
 
+type ArticleAccordionGroupBlock = {
+  _key?: string
+  _type: 'accordionGroup'
+  accordions?: {
+    _key?: string
+    _type?: 'accordion'
+    title?: string
+    content?: PortableTextBlock[]
+  }[]
+}
+
 type BlockquoteBlock = {
   _key?: string
   _type: 'sitat'
@@ -94,6 +105,7 @@ type InnholdBlock =
   | BlockquoteBlock
   | ArticleButtonBlock
   | ArticleOpenCloseBlock
+  | ArticleAccordionGroupBlock
   | PanelBlock
   | RettskilderPanelBlock
   | SharedContentReference
@@ -450,6 +462,40 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
             <p role="status">Legg til innhold i Åpne/Lukke.</p>
           )}
         </OpenClose>
+      )
+    }
+
+    if (block._type === 'accordionGroup') {
+      if (!block.accordions?.length) {
+        return <p role="status">Legg til minst én accordion for å forhåndsvise gruppen.</p>
+      }
+
+      return (
+        <Accordion size="large">
+          {block.accordions.map((accordion, index) => {
+            if (!accordion.title) {
+              return (
+                <p key={accordion._key || index} role="status">
+                  Legg til en overskrift for å forhåndsvise accordionen.
+                </p>
+              )
+            }
+
+            return (
+              <Accordion.Item
+                key={accordion._key || index}
+                title={accordion.title}
+                titleAs={nested ? 'h3' : 'h2'}
+              >
+                {accordion.content ? (
+                  <PortableText value={accordion.content} components={contentComponents} />
+                ) : (
+                  <p role="status">Legg til innhold i accordionen.</p>
+                )}
+              </Accordion.Item>
+            )
+          })}
+        </Accordion>
       )
     }
 

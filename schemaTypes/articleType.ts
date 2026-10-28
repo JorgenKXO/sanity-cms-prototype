@@ -75,38 +75,6 @@ export const articleType = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
-      name: 'breadcrumbs',
-      title: 'Brødsmulesti',
-      type: 'array',
-      group: 'navigationSeo',
-      of: [
-        defineArrayMember({
-          type: 'object',
-          fields: [
-            defineField({
-              name: 'label',
-              title: 'Etikett',
-              type: 'string',
-              validation: (rule) => rule.required(),
-            }),
-            defineField({
-              name: 'href',
-              title: 'Nettadresse',
-              type: 'url',
-              validation: (rule) =>
-                rule.uri({
-                  allowRelative: true,
-                  scheme: ['http', 'https', 'mailto', 'tel'],
-                }),
-            }),
-          ],
-          preview: {
-            select: {title: 'label', subtitle: 'href'},
-          },
-        }),
-      ],
-    }),
-    defineField({
       name: 'kategori',
       title: 'Kategori',
       description: 'Hvilken tematisk mappe artikkelen hører til.',

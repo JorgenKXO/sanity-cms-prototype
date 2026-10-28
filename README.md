@@ -58,7 +58,7 @@ Open <http://localhost:3333> and sign in with your Sanity account.
 
 1. Open Studio.
 2. Create a new **Article** document.
-3. Fill in the title, slug, ingress, breadcrumbs, and body sections.
+3. Fill in the title, slug, ingress, and body sections.
 4. Open the **Forhåndsvisning av artikkel**-fanen på dokumentet.
 
 The article preview intentionally omits the header, footer, feedback widget, and "to the top" button. It approximates the reference article layout with a narrow content column, large heading, ingress text, green links, section headings, related links, and info boxes.

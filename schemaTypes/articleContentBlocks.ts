@@ -302,43 +302,126 @@ export const articleButtonContentBlockType = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
+      name: 'destinations',
+      title: 'Lenkemål',
+      description:
+        'Legg til Sanity-sider og filer i ønsket rekkefølge. Flere mål åpner en modal. For eksisterende knapper erstatter denne listen det gamle lenkemålet når du legger til valg.',
+      type: 'array',
+      of: [
+        defineArrayMember({
+          name: 'buttonDestination',
+          title: 'Lenkemål',
+          type: 'object',
+          icon: ArrowRightIcon,
+          fields: [
+            defineField({
+              name: 'label',
+              title: 'Tekst for valget',
+              description: 'Vises på navigasjonskortet når knappen har flere mål.',
+              type: 'string',
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'linkType',
+              title: 'Lenketype',
+              type: 'string',
+              options: {
+                list: [
+                  {title: 'Sanity-side', value: 'internal'},
+                  {title: 'Vedlegg/fil for nedlasting', value: 'file'},
+                ],
+                layout: 'radio',
+              },
+              initialValue: 'internal',
+              validation: (rule) => rule.required().custom((value) =>
+                value === 'external'
+                  ? 'Eksterne lenker er ikke lenger tillatt. Velg en Sanity-side eller fil, eller fjern lenkemålet.'
+                  : true),
+            }),
+            defineField({
+              name: 'page',
+              title: 'Side',
+              type: 'reference',
+              to: [{type: 'article'}, {type: 'sectionPage'}, {type: 'navigationPage'}],
+              hidden: ({parent}) => parent?.linkType !== 'internal',
+              validation: (rule) => rule.custom((value, context) => {
+                const parent = context.parent as {linkType?: string} | undefined
+                return parent?.linkType !== 'internal' || value?._ref
+                  ? true : 'Velg en Sanity-side.'
+              }),
+            }),
+            defineField({
+              name: 'url',
+              title: 'Nettadresse',
+              type: 'url',
+              deprecated: {reason: 'Eksterne lenker er ikke lenger tillatt på knapper.'},
+              readOnly: true,
+              hidden: ({parent, value}) => parent?.linkType !== 'external' || !value,
+            }),
+            defineField({
+              name: 'file',
+              title: 'Vedlegg/fil',
+              type: 'file',
+              hidden: ({parent}) => parent?.linkType !== 'file',
+              validation: (rule) => rule.custom((value, context) => {
+                const parent = context.parent as {linkType?: string} | undefined
+                return parent?.linkType !== 'file' || value?.asset?._ref
+                  ? true : 'Last opp eller velg en fil.'
+              }),
+            }),
+          ],
+          preview: {
+            select: {title: 'label', linkType: 'linkType'},
+            prepare({title, linkType}) {
+              const titles: Record<string, string> = {
+                internal: 'Sanity-side',
+                external: 'Ekstern nettside (må erstattes eller fjernes)',
+                file: 'Vedlegg/fil for nedlasting',
+              }
+              return {title: title || 'Lenkemål', subtitle: titles[linkType] || 'Velg lenketype'}
+            },
+          },
+        }),
+      ],
+      validation: (rule) => rule.custom((value, context) => {
+        const parent = context.parent as {linkType?: string} | undefined
+        return value?.length || parent?.linkType
+          ? true : 'Legg til minst ett lenkemål.'
+      }),
+    }),
+    defineField({
       name: 'linkType',
       title: 'Lenketype',
       type: 'string',
-      options: {
-        list: [
-          {title: 'Ekstern nettside', value: 'external'},
-          {title: 'Sanity-side', value: 'internal'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'external',
-      validation: (rule) => rule.required(),
+      description: 'Tidligere lenketype. Bruk Lenkemål for å erstatte den gamle lenken.',
+      readOnly: true,
+      hidden: ({parent}) => !parent?.linkType || Boolean(parent?.destinations?.length),
+      validation: (rule) => rule.custom((value, context) => {
+        const parent = context.parent as {destinations?: unknown[]} | undefined
+        return value === 'external' && !parent?.destinations?.length
+          ? 'Eksterne lenker er ikke lenger tillatt. Legg til en Sanity-side eller fil under Lenkemål.'
+          : true
+      }),
     }),
     defineField({
       name: 'url',
       title: 'Nettadresse',
       type: 'url',
-      hidden: ({parent}) => parent?.linkType !== 'external',
-      validation: (rule) =>
-        rule
-          .uri({scheme: ['http', 'https']})
-          .custom((value, context) => {
-            const parent = context.parent as {linkType?: string} | undefined
-            if (parent?.linkType !== 'external' || value) return true
-            return 'Legg til nettadressen.'
-          }),
+      deprecated: {reason: 'Eksterne lenker er ikke lenger tillatt på knapper.'},
+      readOnly: true,
+      hidden: ({parent, value}) =>
+        parent?.linkType !== 'external' || Boolean(parent?.destinations?.length) || !value,
     }),
     defineField({
       name: 'page',
       title: 'Side',
       type: 'reference',
       to: [{type: 'article'}, {type: 'sectionPage'}, {type: 'navigationPage'}],
-      hidden: ({parent}) => parent?.linkType !== 'internal',
+      hidden: ({parent}) => parent?.linkType !== 'internal' || Boolean(parent?.destinations?.length),
       validation: (rule) =>
         rule.custom((value, context) => {
-          const parent = context.parent as {linkType?: string} | undefined
-          if (parent?.linkType !== 'internal' || value) return true
+          const parent = context.parent as {linkType?: string; destinations?: unknown[]} | undefined
+          if (parent?.destinations?.length || parent?.linkType !== 'internal' || value) return true
           return 'Velg en Sanity-side.'
         }),
     }),

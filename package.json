@@ -22,6 +22,7 @@
     "@skatteetaten/ds-core-designtokens": "^2.10.0",
     "@skatteetaten/ds-icons": "^2.10.0",
     "@skatteetaten/ds-navigation": "^2.10.0",
+    "@skatteetaten/ds-overlays": "^2.10.0",
     "@skatteetaten/ds-typography": "^2.10.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

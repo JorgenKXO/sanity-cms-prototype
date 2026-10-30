@@ -5,7 +5,7 @@ import {
 } from '@portabletext/react'
 import {Accordion, OpenClose} from '@skatteetaten/ds-collections'
 import '@skatteetaten/ds-core-designtokens/index.css'
-import {Button, Link, MegaButton} from '@skatteetaten/ds-buttons'
+import {Link} from '@skatteetaten/ds-buttons'
 import {Panel} from '@skatteetaten/ds-content'
 import {Breadcrumbs} from '@skatteetaten/ds-navigation'
 import {Blockquote, Heading, List, Paragraph} from '@skatteetaten/ds-typography'
@@ -18,6 +18,7 @@ import {InformasjonPanel, sectionIconMap} from './InformasjonPanel'
 import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
 import './numberedAccordion.css'
+import {ArticleButton, getButtonLinks, type ArticleButtonBlock, type ButtonDestination} from './ArticleButton'
 
 type Breadcrumb = {
   _key?: string
@@ -46,16 +47,6 @@ type InformasjonBlock = {
   color?: string
   icon?: string
   text?: PortableTextBlock[]
-}
-
-type ArticleButtonBlock = {
-  _key?: string
-  _type: 'knapp'
-  label?: string
-  appearance?: 'secondary' | 'primary' | 'mega'
-  linkType?: 'external' | 'internal'
-  url?: string
-  page?: {_ref?: string}
 }
 
 type ArticleOpenCloseBlock = {
@@ -126,11 +117,6 @@ type SharedContentDocument = {
   _id: string
   title?: string
   content?: SharedContentBlock[]
-}
-
-type ButtonDestination = {
-  _id: string
-  slug?: {current?: string}
 }
 
 export type ArticleDocument = {
@@ -218,9 +204,6 @@ const styles: Record<string, CSSProperties> = {
     height: 'auto',
     margin: 'var(--spacing-m) 0',
     borderRadius: '4px',
-  },
-  button: {
-    padding: 'var(--spacing-s) 0',
   },
 }
 
@@ -332,8 +315,10 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
       (article?.content || [])
         .flatMap((block) => (block._type === 'seksjon' ? block.content || [] : [block]))
         .filter((block): block is ArticleButtonBlock => block._type === 'knapp')
-        .filter((block) => block.linkType === 'internal')
-        .map((block) => block.page?._ref)
+        .flatMap(getButtonLinks)
+        .map((link) => link.linkType === 'internal'
+          ? link.page?._ref
+          : link.linkType === 'file' ? link.file?.asset?._ref : undefined)
         .filter((id): id is string => Boolean(id)),
     ),
   ]
@@ -391,7 +376,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
     client
       .withConfig({perspective: 'drafts'})
       .fetch<ButtonDestination[]>(
-        `*[_id in $ids]{_id, slug}`,
+        `*[_id in $ids]{_id, slug, url, originalFilename}`,
         {ids: buttonDestinationIds},
       )
       .then((results) => {
@@ -553,61 +538,14 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
     }
 
     if (block._type === 'knapp') {
-      if (!block.label) {
-        return <p role="status">Legg til lenketekst for å forhåndsvise knappen.</p>
-      }
-
-      let href: string | undefined
-      if (block.linkType === 'external') {
-        if (!block.url) {
-          return <p role="status">Legg til nettadressen for å forhåndsvise knappen.</p>
-        }
-        href = block.url
-      } else if (block.linkType === 'internal') {
-        const pageId = block.page?._ref
-        if (buttonDestinationError) {
-          return <p role="alert">Kunne ikke hente lenkemålet: {buttonDestinationError}</p>
-        }
-        const destination = pageId ? buttonDestinationsById[pageId] : undefined
-        if (!destination?.slug?.current) {
-          return (
-            <p role={isLoadingButtonDestinations ? 'status' : 'alert'}>
-              {isLoadingButtonDestinations
-                ? 'Laster lenkemål …'
-                : 'Lenkemålet ble ikke funnet eller mangler nettadresse.'}
-            </p>
-          )
-        }
-        href = `/${destination.slug.current}`
-      } else {
-        return <p role="status">Velg en lenketype for å forhåndsvise knappen.</p>
-      }
-
-      if (!href) return <p role="alert">Lenkemålet mangler nettadresse.</p>
-      if (block.appearance === 'mega') {
-        return (
-          <div style={styles.button}>
-            <MegaButton href={href} isExternal={block.linkType === 'external'}>
-              {block.label}
-            </MegaButton>
-          </div>
-        )
-      }
-      if (block.appearance === 'primary' || block.appearance === 'secondary') {
-        return (
-          <div style={styles.button}>
-            <Button
-              href={href}
-              variant={block.appearance}
-              isExternal={block.linkType === 'external'}
-            >
-              {block.label}
-            </Button>
-          </div>
-        )
-      }
-
-      return <p role="alert">Velg et utseende for knappen.</p>
+      return (
+        <ArticleButton
+          block={block}
+          destinationsById={buttonDestinationsById}
+          error={buttonDestinationError}
+          isLoading={isLoadingButtonDestinations}
+        />
+      )
     }
 
     if (block._type === 'rettskilderPanel') {

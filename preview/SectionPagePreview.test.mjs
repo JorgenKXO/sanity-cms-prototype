@@ -16,6 +16,7 @@ await build({
     contents: `
       export {SectionPagePreview} from './preview/SectionPagePreview'
       export {ArticlePreview} from './preview/ArticlePreview'
+      export {ArticleButton, getButtonLinks} from './preview/ArticleButton'
     `,
     resolveDir: root,
     loader: 'ts',
@@ -54,7 +55,7 @@ await build({
     },
   }],
 })
-const {SectionPagePreview, ArticlePreview} = await import(
+const {SectionPagePreview, ArticlePreview, ArticleButton, getButtonLinks} = await import(
   pathToFileURL(`${directory}/preview.mjs`).href
 )
 const text = {
@@ -161,6 +162,82 @@ test('renders secondary, primary and mega article buttons as links', () => {
     assert.ok(html.includes('Les mer'), html)
     assert.ok(html.includes(className), html)
     assert.ok(html.includes('padding:var(--spacing-s) 0'), html)
+  }
+})
+
+const buttonDestinations = {
+  'article-target': {_id: 'article-target', slug: {current: 'intern-side'}},
+  'file-target': {
+    _id: 'file-target',
+    url: 'https://cdn.sanity.io/files/test1234/production/document.pdf',
+    originalFilename: 'Veiledning 2026.pdf',
+  },
+}
+const buttonLinks = [
+  {_key: 'internal', label: 'Intern side', linkType: 'internal', page: {_ref: 'article-target'}},
+  {_key: 'external', label: 'Ekstern side', linkType: 'external', url: 'https://example.no'},
+  {_key: 'file', label: 'Last ned veiledning', linkType: 'file', file: {asset: {_ref: 'file-target'}}},
+]
+const renderButton = (destinations, props = {}, appearance = 'secondary') =>
+  renderToStaticMarkup(createElement(ArticleButton, {
+    block: {_type: 'knapp', label: 'Velg tjeneste', appearance, destinations},
+    destinationsById: buttonDestinations,
+    isLoading: false,
+    ...props,
+  }))
+
+test('one target navigates directly for all destination types and appearances', () => {
+  for (const appearance of ['secondary', 'primary', 'mega']) {
+    for (const link of buttonLinks) {
+      const html = renderButton([link], {}, appearance)
+      const expected = {
+        internal: '/intern-side',
+        external: 'https://example.no',
+        file: `${buttonDestinations['file-target'].url}?dl=Veiledning%202026.pdf`,
+      }[link.linkType]
+      assert.ok(html.includes(`href="${expected}"`), html)
+      assert.ok(!html.includes('<dialog'), html)
+    }
+  }
+})
+
+test('two or more targets render a modal trigger and ordered navigation tiles', () => {
+  for (const appearance of ['secondary', 'primary', 'mega']) {
+    for (const count of [2, 3]) {
+      const html = renderButton(buttonLinks.slice(0, count), {}, appearance)
+      assert.match(html, /<button[^>]*type="button"[^>]*>[\s\S]*?Velg tjeneste/)
+      assert.match(html, /<dialog\b/)
+      assert.equal((html.match(/<a\b/g) || []).length, count)
+      assert.ok(html.indexOf('Intern side') < html.indexOf('Ekstern side'), html)
+      if (count === 3) {
+        const fileTile = html.match(/<a\b[^>]*href="[^"]*\?dl=[^"]*"[\s\S]*?<\/a>/)?.[0]
+        assert.ok(fileTile, html)
+        assert.ok(!fileTile.includes('<svg'), fileTile)
+      }
+    }
+  }
+})
+
+test('keeps legacy button destinations until an explicit replacement list is populated', () => {
+  const legacy = {_type: 'knapp', label: 'Gammel knapp', linkType: 'external', url: 'https://old.no'}
+  assert.deepEqual(getButtonLinks(legacy), [legacy])
+  const empty = {...legacy, destinations: []}
+  assert.deepEqual(getButtonLinks(empty), [empty])
+  assert.deepEqual(getButtonLinks({...legacy, destinations: buttonLinks}), buttonLinks)
+})
+
+test('shows explicit empty, loading, missing-reference and error states without partial navigation', () => {
+  assert.match(renderButton([]), /role="status"[^>]*>Legg til minst ett lenkemål/)
+  assert.match(renderButton([{...buttonLinks[1], label: ''}]), /Legg til tekst/)
+  assert.match(renderButton([{...buttonLinks[1], url: 'javascript:alert(1)'}]), /role="alert"/)
+  for (const link of [buttonLinks[0], buttonLinks[2]]) {
+    const loading = renderButton([link, buttonLinks[1]], {destinationsById: {}, isLoading: true})
+    assert.match(loading, /role="status"[^>]*>Laster lenkemål/)
+    assert.ok(!loading.includes('<button'), loading)
+    const missing = renderButton([link], {destinationsById: {}})
+    assert.match(missing, /role="alert"/)
+    const failure = renderButton([link], {error: 'Nettverksfeil'})
+    assert.match(failure, /Kunne ikke hente lenkemålet: Nettverksfeil/)
   }
 })
 

@@ -17,6 +17,7 @@ import {fixedPanelAppearance} from './fixedPanelAppearance'
 import {InformasjonPanel, sectionIconMap} from './InformasjonPanel'
 import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
+import './numberedAccordion.css'
 
 type Breadcrumb = {
   _key?: string
@@ -68,6 +69,7 @@ type ArticleOpenCloseBlock = {
 type ArticleAccordionGroupBlock = {
   _key?: string
   _type: 'accordionGroup'
+  showNumbers?: boolean
   accordions?: {
     _key?: string
     _type?: 'accordion'
@@ -470,31 +472,36 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
         return <p role="status">Legg til minst én accordion for å forhåndsvise gruppen.</p>
       }
 
+      const items = block.accordions.map((accordion, index) => {
+        const item = accordion.title ? (
+          <Accordion.Item
+            key={accordion._key || index}
+            title={accordion.title}
+            titleAs={nested ? 'h3' : 'h2'}
+          >
+            {accordion.content ? (
+              <PortableText value={accordion.content} components={contentComponents} />
+            ) : (
+              <p role="status">Legg til innhold i accordionen.</p>
+            )}
+          </Accordion.Item>
+        ) : (
+          <p key={accordion._key || index} role="status">
+            Legg til en overskrift for å forhåndsvise accordionen.
+          </p>
+        )
+
+        return block.showNumbers ? (
+          <div key={accordion._key || index} role="listitem" className="numbered-accordion-row">
+            <span className="numbered-accordion-marker">{index + 1}</span>
+            {item}
+          </div>
+        ) : item
+      })
+
       return (
         <Accordion size="large">
-          {block.accordions.map((accordion, index) => {
-            if (!accordion.title) {
-              return (
-                <p key={accordion._key || index} role="status">
-                  Legg til en overskrift for å forhåndsvise accordionen.
-                </p>
-              )
-            }
-
-            return (
-              <Accordion.Item
-                key={accordion._key || index}
-                title={accordion.title}
-                titleAs={nested ? 'h3' : 'h2'}
-              >
-                {accordion.content ? (
-                  <PortableText value={accordion.content} components={contentComponents} />
-                ) : (
-                  <p role="status">Legg til innhold i accordionen.</p>
-                )}
-              </Accordion.Item>
-            )
-          })}
+          {block.showNumbers ? <div role="list">{items}</div> : items}
         </Accordion>
       )
     }

@@ -193,6 +193,59 @@ test('renders accordion groups with large accordions and their nested rich text'
   assert.ok(html.includes('large'), html)
 })
 
+test('only numbers accordion groups when enabled and restarts numbering for each group', () => {
+  const group = {
+    _key: 'group',
+    _type: 'accordionGroup',
+    accordions: [
+      {_key: 'first', title: 'Første spørsmål', content: []},
+      {_key: 'second', title: 'Andre spørsmål', content: []},
+    ],
+  }
+  for (const showNumbers of [undefined, false]) {
+    const html = render(ArticlePreview, {content: [{...group, showNumbers}]})
+    assert.ok(!html.includes('numbered-accordion'), html)
+    assert.ok(!html.includes('role="list"'), html)
+  }
+
+  const html = render(ArticlePreview, {
+    content: [
+      {...group, showNumbers: true},
+      {...group, _key: 'other-group', showNumbers: true},
+    ],
+  })
+  assert.equal((html.match(/role="list"/g) || []).length, 2)
+  assert.equal((html.match(/role="listitem"/g) || []).length, 4)
+  assert.equal((html.match(/class="numbered-accordion-marker">1</g) || []).length, 2)
+  assert.equal((html.match(/class="numbered-accordion-marker">2</g) || []).length, 2)
+  assert.equal((html.match(/aria-expanded="false"/g) || []).length, 4)
+})
+
+test('supports numbered accordion groups inside article sections and incomplete drafts', () => {
+  const group = {
+    _key: 'group', _type: 'accordionGroup', showNumbers: true,
+    accordions: [{_key: 'first', title: 'Spørsmål', content: text.text}],
+  }
+  const html = render(ArticlePreview, {
+    content: [{_key: 'section', _type: 'seksjon', heading: 'Seksjon', content: [group]}],
+  })
+  assert.match(html, /<h2\b[^>]*><button[^>]*aria-expanded="false"/)
+  assert.ok(html.includes('numbered-accordion-marker">1</span>'), html)
+  assert.ok(!html.includes('numbered-accordion-marker">2</span>'), html)
+
+  for (const accordions of [undefined, []]) {
+    const empty = render(ArticlePreview, {content: [{...group, accordions}]})
+    assert.ok(empty.includes('Legg til minst én accordion'), empty)
+    assert.ok(!empty.includes('numbered-accordion-marker'), empty)
+  }
+  const incomplete = render(ArticlePreview, {
+    content: [{...group, accordions: [{_key: 'untitled'}, ...group.accordions]}],
+  })
+  assert.ok(incomplete.includes('Legg til en overskrift'), incomplete)
+  assert.equal((incomplete.match(/role="listitem"/g) || []).length, 2)
+  assert.ok(incomplete.includes('numbered-accordion-marker">2</span>'), incomplete)
+})
+
 test('preserves article section blocks, circle icons and shared references', () => {
   const html = render(ArticlePreview, {
     title: 'Artikkel med seksjoner',

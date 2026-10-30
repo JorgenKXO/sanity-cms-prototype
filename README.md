@@ -125,6 +125,18 @@ og under hver knapp. Bruk megaknapp til én tydelig hovedhandling.
 Dette gjelder Studio-forhåndsvisningen; en separat publiseringsfrontend må
 også støtte innholdsblokken `knapp`.
 
+## Nummererte accordion-grupper
+
+Legg til **Accordion-gruppe** i en artikkel eller artikkelseksjon, og slå på
+**Vis med tall** for å vise nummererte sirkler til venstre for accordionene.
+En linje forbinder sirklene og følger innholdet når accordionene åpnes.
+Nummereringen starter på 1 i hver gruppe og følger rekkefølgen i Studio.
+Innstillingen er av som standard; eksisterende grupper vises som før.
+
+Forhåndsvisningen bruker designsystemets `Accordion` med et tilpasset nummerert
+oppsett basert på skattemeldingssiden på skatteetaten.no. En separat
+publiseringsfrontend må også støtte feltet `accordionGroup.showNumbers`.
+
 Begge måtene finnes på `master`: bruk **Artikkel → Innhold → Seksjon** for
 seksjonsblokker og **Seksjonsside → Seksjoner** for den åpne redigeringen.
 Artikler beholder også støtte for delt innhold, inkludert inne i seksjonsblokker.

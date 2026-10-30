@@ -175,6 +175,10 @@ test('defines accordion groups with required nested accordions and no size setti
 
   assert.equal(accordionGroup.title, 'Accordion-gruppe')
   assert.equal(accordionGroup.fields.some((field) => field.name === 'size'), false)
+  const showNumbers = accordionGroup.fields.find((field) => field.name === 'showNumbers')
+  assert.equal(showNumbers.title, 'Vis med tall')
+  assert.equal(showNumbers.type, 'boolean')
+  assert.equal(showNumbers.initialValue, false)
   assert.deepEqual(
     accordion.fields.map((field) => field.name),
     ['title', 'content'],

@@ -1,0 +1,43 @@
+.numbered-accordion-row {
+  /* Match the centre of the first title line, including the accordion's top border. */
+  --numbered-accordion-centre: calc(
+    1px + var(--spacing-s) + var(--font-size-xl) * var(--semantic-line-height-default) / 2
+  );
+  position: relative;
+  padding-inline-start: calc(var(--spacing-xxl) + var(--spacing-s-plus));
+}
+
+.numbered-accordion-row:not(:last-child)::before {
+  position: absolute;
+  inset-block-start: var(--numbered-accordion-centre);
+  inset-inline-start: calc((var(--spacing-xl) + var(--spacing-xs)) / 2 - 1px);
+  width: 2px;
+  height: 100%;
+  background: var(--semantic-divider-30);
+  content: '';
+}
+
+.numbered-accordion-marker {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: var(--numbered-accordion-centre);
+  inset-inline-start: 0;
+  display: flex;
+  width: calc(var(--spacing-xl) + var(--spacing-xs));
+  height: calc(var(--spacing-xl) + var(--spacing-xs));
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--semantic-page-foreground);
+  border-radius: 50%;
+  background: var(--semantic-page-background);
+  color: var(--semantic-page-foreground);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--semantic-line-height-default);
+  transform: translateY(-50%);
+}
+
+.numbered-accordion-row:not(:last-child) > :last-child {
+  border-bottom: none;
+}

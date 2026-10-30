@@ -423,6 +423,13 @@ export const articleAccordionGroupContentBlockType = defineType({
   fields: [
     blockNameField,
     defineField({
+      name: 'showNumbers',
+      title: 'Vis med tall',
+      description: 'Vis et tall til venstre for hver accordion, med en linje mellom tallene.',
+      type: 'boolean',
+      initialValue: false,
+    }),
+    defineField({
       name: 'accordions',
       title: 'Accordioner',
       description: 'Legg til accordionene som skal inngå i gruppen.',

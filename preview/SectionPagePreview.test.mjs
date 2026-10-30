@@ -193,6 +193,37 @@ test('renders accordion groups with large accordions and their nested rich text'
   assert.ok(html.includes('large'), html)
 })
 
+test('renders OpenClose objects inside accordion portable text', () => {
+  const html = render(ArticlePreview, {
+    title: 'Artikkel med Åpne/Lukke i accordion',
+    content: [{
+      _key: 'accordion-group',
+      _type: 'accordionGroup',
+      accordions: [{
+        _key: 'accordion',
+        title: 'Spørsmål',
+        content: [{
+          _key: 'open-close',
+          _type: 'openClose',
+          title: 'Les mer',
+          size: 'medium',
+          content: [{
+            _key: 'paragraph',
+            _type: 'block',
+            style: 'normal',
+            markDefs: [],
+            children: [{_key: 'span', _type: 'span', text: 'Mer informasjon', marks: []}],
+          }],
+        }],
+      }],
+    }],
+  })
+
+  assert.ok(html.includes('Spørsmål'), html)
+  assert.ok(html.includes('Les mer'), html)
+  assert.ok(html.includes('medium'), html)
+})
+
 test('only numbers accordion groups when enabled and restarts numbering for each group', () => {
   const group = {
     _key: 'group',

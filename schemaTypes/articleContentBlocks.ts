@@ -449,8 +449,9 @@ export const articleAccordionGroupContentBlockType = defineType({
             defineField({
               name: 'content',
               title: 'Innhold',
+              description: 'Tekst og Åpne/Lukke-objekter.',
               type: 'array',
-              of: [articleTextBlock],
+              of: [articleTextBlock, defineArrayMember({type: 'openClose'})],
               validation: (rule) => rule.required().min(1),
             }),
           ],

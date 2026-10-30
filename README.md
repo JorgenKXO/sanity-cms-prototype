@@ -131,7 +131,9 @@ Legg til **Accordion-gruppe** i en artikkel eller artikkelseksjon, og slå på
 **Vis med tall** for å vise nummererte sirkler til venstre for accordionene.
 En linje forbinder sirklene og følger innholdet når accordionene åpnes.
 Nummereringen starter på 1 i hver gruppe og følger rekkefølgen i Studio.
-Innstillingen er av som standard; eksisterende grupper vises som før.
+I hver accordion kan redaktører legge til tekst og **Åpne/Lukke**-objekter
+direkte i innholdsredigereren. Innstillingen er av som standard; eksisterende
+grupper vises som før.
 
 Forhåndsvisningen bruker designsystemets `Accordion` med et tilpasset nummerert
 oppsett basert på skattemeldingssiden på skatteetaten.no. En separat

@@ -261,6 +261,31 @@ const components = {
     bullet: ({children}) => <List.Element>{children}</List.Element>,
     number: ({children}) => <List.Element>{children}</List.Element>,
   },
+  types: {
+    openClose: ({value}) => {
+      const title = getString(value, 'title')
+      if (!title) {
+        return <p role="status">Legg til en overskrift for å forhåndsvise Åpne/Lukke.</p>
+      }
+
+      const content = Array.isArray(value.content)
+        ? value.content as PortableTextBlock[]
+        : undefined
+      const size = value.size === 'small' || value.size === 'medium' || value.size === 'large'
+        ? value.size
+        : undefined
+
+      return (
+        <OpenClose title={title} size={size} titleAs="h3">
+          {content ? (
+            <PortableText value={content} components={components} />
+          ) : (
+            <p role="status">Legg til innhold i Åpne/Lukke.</p>
+          )}
+        </OpenClose>
+      )
+    },
+  },
 } satisfies PortableTextComponents
 
 // Ingressen tillater kun lenker, ingen annen formatering – egen renderer uten overskrifter/lister.

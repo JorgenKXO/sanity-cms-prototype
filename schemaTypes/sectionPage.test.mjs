@@ -332,6 +332,9 @@ test('validates mixed button targets, required destinations and uploaded file as
   assert.equal(legacyField.hidden({parent: {linkType: 'external'}}), false)
   const destinationsField = type.fields.find((field) => field.name === 'destinations')
   const targetFields = destinationsField.of[0].fields
+  assert.equal(targetFields[0].name, 'linkType')
+  assert.equal(targetFields.at(-1).name, 'label')
+  assert.equal(typeof destinationsField.of[0].components.input, 'function')
   assert.equal(legacyField.readOnly, true)
   assert.equal(legacyField.options, undefined)
   assert.deepEqual(targetFields.find((field) => field.name === 'linkType')

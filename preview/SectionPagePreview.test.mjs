@@ -208,6 +208,9 @@ test('two or more targets render a modal trigger and ordered navigation tiles', 
       assert.match(html, /<button[^>]*type="button"[^>]*>[\s\S]*?Velg tjeneste/)
       assert.match(html, /<dialog\b/)
       assert.equal((html.match(/<a\b/g) || []).length, count)
+      const links = html.match(/<a\b[^>]*>/g) || []
+      assert.ok(links.every((link) => /class="[^"]*navigationTile/.test(link)), html)
+      assert.ok(!html.includes('linkGroup'), html)
       assert.ok(html.indexOf('Intern side') < html.indexOf('Ekstern side'), html)
       if (count === 3) {
         const fileTile = html.match(/<a\b[^>]*href="[^"]*\?dl=[^"]*"[\s\S]*?<\/a>/)?.[0]

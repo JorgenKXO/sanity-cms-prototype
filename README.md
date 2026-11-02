@@ -124,6 +124,12 @@ Hvert mål har egen **Tekst for valget** og kan være:
 - **Vedlegg/fil for nedlasting**: last opp eller velg en fil i Sanity.
   Filen lenkes med Sanity CDN sin `dl`-parameter for nedlasting.
 
+I redigeringen av et lenkemål vises **Lenketype** først, deretter side eller fil
+og **Tekst for valget**. Når en Sanity-side velges og tekstfeltet er tomt,
+fylles teksten inn fra sidens tittel. Teksten kan redigeres og blir ikke
+overskrevet ved sidebytte dersom den allerede er fylt ut. For filer fylles
+teksten inn manuelt.
+
 Med ett mål går knappen direkte til siden eller filen. Med to eller flere
 åpner knappen designsystemets `Modal`, med `NavigationTile` for hvert valg.
 Filer vises uten ikon.

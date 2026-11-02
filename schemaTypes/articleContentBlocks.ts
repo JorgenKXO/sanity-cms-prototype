@@ -8,6 +8,7 @@ import {
   WarningOutlineIcon,
 } from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {ButtonDestinationInput} from '../components/ButtonDestinationInput'
 
 type PortableTextBlockPreview = {
   _type: string
@@ -313,14 +314,8 @@ export const articleButtonContentBlockType = defineType({
           title: 'Lenkemål',
           type: 'object',
           icon: ArrowRightIcon,
+          components: {input: ButtonDestinationInput},
           fields: [
-            defineField({
-              name: 'label',
-              title: 'Tekst for valget',
-              description: 'Vises på navigasjonskortet når knappen har flere mål.',
-              type: 'string',
-              validation: (rule) => rule.required(),
-            }),
             defineField({
               name: 'linkType',
               title: 'Lenketype',
@@ -368,6 +363,14 @@ export const articleButtonContentBlockType = defineType({
                 return parent?.linkType !== 'file' || value?.asset?._ref
                   ? true : 'Last opp eller velg en fil.'
               }),
+            }),
+            defineField({
+              name: 'label',
+              title: 'Tekst for valget',
+              description:
+                'Vises på navigasjonskortet når knappen har flere mål. Fylles inn fra sidetittelen når feltet er tomt. Du kan endre teksten.',
+              type: 'string',
+              validation: (rule) => rule.required(),
             }),
           ],
           preview: {

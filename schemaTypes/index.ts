@@ -6,6 +6,7 @@ import {
   articleButtonContentBlockType,
   articleImageContentBlockType,
   articleInformationContentBlockType,
+  articleLinkListContentBlockType,
   articleOpenCloseContentBlockType,
   articleTextContentBlockType,
 } from './articleContentBlocks'
@@ -30,6 +31,7 @@ export const schemaTypes = [
   articleTextContentBlockType,
   articleImageContentBlockType,
   articleInformationContentBlockType,
+  articleLinkListContentBlockType,
   articleButtonContentBlockType,
   articleOpenCloseContentBlockType,
   articleAccordionGroupContentBlockType,

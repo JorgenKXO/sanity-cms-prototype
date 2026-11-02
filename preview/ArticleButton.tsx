@@ -21,6 +21,7 @@ export type ArticleButtonBlock = ButtonLink & {
 
 export type ButtonDestination = {
   _id: string
+  title?: string
   slug?: {current?: string}
   url?: string
   originalFilename?: string

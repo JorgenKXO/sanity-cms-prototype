@@ -4,8 +4,10 @@ import {mkdtemp, rm} from 'node:fs/promises'
 import {createRequire} from 'node:module'
 import {fileURLToPath, pathToFileURL} from 'node:url'
 import {build} from 'esbuild'
-import {createElement} from 'react'
+import {act, createElement} from 'react'
+import {createRoot} from 'react-dom/client'
 import {renderToStaticMarkup} from 'react-dom/server'
+import {JSDOM} from 'jsdom'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const require = createRequire(import.meta.url)
@@ -17,6 +19,7 @@ await build({
       export {SectionPagePreview} from './preview/SectionPagePreview'
       export {ArticlePreview} from './preview/ArticlePreview'
       export {ArticleButton, getButtonLinks} from './preview/ArticleButton'
+      export {ArticleLinkList} from './preview/ArticleLinkList'
     `,
     resolveDir: root,
     loader: 'ts',
@@ -43,6 +46,7 @@ await build({
         contents: `
           import {createClient} from '@sanity/client'
           export function useClient() {
+            if (globalThis.articlePreviewTestClient) return globalThis.articlePreviewTestClient
             return createClient({
               projectId: 'test1234', dataset: 'production',
               apiVersion: '2026-09-10', useCdn: false,
@@ -55,7 +59,7 @@ await build({
     },
   }],
 })
-const {SectionPagePreview, ArticlePreview, ArticleButton, getButtonLinks} = await import(
+const {SectionPagePreview, ArticlePreview, ArticleButton, getButtonLinks, ArticleLinkList} = await import(
   pathToFileURL(`${directory}/preview.mjs`).href
 )
 const text = {
@@ -82,6 +86,189 @@ const page = {
 const render = (Component, displayed) => renderToStaticMarkup(
   createElement(Component, {document: {displayed}}),
 )
+
+test('renders ordered semantic LinkGroup lists with page titles and internal URLs', () => {
+  const pages = [
+    {_key: 'second', _ref: 'second'},
+    {_key: 'first', _ref: 'first'},
+  ]
+  const destinationsById = {
+    first: {title: 'Første side', slug: {current: 'kategori/forste-side'}},
+    second: {title: 'Andre side', slug: {current: 'andre-side'}},
+  }
+  for (const selectedPages of [[pages[0]], pages]) {
+    const html = renderToStaticMarkup(createElement(ArticleLinkList, {
+      block: {_type: 'lenkeliste', blockName: 'Skjult navn', pages: selectedPages},
+      destinationsById,
+      isLoading: false,
+    }))
+    assert.match(html, /<ul\b/)
+    assert.equal((html.match(/<li\b/g) || []).length, selectedPages.length)
+    assert.equal((html.match(/<a\b/g) || []).length, selectedPages.length)
+    assert.match(html, /href="\/andre-side"/)
+    assert.ok(!html.includes('Skjult navn'))
+    if (selectedPages.length > 1) {
+      assert.match(html, /href="\/kategori\/forste-side"/)
+      assert.ok(html.indexOf('Andre side') < html.indexOf('Første side'))
+    }
+  }
+})
+
+test('shows link-list empty, invalid, loading, missing-page and fetch-error states', () => {
+  const renderList = (pages, props = {}) => renderToStaticMarkup(createElement(ArticleLinkList, {
+    block: {_type: 'lenkeliste', pages},
+    destinationsById: {},
+    isLoading: false,
+    ...props,
+  }))
+  for (const pages of [undefined, []]) {
+    assert.match(renderList(pages), /role="status"[\s\S]*Legg til minst én side/)
+  }
+  assert.match(renderList([{}]), /role="status"[\s\S]*Velg en Sanity-side/)
+  const pages = [{_ref: 'target'}]
+  assert.match(renderList(pages, {isLoading: true}), /role="status"[\s\S]*Laster sidene/)
+  for (const destination of [undefined, {title: 'Side'}, {slug: {current: 'side'}}, {
+    title: ' ', slug: {current: 'side'},
+  }]) {
+    const html = renderList(pages, {destinationsById: {target: destination}})
+    assert.match(html, /role="alert"/)
+    assert.ok(!html.includes('<a'))
+  }
+  assert.match(renderList(pages, {error: 'Nettverksfeil'}), /role="alert"[\s\S]*Nettverksfeil/)
+  const partial = renderList([{_ref: 'valid'}, ...pages], {
+    destinationsById: {valid: {title: 'Gyldig side', slug: {current: 'gyldig'}}},
+  })
+  assert.match(partial, /role="alert"/)
+  assert.ok(!partial.includes('<a'))
+})
+
+test('allows overriding link text while keeping the original title as the default', () => {
+  const renderList = (label, destination = {title: 'Originaltittel', slug: {current: 'side'}}) =>
+    renderToStaticMarkup(createElement(ArticleLinkList, {
+      block: {_type: 'lenkeliste', pages: [{
+        _key: 'link', _type: 'linkListItem', page: {_ref: 'target'}, label,
+      }]},
+      destinationsById: {target: destination},
+      isLoading: false,
+    }))
+  const custom = renderList('Egen lenketekst')
+  assert.match(custom, /href="\/side"/)
+  assert.ok(custom.includes('Egen lenketekst'))
+  assert.ok(!custom.includes('Originaltittel'))
+  for (const label of [undefined, '', '   ']) {
+    assert.ok(renderList(label).includes('Originaltittel'))
+  }
+  assert.ok(renderList('Egen tekst', {slug: {current: 'side'}}).includes('Egen tekst'))
+  for (const destination of [undefined, {title: 'Originaltittel'}]) {
+    const html = renderList('Egen tekst', destination === undefined ? {} : destination)
+    assert.match(html, /role="alert"/)
+    assert.ok(!html.includes('<a'))
+  }
+})
+
+test('renders optional link-list heading and ingress before links with contextual heading levels', () => {
+  const renderList = (fields, nested = false) => renderToStaticMarkup(createElement(ArticleLinkList, {
+    block: {_type: 'lenkeliste', pages: [{_ref: 'target'}], ...fields},
+    destinationsById: {target: {title: 'Lenketittel', slug: {current: 'side'}}},
+    isLoading: false,
+    nested,
+  }))
+  for (const nested of [false, true]) {
+    const html = renderList({heading: 'Nyttige lenker', ingress: 'Finn flere opplysninger her.'}, nested)
+    assert.match(html, nested ? /<h3\b/ : /<h2\b/)
+    assert.match(html, /<h[23]\b[^>]*data-level="4"/)
+    assert.match(html, /<h[23]\b[^>]*class="[^"]*article-link-list-intro[^"]*"/)
+    assert.match(html, /<p\b[^>]*class="[^"]*article-link-list-intro[^"]*"/)
+    assert.ok(!/<(?:h[23]|p)\b[^>]*data-has-spacing="true"/.test(html))
+    assert.ok(html.indexOf('Nyttige lenker') < html.indexOf('Finn flere opplysninger her.'))
+    assert.ok(html.indexOf('Finn flere opplysninger her.') < html.indexOf('<ul'))
+    assert.match(html, /<p\b[^>]*data-ingress="true"/)
+  }
+  for (const fields of [{}, {heading: '', ingress: ''}, {heading: ' ', ingress: ' '}]) {
+    const html = renderList(fields)
+    assert.ok(!/<h[23]\b|<p\b/.test(html))
+    assert.match(html, /Lenketittel/)
+  }
+  assert.match(renderList({heading: 'Kun overskrift'}), /<h2\b/)
+  assert.ok(!/<p\b/.test(renderList({heading: 'Kun overskrift'})))
+  assert.match(renderList({ingress: 'Kun ingress'}), /<p\b/)
+  assert.ok(!renderList({ingress: 'Kun ingress'}).includes('<h2'))
+})
+
+test('resolves and deduplicates link-list and button references in articles and sections', async () => {
+  const dom = new JSDOM('<div id="root"></div>')
+  globalThis.window = dom.window
+  globalThis.document = dom.window.document
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true
+  const pending = []
+  globalThis.articlePreviewTestClient = {
+    config: () => ({projectId: 'test1234', dataset: 'production'}),
+    withConfig(config) {
+      assert.equal(config.perspective, 'drafts')
+      return this
+    },
+    fetch(query, parameters) {
+      return new Promise((resolve, reject) => pending.push({query, parameters, resolve, reject}))
+    },
+  }
+  const reactRoot = createRoot(document.getElementById('root'))
+  const list = {
+    _key: 'list', _type: 'lenkeliste',
+    heading: 'Relaterte sider',
+    ingress: 'Se også disse sidene.',
+    pages: [
+      {_key: 'b', _type: 'linkListItem', page: {_ref: 'page-b'}, label: 'Egen tekst B'},
+      {_key: 'a', _ref: 'page-a'},
+    ],
+  }
+  const button = {
+    _key: 'button', _type: 'knapp', label: 'Knapp', appearance: 'secondary',
+    linkType: 'internal', page: {_ref: 'page-a'},
+  }
+  const renderArticle = async (content) => act(async () => {
+    reactRoot.render(createElement(ArticlePreview, {document: {displayed: {content}}}))
+  })
+  try {
+    await renderArticle([list, button])
+    assert.deepEqual(pending[0].parameters, {ids: ['page-b', 'page-a']})
+    assert.match(pending[0].query, /title/)
+    assert.match(document.body.textContent, /Laster sidene/)
+    await act(async () => pending[0].resolve([
+      {_id: 'page-a', title: 'Side A', slug: {current: 'side-a'}},
+      {_id: 'page-b', title: 'Side B', slug: {current: 'side-b'}},
+    ]))
+    assert.deepEqual([...document.querySelectorAll('li a')].map((link) => [
+      link.textContent, link.getAttribute('href'),
+    ]), [['Egen tekst B', '/side-b'], ['Side A', '/side-a']])
+    assert.equal(document.querySelector('a[href="/side-a"]:not(li a)').textContent, 'Knapp')
+    assert.equal(document.querySelector('h2').textContent, 'Relaterte sider')
+
+    await renderArticle([{_key: 'section', _type: 'seksjon', heading: 'Seksjon', content: [list]}])
+    assert.equal(pending.length, 1)
+    assert.equal(document.querySelectorAll('section li a').length, 2)
+    assert.equal(document.querySelector('section h3').textContent, 'Relaterte sider')
+    await renderArticle([{_key: 'section', _type: 'seksjon', content: [list]}])
+    assert.equal(document.querySelector('section h2').textContent, 'Relaterte sider')
+
+    await renderArticle([{...list, pages: [{_ref: 'stale'}]}])
+    await renderArticle([{...list, pages: [{_ref: 'new-page'}]}])
+    await act(async () => pending[1].resolve([
+      {_id: 'stale', title: 'Utdatert side', slug: {current: 'utdatert'}},
+    ]))
+    assert.ok(!document.body.textContent.includes('Utdatert side'))
+    await act(async () => pending[2].reject(new Error('Nettverksfeil')))
+    assert.match(document.querySelector('[role="alert"]').textContent, /Nettverksfeil/)
+    await renderArticle([])
+    assert.equal(document.querySelector('[role="alert"]'), null)
+  } finally {
+    await act(async () => reactRoot.unmount())
+    dom.window.close()
+    delete globalThis.window
+    delete globalThis.document
+    delete globalThis.IS_REACT_ACT_ENVIRONMENT
+    delete globalThis.articlePreviewTestClient
+  }
+})
 
 test('renders green boundaries matching the original section prototype', () => {
   const html = render(SectionPagePreview, page)

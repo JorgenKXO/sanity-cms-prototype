@@ -19,6 +19,7 @@ import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
 import './numberedAccordion.css'
 import {ArticleButton, getButtonLinks, type ArticleButtonBlock, type ButtonDestination} from './ArticleButton'
+import {ArticleLinkList, getLinkListPageId, type ArticleLinkListBlock} from './ArticleLinkList'
 
 type Breadcrumb = {
   _key?: string
@@ -97,6 +98,7 @@ type InnholdBlock =
   | SharedContentBlock
   | BlockquoteBlock
   | ArticleButtonBlock
+  | ArticleLinkListBlock
   | ArticleOpenCloseBlock
   | ArticleAccordionGroupBlock
   | PanelBlock
@@ -296,9 +298,9 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
   const [sharedContentById, setSharedContentById] = useState<Record<string, SharedContentDocument>>({})
   const [sharedContentError, setSharedContentError] = useState<string>()
   const [isLoadingSharedContent, setIsLoadingSharedContent] = useState(false)
-  const [buttonDestinationsById, setButtonDestinationsById] = useState<Record<string, ButtonDestination>>({})
-  const [buttonDestinationError, setButtonDestinationError] = useState<string>()
-  const [isLoadingButtonDestinations, setIsLoadingButtonDestinations] = useState(false)
+  const [destinationsById, setDestinationsById] = useState<Record<string, ButtonDestination>>({})
+  const [destinationError, setDestinationError] = useState<string>()
+  const [isLoadingDestinations, setIsLoadingDestinations] = useState(false)
 
   const sharedContentIds = [
     ...new Set(
@@ -310,19 +312,25 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
   ]
   const sharedContentIdsKey = JSON.stringify(sharedContentIds)
 
-  const buttonDestinationIds = [
+  const destinationIds = [
     ...new Set(
       (article?.content || [])
         .flatMap((block) => (block._type === 'seksjon' ? block.content || [] : [block]))
-        .filter((block): block is ArticleButtonBlock => block._type === 'knapp')
-        .flatMap(getButtonLinks)
-        .map((link) => link.linkType === 'internal'
-          ? link.page?._ref
-          : link.linkType === 'file' ? link.file?.asset?._ref : undefined)
+        .flatMap((block) => {
+          if (block._type === 'lenkeliste') {
+            return (block.pages || []).map(getLinkListPageId)
+          }
+          if (block._type === 'knapp') {
+            return getButtonLinks(block).map((link) => link.linkType === 'internal'
+              ? link.page?._ref
+              : link.linkType === 'file' ? link.file?.asset?._ref : undefined)
+          }
+          return []
+        })
         .filter((id): id is string => Boolean(id)),
     ),
   ]
-  const buttonDestinationIdsKey = JSON.stringify(buttonDestinationIds)
+  const destinationIdsKey = JSON.stringify(destinationIds)
 
   useEffect(() => {
     if (sharedContentIds.length === 0) {
@@ -362,33 +370,33 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
   }, [client, sharedContentIdsKey])
 
   useEffect(() => {
-    if (buttonDestinationIds.length === 0) {
-      setButtonDestinationsById({})
-      setButtonDestinationError(undefined)
-      setIsLoadingButtonDestinations(false)
+    if (destinationIds.length === 0) {
+      setDestinationsById({})
+      setDestinationError(undefined)
+      setIsLoadingDestinations(false)
       return
     }
 
     let cancelled = false
-    setButtonDestinationsById({})
-    setButtonDestinationError(undefined)
-    setIsLoadingButtonDestinations(true)
+    setDestinationsById({})
+    setDestinationError(undefined)
+    setIsLoadingDestinations(true)
     client
       .withConfig({perspective: 'drafts'})
       .fetch<ButtonDestination[]>(
-        `*[_id in $ids]{_id, slug, url, originalFilename}`,
-        {ids: buttonDestinationIds},
+        `*[_id in $ids]{_id, title, slug, url, originalFilename}`,
+        {ids: destinationIds},
       )
       .then((results) => {
         if (cancelled) return
-        setButtonDestinationsById(Object.fromEntries(results.map((result) => [result._id, result])))
-        setIsLoadingButtonDestinations(false)
+        setDestinationsById(Object.fromEntries(results.map((result) => [result._id, result])))
+        setIsLoadingDestinations(false)
       })
       .catch((error: unknown) => {
         if (cancelled) return
-        setButtonDestinationsById({})
-        setButtonDestinationError(error instanceof Error ? error.message : 'Ukjent feil')
-        setIsLoadingButtonDestinations(false)
+        setDestinationsById({})
+        setDestinationError(error instanceof Error ? error.message : 'Ukjent feil')
+        setIsLoadingDestinations(false)
       })
 
     return () => {
@@ -396,7 +404,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
     }
     // Keep the request stable while Sanity recreates the reference array.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, buttonDestinationIdsKey])
+  }, [client, destinationIdsKey])
 
   if (!article) {
     return <div style={styles.empty}>No article content to preview yet.</div>
@@ -541,9 +549,21 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
       return (
         <ArticleButton
           block={block}
-          destinationsById={buttonDestinationsById}
-          error={buttonDestinationError}
-          isLoading={isLoadingButtonDestinations}
+          destinationsById={destinationsById}
+          error={destinationError}
+          isLoading={isLoadingDestinations}
+        />
+      )
+    }
+
+    if (block._type === 'lenkeliste') {
+      return (
+        <ArticleLinkList
+          block={block}
+          destinationsById={destinationsById}
+          error={destinationError}
+          isLoading={isLoadingDestinations}
+          nested={nested}
         />
       )
     }
@@ -616,7 +636,10 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
           {block.heading ? <Heading as="h2" level={2}>{block.heading}</Heading> : null}
           {block.content?.map((child, index) => (
             <div key={child._key || index}>
-              {renderContentBlock(child, child._type === 'openClose' && Boolean(block.heading))}
+              {renderContentBlock(
+                child,
+                (child._type === 'openClose' || child._type === 'lenkeliste') && Boolean(block.heading),
+              )}
             </div>
           ))}
         </div>

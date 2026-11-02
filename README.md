@@ -150,6 +150,33 @@ og under hver knapp. Bruk megaknapp til én tydelig hovedhandling.
 Dette gjelder Studio-forhåndsvisningen; en separat publiseringsfrontend må
 også støtte innholdsblokken `knapp`.
 
+## Lenkelister i artikler
+
+Legg til **Lenkeliste** i artikkelens **Innhold** eller inne i en artikkelseksjon.
+Komponenten har et punktlisteikon i Studio. Under **Sider** kan redaktøren legge
+til et valgfritt antall lenker til artikler, seksjonssider og navigasjonssider,
+og endre rekkefølgen. Velg **Lenke**, velg **Side**, og fyll eventuelt inn
+**Lenketekst (valgfritt)** for å overstyre sidens originaltittel. Et tomt felt
+bruker alltid sidens gjeldende tittel. Minst én side må være valgt før publisering.
+Lenkelisten kan ha **Overskrift (valgfritt)** og **Ingress (valgfritt)** over
+lenkene. Begge kan utelates. Overskriften brukes også som navn i innholdslisten
+i Studio; lenkelisten har ikke et eget redaktørnavn.
+I forhåndsvisningen bruker overskriften designsystemets kompakte størrelse
+(`Heading level={4}`), men beholder semantisk nivå h2 eller h3 ut fra plasseringen.
+Overskrift og ingress har kompakt avstand under seg (`--spacing-xs`).
+
+Forhåndsvisningen bruker designsystemets `LinkGroup` i varianten `list`, basert
+på det dokumenterte lenkeliste-eksempelet. Sidetitlene brukes som standard lenketekst,
+og sidens nettadresse (slug) brukes som lenkemål. Manglende sider, titler,
+nettadresser og hentefeil vises som meldinger i forhåndsvisningen.
+
+En separat publiseringsfrontend må også støtte blokken `lenkeliste` og slå opp
+sidereferansene i feltet `pages`: nye `linkListItem`-objekter har `page` og valgfri
+`label`. Eldre direkte sidereferanser fungerer fortsatt uten migrering og bruker
+sidetittelen. Eldre referanser kan ikke legges til fra menyen lenger. Erstatt en
+eldre referanse med **Lenke** for å gi den egen lenketekst. Feltene `heading` og
+`ingress` er valgfrie strenger.
+
 ## Nummererte accordion-grupper
 
 Legg til **Accordion-gruppe** i en artikkel eller artikkelseksjon, og slå på

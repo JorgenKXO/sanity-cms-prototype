@@ -5,10 +5,12 @@ import {
   ImageIcon,
   InfoOutlineIcon,
   TextIcon,
+  UlistIcon,
   WarningOutlineIcon,
 } from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {ButtonDestinationInput} from '../components/ButtonDestinationInput'
+import {LinkListPagesInput} from '../components/LinkListPagesInput'
 
 type PortableTextBlockPreview = {
   _type: string
@@ -72,6 +74,83 @@ export const blockNameField = defineField({
   description:
     'Gi blokken et gjenkjennelig navn som vises i innholdslisten, slik at det blir enklere å orientere seg. Vises ikke for besøkende på nettsiden.',
   type: 'string',
+})
+
+export const articleLinkListContentBlockType = defineType({
+  name: 'lenkeliste',
+  title: 'Lenkeliste',
+  type: 'object',
+  icon: UlistIcon,
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Overskrift (valgfritt)',
+      type: 'string',
+    }),
+    defineField({
+      name: 'ingress',
+      title: 'Ingress (valgfritt)',
+      type: 'text',
+      rows: 3,
+    }),
+    defineField({
+      name: 'pages',
+      title: 'Sider',
+      description:
+        'Legg til lenker i ønsket rekkefølge. Velg en Sanity-side og fyll eventuelt inn egen lenketekst. Du kan legge til så mange lenker du vil.',
+      type: 'array',
+      components: {input: LinkListPagesInput},
+      of: [
+        defineArrayMember({
+          name: 'linkListItem',
+          title: 'Lenke',
+          type: 'object',
+          icon: ArrowRightIcon,
+          fields: [
+            defineField({
+              name: 'page',
+              title: 'Side',
+              type: 'reference',
+              to: [{type: 'article'}, {type: 'sectionPage'}, {type: 'navigationPage'}],
+              validation: (rule) => rule.required(),
+            }),
+            defineField({
+              name: 'label',
+              title: 'Lenketekst (valgfritt)',
+              description: 'La feltet stå tomt for å bruke sidens originaltittel.',
+              type: 'string',
+            }),
+          ],
+          preview: {
+            select: {label: 'label', pageTitle: 'page.title'},
+            prepare({label, pageTitle}) {
+              return {
+                title: label?.trim() || pageTitle || 'Velg en side',
+                subtitle: label?.trim() ? pageTitle || 'Lenke' : 'Lenke · bruker sidens tittel',
+              }
+            },
+          },
+        }),
+        defineArrayMember({
+          title: 'Side (uten egen lenketekst)',
+          type: 'reference',
+          to: [{type: 'article'}, {type: 'sectionPage'}, {type: 'navigationPage'}],
+          validation: (rule) => rule.required(),
+        }),
+      ],
+      validation: (rule) => rule.required().min(1),
+    }),
+  ],
+  preview: {
+    select: {heading: 'heading', pages: 'pages'},
+    prepare({heading, pages}) {
+      const count = Array.isArray(pages) ? pages.length : 0
+      return {
+        title: heading?.trim() || 'Lenkeliste',
+        subtitle: `Lenkeliste · ${count} ${count === 1 ? 'lenke' : 'lenker'}`,
+      }
+    },
+  },
 })
 
 export const articleTextContentBlockType = defineType({

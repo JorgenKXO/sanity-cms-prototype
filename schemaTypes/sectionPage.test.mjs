@@ -5,7 +5,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url'
 import {build} from 'esbuild'
 import {firstValueFrom, of} from 'rxjs'
 import {createClient} from '@sanity/client'
-import {ChevronDownIcon} from '@sanity/icons'
+import {ChevronDownIcon, UlistIcon} from '@sanity/icons'
 import {resolveConfig, validateDocument} from 'sanity'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
@@ -23,6 +23,7 @@ await build({
         articleButtonContentBlockType, articleOpenCloseContentBlockType,
         articleAccordionGroupContentBlockType,
         articleBlockquoteContentBlockType,
+        articleLinkListContentBlockType,
       } from './schemaTypes/articleContentBlocks'
       import {sharedContentType} from './schemaTypes/sharedContentType'
       const navigationPageTestType = defineType({
@@ -36,6 +37,7 @@ await build({
         articleButtonContentBlockType, articleOpenCloseContentBlockType, navigationPageTestType,
         articleAccordionGroupContentBlockType,
         articleBlockquoteContentBlockType,
+        articleLinkListContentBlockType,
         sharedContentType,
       ]
     `,
@@ -141,7 +143,7 @@ test('requires section content, but name, heading and icon are optional', async 
   }
 })
 
-test('offers the accordion group on articles but not section pages', () => {
+test('offers accordion groups and link lists on articles but not section pages', () => {
   const article = schemaTypes.find((type) => type.name === 'article')
   const sectionType = schemaTypes.find((type) => type.name === 'pageSection')
   const directArticleBlocks = article.fields.find((field) => field.name === 'content').of
@@ -152,9 +154,11 @@ test('offers the accordion group on articles but not section pages', () => {
   const sectionBlocks = sectionType.fields.find((field) => field.name === 'content').of
   assert.ok(directArticleBlocks.some((block) => block.type === 'accordionGroup'))
   assert.ok(articleBlocks.some((block) => block.type === 'accordionGroup'))
+  assert.ok(directArticleBlocks.some((block) => block.type === 'lenkeliste'))
+  assert.ok(articleBlocks.some((block) => block.type === 'lenkeliste'))
   assert.deepEqual(
     articleBlocks.map((block) => block.type === 'accordionGroup' ? block.type : block.name || block.type),
-    [...sectionBlocks.map((block) => block.name || block.type), 'accordionGroup'],
+    [...sectionBlocks.map((block) => block.name || block.type), 'accordionGroup', 'lenkeliste'],
   )
   assert.deepEqual(
     sectionBlocks.map((block) => block.name || block.type),
@@ -166,6 +170,88 @@ test('offers the accordion group on articles but not section pages', () => {
     typeof page.fields.find((field) => field.name === 'sections').components.input,
     'function',
   )
+})
+
+test('defines link lists with a list icon and uncapped ordered Sanity page references', async () => {
+  const type = schemaTypes.find((type) => type.name === 'lenkeliste')
+  assert.equal(type.title, 'Lenkeliste')
+  assert.equal(type.icon, UlistIcon)
+  assert.deepEqual(type.fields.map((field) => field.name), ['heading', 'ingress', 'pages'])
+  assert.equal(type.fields.find((field) => field.name === 'heading').validation, undefined)
+  assert.equal(type.fields.find((field) => field.name === 'ingress').validation, undefined)
+  const pages = type.fields.find((field) => field.name === 'pages')
+  assert.equal(pages.type, 'array')
+  const link = pages.of.find((member) => member.name === 'linkListItem')
+  assert.equal(link.type, 'object')
+  assert.deepEqual(link.fields.map((field) => field.name), ['page', 'label'])
+  assert.deepEqual(link.fields.find((field) => field.name === 'page').to.map((target) => target.type), [
+    'article', 'sectionPage', 'navigationPage',
+  ])
+  assert.ok(pages.of.some((member) => member.type === 'reference'))
+  assert.equal(link.preview.prepare({label: 'Egen tekst', pageTitle: 'Original'}).title, 'Egen tekst')
+  assert.equal(link.preview.prepare({label: ' ', pageTitle: 'Original'}).title, 'Original')
+  assert.equal(type.preview.prepare({pages: [{}]}).subtitle, 'Lenkeliste · 1 lenke')
+  assert.equal(type.preview.prepare({pages: [{}, {}]}).subtitle, 'Lenkeliste · 2 lenker')
+  assert.equal(type.preview.prepare({heading: 'Relaterte sider'}).title, 'Relaterte sider')
+  assert.equal(type.preview.prepare({blockName: 'Gammelt navn'}).title, 'Lenkeliste')
+
+  const members = [{kind: 'item', key: 'legacy', item: {schemaType: {name: 'reference'}}}]
+  const inputProps = {
+    schemaType: {...pages, of: pages.of.map((member) => ({
+      ...member, name: member.name || member.type,
+    }))},
+    members,
+    value: [{_key: 'legacy', _type: 'reference', _ref: 'target'}],
+    readOnly: true,
+    onChange: () => {},
+    renderDefault: (props) => props,
+  }
+  const rendered = pages.components.input(inputProps)
+  assert.deepEqual(rendered.schemaType.of.map((member) => member.name), ['linkListItem'])
+  assert.equal(rendered.members, members)
+  assert.equal(rendered.value, inputProps.value)
+  assert.equal(rendered.readOnly, true)
+  assert.equal(rendered.onChange, inputProps.onChange)
+  assert.equal(inputProps.schemaType.of.length, 2)
+
+  const validate = async (value, nested = false) => (await validateDocument({
+    document: {
+      ...document(undefined),
+      _type: 'article',
+      content: nested
+        ? [{_key: 'section', _type: 'seksjon', content: [value]}]
+        : [value],
+    },
+    workspace,
+    environment: 'cli',
+    getDocumentExists: async () => true,
+  })).filter((marker) => marker.level === 'error')
+  const list = {_key: 'list', _type: 'lenkeliste'}
+  for (const nested of [false, true]) {
+    for (const label of [undefined, '', ' ', 'Egen lenketekst']) {
+      assert.deepEqual(await validate({
+        ...list, heading: 'Relaterte sider', ingress: 'Her finner du mer informasjon.', pages: [{
+          _key: 'link', _type: 'linkListItem',
+          page: {_type: 'reference', _ref: 'target'}, label,
+        }],
+      }, nested), [])
+    }
+    for (const count of [1, 100]) {
+      assert.deepEqual(await validate({
+        ...list,
+        pages: Array.from({length: count}, (_, index) => ({
+          _key: `page-${index}`, _type: 'reference', _ref: `target-${index}`,
+        })),
+      }, nested), [])
+    }
+    for (const pages of [
+      undefined, [], [{_key: 'empty', _type: 'reference'}],
+      [{_key: 'empty', _type: 'linkListItem', label: 'Tekst uten side'}],
+    ]) {
+      const result = await validate({...list, pages}, nested)
+      assert.ok(result.some((marker) => marker.path.includes('pages')), JSON.stringify(result))
+    }
+  }
 })
 
 test('defines accordion groups with required nested accordions and no size setting', () => {

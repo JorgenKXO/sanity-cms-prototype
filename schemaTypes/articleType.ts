@@ -41,6 +41,7 @@ const contentMembers = () => [
   defineArrayMember({type: 'reference', to: [{type: 'sharedContent'}]}),
   ...articleContentBlocks.slice(3),
   defineArrayMember({type: 'accordionGroup'}),
+  defineArrayMember({type: 'lenkeliste'}),
 ]
 
 export const articleType = defineType({

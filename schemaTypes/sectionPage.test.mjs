@@ -357,12 +357,22 @@ test('defines accordion groups with required nested accordions and no size setti
   assert.equal(showNumbers.title, 'Vis med tall')
   assert.equal(showNumbers.type, 'boolean')
   assert.equal(showNumbers.initialValue, false)
+  const ingress = accordion.fields.find((field) => field.name === 'ingress')
+  assert.equal(ingress.title, 'Ingress')
+  assert.equal(ingress.type, 'string')
   const content = accordion.fields.find((field) => field.name === 'content')
-  assert.deepEqual(content.of.map((member) => member.type || member.name), ['block', 'openClose'])
-  assert.match(content.description, /Åpne\/Lukke-objekter/)
+  assert.deepEqual(
+    content.of.map((member) => member.type || member.name),
+    ['block', 'openClose', 'bilde', 'eksempel', 'knapp', 'lenkeliste'],
+  )
+  assert.deepEqual(
+    content.of[0],
+    schemaTypes.find((type) => type.name === 'eksempel').fields[0].of[0],
+  )
+  assert.match(content.description, /samme formateringsvalg som Eksempel/)
   assert.deepEqual(
     accordion.fields.map((field) => field.name),
-    ['title', 'content'],
+    ['title', 'ingress', 'content'],
   )
   assert.equal(accordionGroup.preview.prepare({accordions: [{}, {}]}).subtitle, '2 accordions')
   assert.equal(accordionGroup.preview.prepare({accordions: [{}]}).subtitle, '1 accordion')

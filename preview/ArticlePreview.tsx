@@ -19,8 +19,8 @@ import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
 import {sectionIconMap} from '../components/SectionIcons'
 import './numberedAccordion.css'
-import {ArticleButton, getButtonLinks, type ArticleButtonBlock, type ButtonDestination} from './ArticleButton'
-import {ArticleLinkList, getLinkListPageId, type ArticleLinkListBlock} from './ArticleLinkList'
+import {ArticleButton, type ArticleButtonBlock, type ButtonDestination} from './ArticleButton'
+import {ArticleLinkList, type ArticleLinkListBlock} from './ArticleLinkList'
 
 type Breadcrumb = {
   _key?: string
@@ -67,6 +67,7 @@ type ArticleAccordionGroupBlock = {
     _key?: string
     _type?: 'accordion'
     title?: string
+    ingress?: string
     content?: PortableTextBlock[]
   }[]
 }
@@ -182,22 +183,54 @@ function getString(value: Record<string, unknown>, key: string) {
   return typeof value[key] === 'string' ? value[key] : undefined
 }
 
-function getExamplePageLinkIds(block: ExampleBlock) {
-  return (block.text || []).flatMap((textBlock) => {
-    if (!isRecord(textBlock) || !Array.isArray(textBlock.markDefs)) {
-      return []
-    }
+function getDestinationIds(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.flatMap(getDestinationIds)
+  }
+  if (!isRecord(value)) {
+    return []
+  }
 
-    return textBlock.markDefs.flatMap((markDef) => {
-      if (!isRecord(markDef) || getString(markDef, '_type') !== 'pageLink') {
-        return []
-      }
+  if (getString(value, '_type') === 'pageLink') {
+    const page = value.page
+    const id = isRecord(page) ? getString(page, '_ref') : undefined
+    return id ? [id] : []
+  }
 
-      const page = markDef.page
+  if (getString(value, '_type') === 'block') {
+    return getDestinationIds(value.markDefs)
+  }
+
+  if (getString(value, '_type') === 'knapp') {
+    const links = Array.isArray(value.destinations) && value.destinations.length
+      ? value.destinations
+      : [value]
+    return links.flatMap((link) => {
+      if (!isRecord(link)) return []
+      const linkType = getString(link, 'linkType')
+      const page = link.page
+      const file = link.file
+      const asset = isRecord(file) ? file.asset : undefined
+      const id = linkType === 'internal' && isRecord(page)
+        ? getString(page, '_ref')
+        : linkType === 'file' && isRecord(asset) ? getString(asset, '_ref') : undefined
+      return id ? [id] : []
+    })
+  }
+
+  if (getString(value, '_type') === 'lenkeliste') {
+    const pages = Array.isArray(value.pages) ? value.pages : []
+    return pages.flatMap((item) => {
+      if (!isRecord(item)) return []
+      const page = getString(item, '_type') === 'linkListItem' ? item.page : item
       const id = isRecord(page) ? getString(page, '_ref') : undefined
       return id ? [id] : []
     })
-  })
+  }
+
+  return ['content', 'accordions', 'text'].flatMap((key) =>
+    getDestinationIds(value[key]),
+  )
 }
 
 const styles: Record<string, CSSProperties> = {
@@ -367,25 +400,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
         block._type === 'seksjon' ? block.content || [] : [block],
       )
 
-  const destinationIds = [
-    ...new Set(
-      contentBlocks.flatMap((block) => {
-        if (block._type === 'eksempel') {
-          return getExamplePageLinkIds(block)
-        }
-        if (block._type === 'lenkeliste') {
-          return (block.pages || []).map(getLinkListPageId)
-        }
-        if (block._type === 'knapp') {
-          return getButtonLinks(block).map((link) => link.linkType === 'internal'
-            ? link.page?._ref
-            : link.linkType === 'file' ? link.file?.asset?._ref : undefined)
-        }
-        return []
-      })
-        .filter((id): id is string => Boolean(id)),
-    ),
-  ]
+  const destinationIds = [...new Set(contentBlocks.flatMap(getDestinationIds))]
   const destinationIdsKey = JSON.stringify(destinationIds)
 
   useEffect(() => {
@@ -490,7 +505,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
       ))
     }
 
-    const contentComponents: PortableTextComponents = nested
+    const baseContentComponents: PortableTextComponents = nested
       ? {
           ...components,
           block: {
@@ -508,6 +523,55 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
           },
         }
       : components
+    const pageLinkMarks = {
+      pageLink: ({children, text, value}) => {
+        const page = isRecord(value) && isRecord(value.page) ? value.page : undefined
+        const pageId = page ? getString(page, '_ref') : undefined
+        if (!pageId) {
+          return <span role="alert">{children} (Lenkemålet mangler en side.)</span>
+        }
+        if (destinationError) {
+          return <span role="alert">{children} (Kunne ikke hente lenkemålet: {destinationError})</span>
+        }
+
+        const destination = destinationsById[pageId]
+        const slug = destination?.slug?.current
+        if (!slug) {
+          return (
+            <span role={isLoadingDestinations ? 'status' : 'alert'}>
+              {children} ({isLoadingDestinations
+                ? 'Laster lenkemål …'
+                : 'Lenkemålet ble ikke funnet eller mangler nettadresse.'})
+            </span>
+          )
+        }
+
+        return <Link href={`/${slug}`}>{text}</Link>
+      },
+    } satisfies NonNullable<PortableTextComponents['marks']>
+    const renderEmbeddedBlock = (value: unknown) => {
+      if (!isRecord(value)) return null
+      switch (getString(value, '_type')) {
+        case 'bilde':
+        case 'eksempel':
+        case 'knapp':
+        case 'lenkeliste':
+          return renderContentBlock(value as InnholdBlock, nested)
+        default:
+          return null
+      }
+    }
+    const contentComponents: PortableTextComponents = {
+      ...baseContentComponents,
+      marks: {...baseContentComponents.marks, ...pageLinkMarks},
+      types: {
+        ...baseContentComponents.types,
+        bilde: ({value}) => renderEmbeddedBlock(value),
+        eksempel: ({value}) => renderEmbeddedBlock(value),
+        knapp: ({value}) => renderEmbeddedBlock(value),
+        lenkeliste: ({value}) => renderEmbeddedBlock(value),
+      },
+    }
     const panelComponents: PortableTextComponents = nested
       ? {
           ...components,
@@ -551,6 +615,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
           <Accordion.Item
             key={accordion._key || index}
             title={accordion.title}
+            subtitle={accordion.ingress}
             titleAs={nested ? 'h3' : 'h2'}
           >
             {accordion.content ? (
@@ -637,33 +702,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
 
       const exampleComponents: PortableTextComponents = {
         ...components,
-        marks: {
-          ...components.marks,
-          pageLink: ({children, text, value}) => {
-            const page = isRecord(value) && isRecord(value.page) ? value.page : undefined
-            const pageId = page ? getString(page, '_ref') : undefined
-            if (!pageId) {
-              return <span role="alert">{children} (Lenkemålet mangler en side.)</span>
-            }
-            if (destinationError) {
-              return <span role="alert">{children} (Kunne ikke hente lenkemålet: {destinationError})</span>
-            }
-
-            const destination = destinationsById[pageId]
-            const slug = destination?.slug?.current
-            if (!slug) {
-              return (
-                <span role={isLoadingDestinations ? 'status' : 'alert'}>
-                  {children} ({isLoadingDestinations
-                    ? 'Laster lenkemål …'
-                    : 'Lenkemålet ble ikke funnet eller mangler nettadresse.'})
-                </span>
-              )
-            }
-
-            return <Link href={`/${slug}`}>{text}</Link>
-          },
-        },
+        marks: {...components.marks, ...pageLinkMarks},
       }
 
       return (

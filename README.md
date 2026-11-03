@@ -106,6 +106,19 @@ Eksisterende sitatinnhold beholdes og vises fortsatt i forhåndsvisningen.
 En separat publiseringsfrontend må også støtte blokken `eksempel`, inkludert
 `pageLink`-referansene og den faste gule `Blockquote`-visningen.
 
+## Accordioner i artikler
+
+Legg til **Accordion-gruppe** i artikkelinnholdet og opprett accordioner med
+overskrift, valgfri **Ingress** og innhold. Ingressen vises som designsystemets
+`subtitle` under overskriften, og er synlig selv når accordionen er lukket.
+Innholdet har samme riktekstvalg som **Eksempel**, og kan i tillegg inneholde
+de eksisterende objektene **Åpne/Lukke**, **Bilde**, **Eksempel**, **Knapp** og
+**Lenkeliste**. Forhåndsvisningen henter også sidereferanser og fil-lenkemål
+fra innhold inne i accordioner.
+
+En separat publiseringsfrontend må støtte accordionens `ingress`, de nestede
+blokktypene og `pageLink`-referansene.
+
 ## Seksjonssider (alternativ prototype)
 
 Opprett **Seksjonsside** fra **Alle seksjonssider** eller en kategorimappe.

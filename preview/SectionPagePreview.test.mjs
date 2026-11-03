@@ -242,6 +242,7 @@ test('resolves and deduplicates page references in examples, link lists and butt
   const button = {
     _key: 'button', _type: 'knapp', label: 'Knapp', appearance: 'secondary',
     linkType: 'internal', page: {_ref: 'page-a'},
+    destinations: [],
   }
   const example = {
     _key: 'example', _type: 'eksempel',
@@ -284,6 +285,23 @@ test('resolves and deduplicates page references in examples, link lists and butt
     assert.equal(document.querySelector('section h3').textContent, 'Relaterte sider')
     await renderArticle([{_key: 'section', _type: 'seksjon', content: [list, example]}])
     assert.equal(document.querySelector('section h2').textContent, 'Relaterte sider')
+
+    await renderArticle([{
+      _key: 'accordion-group',
+      _type: 'accordionGroup',
+      accordions: [{
+        _key: 'accordion',
+        title: 'Spørsmål',
+        ingress: 'Kort forklaring',
+        content: [list, button, example, {...example.text[0], _key: 'direct-page-link'}],
+      }],
+    }])
+    assert.equal(pending.length, 1)
+    assert.equal(document.querySelector('a[href="/side-a"]:not(li a)').textContent, 'Knapp')
+    assert.equal(document.querySelectorAll('a[href="/side-c"]').length, 2)
+    assert.equal(document.querySelectorAll('li a').length, 2)
+    assert.match(document.querySelector('button[aria-expanded]').textContent, /Kort forklaring/)
+    assert.equal(document.querySelector('[role="alert"]'), null)
 
     await renderArticle([{...list, pages: [{_ref: 'stale'}]}])
     await renderArticle([example])
@@ -545,6 +563,7 @@ test('renders accordion groups with large accordions and their nested rich text'
         {
           _key: 'accordion-one',
           title: 'Første spørsmål',
+          ingress: 'Kort forklaring',
           content: [{
             _key: 'paragraph',
             _type: 'block',
@@ -560,8 +579,70 @@ test('renders accordion groups with large accordions and their nested rich text'
 
   assert.ok(html.includes('Første spørsmål'), html)
   assert.ok(html.includes('Andre spørsmål'), html)
+  assert.ok(html.includes('Kort forklaring'), html)
   assert.ok(html.includes('Første svar'), html)
   assert.ok(html.includes('large'), html)
+})
+
+test('renders existing content blocks and example rich text inside accordion portable text', () => {
+  const html = render(ArticlePreview, {
+    title: 'Artikkel med rik accordion',
+    content: [{
+      _key: 'accordion-group',
+      _type: 'accordionGroup',
+      accordions: [{
+        _key: 'accordion',
+        title: 'Spørsmål',
+        ingress: 'Ingress til spørsmålet',
+        content: [
+          {
+            _key: 'rich-text',
+            _type: 'block',
+            style: 'h2',
+            markDefs: [],
+            children: [{_key: 'span', _type: 'span', text: 'Underoverskrift', marks: ['strong']}],
+          },
+          {
+            _key: 'image',
+            _type: 'bilde',
+            image: {_type: 'image', asset: {_type: 'reference', _ref: 'image-test-10x10-png'}},
+            isDecorative: true,
+          },
+          {
+            _key: 'example',
+            _type: 'eksempel',
+            text: [{
+              _key: 'example-paragraph',
+              _type: 'block',
+              style: 'normal',
+              markDefs: [],
+              children: [{_key: 'span', _type: 'span', text: 'Eksempelinnhold', marks: []}],
+            }],
+          },
+          {
+            _key: 'button',
+            _type: 'knapp',
+            label: 'Knapp i accordion',
+            appearance: 'secondary',
+          },
+          {
+            _key: 'link-list',
+            _type: 'lenkeliste',
+            pages: [],
+          },
+        ],
+      }],
+    }],
+  })
+
+  assert.ok(html.includes('Ingress til spørsmålet'), html)
+  assert.match(html, /<h2\b[^>]*><strong>Underoverskrift<\/strong><\/h2>/)
+  assert.ok(html.includes('<strong>Underoverskrift</strong>'), html)
+  assert.ok(html.includes('<img'), html)
+  assert.ok(html.includes('alt=""'), html)
+  assert.ok(html.includes('Eksempelinnhold'), html)
+  assert.ok(html.includes('Legg til minst ett lenkemål for å forhåndsvise knappen.'), html)
+  assert.ok(html.includes('Legg til minst én side for å forhåndsvise lenkelisten.'), html)
 })
 
 test('renders OpenClose objects inside accordion portable text', () => {

@@ -774,11 +774,25 @@ export const articleAccordionGroupContentBlockType = defineType({
               validation: (rule) => rule.required(),
             }),
             defineField({
+              name: 'ingress',
+              title: 'Ingress',
+              description: 'Valgfri ingress som vises under overskriften.',
+              type: 'string',
+            }),
+            defineField({
               name: 'content',
               title: 'Innhold',
-              description: 'Tekst og Åpne/Lukke-objekter.',
+              description:
+                'Rik tekst med samme formateringsvalg som Eksempel, samt Åpne/Lukke, bilde, eksempel, knapp og lenkeliste.',
               type: 'array',
-              of: [articleTextBlock, defineArrayMember({type: 'openClose'})],
+              of: [
+                exampleTextBlock,
+                defineArrayMember({type: 'openClose'}),
+                defineArrayMember({type: 'bilde'}),
+                defineArrayMember({type: 'eksempel'}),
+                defineArrayMember({type: 'knapp'}),
+                defineArrayMember({type: 'lenkeliste'}),
+              ],
               validation: (rule) => rule.required().min(1),
             }),
           ],

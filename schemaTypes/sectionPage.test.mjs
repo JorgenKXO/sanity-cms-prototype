@@ -31,6 +31,7 @@ await build({
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType, articleOpenCloseContentBlockType,
         articleAccordionGroupContentBlockType,
+        articleImageTextContentBlockType,
         articleBlockquoteContentBlockType,
         articleLinkListContentBlockType,
       } from './schemaTypes/articleContentBlocks'
@@ -45,6 +46,7 @@ await build({
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType, articleOpenCloseContentBlockType, navigationPageTestType,
         articleAccordionGroupContentBlockType,
+        articleImageTextContentBlockType,
         articleBlockquoteContentBlockType,
         articleLinkListContentBlockType,
         sharedContentType,
@@ -181,7 +183,7 @@ test('offers accordion groups and link lists on articles but not section pages',
   assert.ok(articleContent.of.every((block) => block.name !== 'seksjon'))
   assert.deepEqual(
     sectionBlocks.map((block) => block.name || block.type),
-    ['tekst', 'bilde', 'sitat', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel', 'openClose'],
+    ['tekst', 'bilde', 'bildeOgTekst', 'sitat', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel', 'openClose'],
   )
   assert.deepEqual(sectionPageBuilder.of.map((block) => block.type), ['pageSection'])
   assert.equal(sectionPageBuilder.components, undefined)
@@ -201,6 +203,64 @@ test('offers accordion groups and link lists on articles but not section pages',
     .filter((name) => !name.toLowerCase().includes('outline'))
     .map((name) => legacyValues[name] || name)
   assert.deepEqual(iconOptions.map(({value}) => value), expectedOptions)
+})
+
+test('configures the image and text block with required content and fixed color choices', async () => {
+  const imageText = schemaTypes.find((type) => type.name === 'bildeOgTekst')
+  const fields = imageText.fields
+  const heading = fields.find((field) => field.name === 'heading')
+  const image = fields.find((field) => field.name === 'image')
+  const body = fields.find((field) => field.name === 'body')
+  const color = fields.find((field) => field.name === 'color')
+
+  assert.ok(heading.validation)
+  assert.ok(image.validation)
+  assert.equal(image.options.hotspot, true)
+  assert.ok(body.validation)
+  assert.deepEqual(body.of[0].styles.map((style) => style.value), ['normal'])
+  assert.deepEqual(body.of[0].lists.map((list) => list.value), ['number', 'bullet'])
+  assert.deepEqual(body.of[0].marks.decorators.map((decorator) => decorator.value), ['strong', 'em'])
+  assert.deepEqual(body.of[0].marks.annotations.map((annotation) => annotation.name), ['link'])
+  assert.equal(fields.some((field) => field.name === 'button'), false)
+  assert.equal(color.options.layout, 'radio')
+  assert.deepEqual(color.options.list.map((option) => option.value), [
+    'denim-10', 'forest-10', 'ochre-10', 'graphite-10', 'burgundy-10',
+  ])
+  assert.equal(color.initialValue, 'denim-10')
+
+  const validBlock = {
+    _key: 'image-text',
+    _type: 'bildeOgTekst',
+    heading: 'Slik gjør du det',
+    image: {_type: 'image', asset: {_type: 'reference', _ref: 'image-test-10x10-png'}},
+    alt: 'En person fyller ut et skjema',
+    body: text().text,
+    color: 'denim-10',
+  }
+  const validateBlock = async (block) =>
+    await validateDocument({
+      document: document([{...section(1), content: [block]}]),
+      workspace,
+      environment: 'cli',
+      getDocumentExists: async () => true,
+    })
+  const blockErrors = async (block) =>
+    (await validateBlock(block)).filter((marker) => marker.level === 'error')
+
+  assert.deepEqual(await blockErrors(validBlock), [])
+  const missingHeadingErrors = await blockErrors({...validBlock, heading: undefined})
+  assert.ok(missingHeadingErrors.some((marker) => marker.path.includes('heading')))
+  assert.ok(missingHeadingErrors.some((marker) => marker.message === 'Legg til en overskrift.'))
+  const missingImageErrors = await validateBlock({...validBlock, image: undefined})
+  assert.ok(
+    missingImageErrors.some((marker) => marker.path.includes('image')),
+    JSON.stringify(missingImageErrors),
+  )
+  assert.ok((await blockErrors({...validBlock, body: undefined}))
+    .some((marker) => marker.path.includes('body')))
+  assert.ok((await blockErrors({...validBlock, alt: undefined}))
+    .some((marker) => marker.path.includes('alt')))
+  assert.deepEqual(await blockErrors({...validBlock, isDecorative: true, alt: undefined}), [])
 })
 
 test('defines link lists with a list icon and uncapped ordered Sanity page references', async () => {

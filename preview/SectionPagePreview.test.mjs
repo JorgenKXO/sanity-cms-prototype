@@ -585,6 +585,59 @@ test('supports numbered accordion groups inside article sections and incomplete 
   assert.ok(incomplete.includes('numbered-accordion-marker">2</span>'), incomplete)
 })
 
+test('renders image and text with its image, rich text and design tokens', () => {
+  const imageText = {
+    _key: 'image-text',
+    _type: 'bildeOgTekst',
+    heading: 'Slik går du fram',
+    image: {_type: 'image', asset: {_type: 'reference', _ref: 'image-test-10x10-png'}},
+    alt: 'En person fyller ut et skjema',
+    body: [{
+      _key: 'paragraph',
+      _type: 'block',
+      style: 'normal',
+      markDefs: [{_key: 'link', _type: 'link', href: '/veiledning'}],
+      children: [{_key: 'span', _type: 'span', text: 'Les veiledningen', marks: ['link']}],
+    }],
+    color: 'graphite-10',
+  }
+  const html = render(ArticlePreview, {title: 'Artikkel', content: [imageText]})
+
+  assert.ok(html.includes('<h2'))
+  assert.ok(html.includes('Slik går du fram'))
+  assert.ok(html.includes('alt="En person fyller ut et skjema"'))
+  assert.ok(html.includes('href="/veiledning"'))
+  assert.ok(html.includes('image-text-panel-graphite'))
+  assert.ok(html.includes('var(--palette-graphite-10)'))
+  assert.ok(html.includes('max-height: none'))
+  assert.ok(html.includes('aspect-ratio: 5 / 4'))
+  assert.ok(!html.includes('@media (max-width: 639px)'))
+  assert.ok(html.includes('object-fit: contain'))
+  assert.ok(html.includes('grid-template-columns: 40% 60%'))
+  assert.ok(html.includes('width: 100%'))
+  assert.ok(html.includes('min-width: 0'))
+  assert.ok(html.includes('line-height: 0'))
+  assert.ok(html.includes('.image-text-panel.image-text-panel {'))
+  assert.ok(html.includes('padding: 0;'))
+
+  const nested = render(SectionPagePreview, {
+    title: 'Seksjonsside',
+    sections: [{_key: 'section', heading: 'Seksjon', content: [imageText]}],
+  })
+  assert.ok(nested.includes('<h3'))
+
+  const nestedArticle = render(ArticlePreview, {
+    title: 'Artikkel',
+    content: [{
+      _key: 'section',
+      _type: 'seksjon',
+      heading: 'Seksjon',
+      content: [imageText],
+    }],
+  })
+  assert.ok(nestedArticle.includes('<h3'))
+})
+
 test('preserves article section blocks, circle icons and shared references', () => {
   const html = render(ArticlePreview, {
     title: 'Artikkel med seksjoner',
@@ -601,11 +654,19 @@ test('preserves article section blocks, circle icons and shared references', () 
   assert.ok(html.includes('border-top:2px solid var(--palette-forest-50)'))
   assert.ok(html.includes('border-bottom:2px solid var(--palette-forest-50)'))
   assert.ok(html.includes('Referert delt innhold ble ikke funnet.'))
-  assert.equal((html.match(/<h2\b/g) || []).length, 2)
+  assert.equal((html.match(/<h2\b/g) || []).length, 1)
+  assert.equal((html.match(/<h3\b/g) || []).length, 1)
 })
 
 test('supports incomplete section page drafts', () => {
   for (const displayed of [{}, {sections: []}, {sections: [{_key: 'empty'}]}]) {
     assert.doesNotThrow(() => render(SectionPagePreview, displayed))
   }
+})
+
+test('does not crash when an article contains an unsupported content block', () => {
+  const html = render(ArticlePreview, {
+    content: [{_key: 'unsupported', _type: 'legacyBlock'}],
+  })
+  assert.ok(html.includes('Denne innholdsblokken kan ikke forhåndsvises.'))
 })

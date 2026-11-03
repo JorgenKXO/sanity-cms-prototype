@@ -6,7 +6,7 @@ import {
 import {Accordion, OpenClose} from '@skatteetaten/ds-collections'
 import '@skatteetaten/ds-core-designtokens/index.css'
 import {Link} from '@skatteetaten/ds-buttons'
-import {Panel} from '@skatteetaten/ds-content'
+import {Panel, type PanelColor} from '@skatteetaten/ds-content'
 import {Breadcrumbs} from '@skatteetaten/ds-navigation'
 import {Blockquote, Heading, List, Paragraph} from '@skatteetaten/ds-typography'
 import imageUrlBuilder, {type SanityImageSource} from '@sanity/image-url'
@@ -71,6 +71,17 @@ type ArticleAccordionGroupBlock = {
   }[]
 }
 
+type BildeOgTekstBlock = {
+  _key?: string
+  _type: 'bildeOgTekst'
+  heading?: string
+  image?: SanityImageSource
+  alt?: string
+  isDecorative?: boolean
+  body?: PortableTextBlock[]
+  color?: 'denim-10' | 'forest-10' | 'ochre-10' | 'graphite-10' | 'burgundy-10'
+}
+
 type BlockquoteBlock = {
   _key?: string
   _type: 'sitat'
@@ -103,6 +114,7 @@ type SharedContentBlock = TekstBlock | BildeBlock | InformasjonBlock
 type SharedContentReference = {_key?: string; _type: 'reference'; _ref: string}
 type InnholdBlock =
   | SharedContentBlock
+  | BildeOgTekstBlock
   | BlockquoteBlock
   | ExampleBlock
   | ArticleButtonBlock
@@ -146,6 +158,14 @@ export type ArticleDocument = {
 const panelTitle: Record<PanelBlock['_type'], string> = {
   varsel: 'Varsel',
   krise: 'Krise',
+}
+
+const imageTextPanelColors: Record<NonNullable<BildeOgTekstBlock['color']>, PanelColor> = {
+  'denim-10': 'denim',
+  'forest-10': 'forest',
+  'ochre-10': 'ochre',
+  'graphite-10': 'graphite',
+  'burgundy-10': 'burgundy',
 }
 
 export type ArticlePreviewProps = {
@@ -560,6 +580,35 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
       )
     }
 
+    if (block._type === 'bildeOgTekst') {
+      const color = block.color || 'denim-10'
+      const imageSource = block.image
+        ? builder.image(block.image).width(960).fit('max').auto('format').url()
+        : undefined
+
+      return (
+        <div className="image-text-panel-wrapper">
+          <Panel
+            title={block.heading || 'Bilde og tekst'}
+            titleAs={nested ? 'h3' : 'h2'}
+            color={imageTextPanelColors[color] || 'denim'}
+            variant="filled"
+            padding="m"
+            spacing="l"
+            imageSource={imageSource}
+            imageSourceAltText={block.isDecorative ? '' : block.alt || ''}
+            className={
+              color === 'graphite-10'
+                ? 'image-text-panel image-text-panel-graphite'
+                : 'image-text-panel'
+            }
+          >
+            {block.body ? <PortableText value={block.body} components={contentComponents} /> : null}
+          </Panel>
+        </div>
+      )
+    }
+
     if (block._type === 'bilde') {
       if (!block.image) {
         return null
@@ -676,7 +725,10 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
     }
 
     // "varsel" eller "krise"
-    const appearance = fixedPanelAppearance[block._type]
+    const appearance = fixedPanelAppearance[block._type as keyof typeof fixedPanelAppearance]
+    if (!appearance) {
+      return <p role="status">Denne innholdsblokken kan ikke forhåndsvises.</p>
+    }
     const Icon = appearance.icon
 
     return (
@@ -715,10 +767,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
           {block.heading ? <Heading as="h2" level={2}>{block.heading}</Heading> : null}
           {block.content?.map((child, index) => (
             <div key={child._key || index}>
-              {renderContentBlock(
-                child,
-                (child._type === 'openClose' || child._type === 'lenkeliste') && Boolean(block.heading),
-              )}
+              {renderContentBlock(child, child._type !== 'accordionGroup' && Boolean(block.heading))}
             </div>
           ))}
         </div>
@@ -728,7 +777,48 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
 
   return (
     <main style={styles.shell}>
-      <style>{'.section-icon-circle svg { fill: var(--palette-graphite-0); }'}</style>
+      <style>{`
+        .section-icon-circle svg { fill: var(--palette-graphite-0); }
+        .image-text-panel-graphite.image-text-panel-graphite {
+          background-color: var(--palette-graphite-10);
+        }
+        .image-text-panel-wrapper {
+          width: 100%;
+          min-width: 0;
+        }
+        .image-text-panel.image-text-panel {
+          max-width: 100%;
+          padding: 0;
+        }
+        .image-text-panel.image-text-panel > div:last-child {
+          box-sizing: border-box;
+          max-width: 100%;
+          padding: var(--spacing-m);
+        }
+        .image-text-panel.image-text-panel > div:first-child {
+          width: 100%;
+          height: auto;
+          aspect-ratio: 5 / 4;
+          align-self: start;
+          line-height: 0;
+        }
+        .image-text-panel img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          max-height: none;
+          object-fit: contain;
+        }
+        @media (min-width: 640px) {
+          .image-text-panel.image-text-panel {
+            grid-template-columns: 40% 60%;
+            gap: 0;
+          }
+          .image-text-panel.image-text-panel > div:last-child {
+            padding: var(--spacing-l);
+          }
+        }
+      `}</style>
       <div style={styles.page}>
         {breadcrumbs.length > 0 ? (
           <Breadcrumbs>

@@ -264,6 +264,107 @@ export const articleImageContentBlockType = defineType({
   },
 })
 
+export const articleImageTextContentBlockType = defineType({
+  name: 'bildeOgTekst',
+  title: 'Bilde og tekst',
+  type: 'object',
+  icon: ImageIcon,
+  fields: [
+    defineField({
+      name: 'heading',
+      title: 'Overskrift',
+      type: 'string',
+      validation: (rule) => rule.required().error('Legg til en overskrift.'),
+    }),
+    defineField({
+      name: 'image',
+      title: 'Bilde eller illustrasjon',
+      type: 'image',
+      options: {hotspot: true},
+      validation: (rule) => rule.required(),
+    }),
+    defineField({
+      name: 'isDecorative',
+      title: 'Dekorativt bilde',
+      type: 'boolean',
+      description:
+        'Slå på hvis bildet er rent dekorativt. Skjermlesere hopper da over bildet, og alternativ tekst er ikke nødvendig.',
+      initialValue: false,
+    }),
+    defineField({
+      name: 'alt',
+      title: 'Alternativ tekst',
+      description: 'Beskriv hva bildet viser, eller merk det som dekorativt.',
+      type: 'string',
+      hidden: ({parent}) => Boolean(parent?.isDecorative),
+      validation: (rule) =>
+        rule.custom((value, context) => {
+          const parent = context.parent as {isDecorative?: boolean} | undefined
+          if (parent?.isDecorative) return true
+          return value ? true : 'Legg til alternativ tekst, eller merk bildet som dekorativt.'
+        }),
+    }),
+    defineField({
+      name: 'color',
+      title: 'Bakgrunnsfarge',
+      type: 'string',
+      options: {
+        list: [
+          {title: 'Blå', value: 'denim-10'},
+          {title: 'Grønn', value: 'forest-10'},
+          {title: 'Gul', value: 'ochre-10'},
+          {title: 'Grå', value: 'graphite-10'},
+          {title: 'Rød', value: 'burgundy-10'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'denim-10',
+      validation: (rule) => rule.required().error('Velg en bakgrunnsfarge.'),
+    }),
+    defineField({
+      name: 'body',
+      title: 'Tekst',
+      description: 'Brødtekst, tekstlenker og lister.',
+      type: 'array',
+      of: [
+        defineArrayMember({
+          type: 'block',
+          styles: [{title: 'Normal', value: 'normal'}],
+          lists: [
+            {title: 'Nummerert liste', value: 'number'},
+            {title: 'Punktliste', value: 'bullet'},
+          ],
+          marks: {
+            decorators: [
+              {title: 'Fet', value: 'strong'},
+              {title: 'Kursiv', value: 'em'},
+            ],
+            annotations: [linkAnnotation],
+          },
+        }),
+      ],
+      validation: (rule) => rule.required().min(1).error('Legg til tekstinnhold.'),
+    }),
+  ],
+  preview: {
+    select: {title: 'heading', media: 'image', color: 'color'},
+    prepare({title, media, color}) {
+      const colorTitles: Record<string, string> = {
+        'denim-10': 'Blå',
+        'forest-10': 'Grønn',
+        'ochre-10': 'Gul',
+        'graphite-10': 'Grå',
+        'burgundy-10': 'Rød',
+      }
+      return {
+        title: title || 'Bilde og tekst',
+        subtitle: colorTitles[color || ''] || 'Bilde og tekst',
+        media,
+      }
+    },
+  },
+})
+
 export const articleBlockquoteContentBlockType = defineType({
   name: 'sitat',
   title: 'Sitat',
@@ -707,6 +808,7 @@ export const articleAccordionGroupContentBlockType = defineType({
 export const articleContentBlocks = [
   defineArrayMember({type: 'tekst'}),
   defineArrayMember({type: 'bilde'}),
+  defineArrayMember({type: 'bildeOgTekst'}),
   defineArrayMember({type: 'eksempel'}),
   defineArrayMember({type: 'informasjon'}),
   defineArrayMember({type: 'knapp'}),

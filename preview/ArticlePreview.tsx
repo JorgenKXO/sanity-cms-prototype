@@ -14,9 +14,10 @@ import type {CSSProperties, JSX} from 'react'
 import {useEffect, useState} from 'react'
 import {useClient} from 'sanity'
 import {fixedPanelAppearance} from './fixedPanelAppearance'
-import {InformasjonPanel, sectionIconMap} from './InformasjonPanel'
+import {InformasjonPanel} from './InformasjonPanel'
 import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
+import {sectionIconMap} from '../components/SectionIcons'
 import './numberedAccordion.css'
 import {ArticleButton, getButtonLinks, type ArticleButtonBlock, type ButtonDestination} from './ArticleButton'
 import {ArticleLinkList, getLinkListPageId, type ArticleLinkListBlock} from './ArticleLinkList'
@@ -171,6 +172,9 @@ const styles: Record<string, CSSProperties> = {
   sectionPageSection: {
     borderTop: '2px solid var(--palette-forest-50)',
     padding: 'var(--spacing-xxl) 0 var(--spacing-l)',
+    display: 'flex',
+    gap: 'var(--spacing-xl)',
+    alignItems: 'flex-start',
   },
   empty: {
     padding: 'var(--spacing-xl)',
@@ -685,21 +689,23 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
                         : styles.sectionPageSection
                     }
                   >
-                    {Icon && (
-                      <span aria-hidden="true">
-                        <Icon />
-                      </span>
-                    )}
-                    {section.heading && (
-                      <Heading as="h2" level={2}>
-                        {section.heading}
-                      </Heading>
-                    )}
-                    {section.content?.map((block) => (
-                      <div key={block._key}>
-                        {renderContentBlock(block, Boolean(section.heading))}
+                    {Icon ? (
+                      <div className="section-icon-circle" style={styles.sectionIcon} aria-hidden="true">
+                        <Icon size="large" />
                       </div>
-                    ))}
+                    ) : null}
+                    <div style={styles.sectionBody}>
+                      {section.heading && (
+                        <Heading as="h2" level={2}>
+                          {section.heading}
+                        </Heading>
+                      )}
+                      {section.content?.map((block) => (
+                        <div key={block._key}>
+                          {renderContentBlock(block, Boolean(section.heading))}
+                        </div>
+                      ))}
+                    </div>
                   </section>
                 )
               })

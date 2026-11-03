@@ -1,14 +1,6 @@
-import {
-  BlockContentIcon,
-  EarthGlobeIcon,
-  ThLargeIcon,
-} from '@sanity/icons'
+import {BlockContentIcon, EarthGlobeIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
-import {
-  articleContentBlocks,
-  blockNameField,
-  sectionIconOptions,
-} from './articleContentBlocks'
+import {articleContentBlocks} from './articleContentBlocks'
 export {articleTextBlock} from './articleContentBlocks'
 
 import {kategoriOptions} from './kategoriOptions'
@@ -34,9 +26,7 @@ const ingressBlock = defineArrayMember({
   },
 })
 
-// Innholdsblokkene som kan brukes direkte på artikkelen og inne i en seksjon.
-// Funksjon slik at hver array får sine egne definisjoner.
-const contentMembers = () => [
+const contentMembers = [
   ...articleContentBlocks.slice(0, 3),
   defineArrayMember({type: 'reference', to: [{type: 'sharedContent'}]}),
   ...articleContentBlocks.slice(3),
@@ -92,57 +82,8 @@ export const articleType = defineType({
       description: 'Bygg opp artikkelen med lokale blokker eller innhold som deles på tvers av artikler.',
       type: 'array',
       group: 'content',
-      of: [
-        defineArrayMember({
-          name: 'seksjon',
-          title: 'Seksjon',
-          type: 'object',
-          icon: ThLargeIcon,
-          fields: [
-            blockNameField,
-            defineField({
-              name: 'heading',
-              title: 'Overskrift (valgfritt)',
-              type: 'string',
-            }),
-            defineField({
-              name: 'icon',
-              title: 'Ikon (valgfritt)',
-              type: 'string',
-              description: 'Velg et ikon fra Skatteetatens designsystem som skal vises ved seksjonen.',
-              options: {list: sectionIconOptions, layout: 'dropdown'},
-            }),
-            defineField({
-              name: 'content',
-              title: 'Innhold',
-              description: 'Samme typer innhold som direkte på artikkelen, bortsett fra seksjoner.',
-              type: 'array',
-              of: contentMembers(),
-              validation: (rule) => rule.required().min(1),
-            }),
-          ],
-          preview: {
-            select: {blockName: 'blockName', title: 'heading', content: 'content'},
-            prepare({blockName, title, content}) {
-              const count = Array.isArray(content) ? content.length : 0
-              return {
-                title: blockName || title || 'Seksjon',
-                subtitle: `Seksjon · ${count} ${count === 1 ? 'blokk' : 'blokker'}`,
-              }
-            },
-          },
-        }),
-        ...contentMembers(),
-      ],
-      validation: (rule) =>
-        rule.required().min(1).custom((blocks) => {
-          const types = Array.isArray(blocks) ? blocks.map((block) => (block as {_type?: string})._type) : []
-          const hasSection = types.includes('seksjon')
-          const hasOther = types.some((type) => type !== 'seksjon')
-          return hasSection && hasOther
-            ? 'Når artikkelen inneholder seksjoner, må alt innhold ligge i seksjoner. Flytt eller fjern blokkene utenfor seksjonene.'
-            : true
-        }),
+      of: contentMembers,
+      validation: (rule) => rule.required().min(1),
     }),
     defineField({
       name: 'updatedAt',

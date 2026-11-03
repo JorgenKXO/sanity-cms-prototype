@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import {after, test} from 'node:test'
-import {mkdtemp, rm} from 'node:fs/promises'
+import {mkdtemp, readFile, rm} from 'node:fs/promises'
 import {createRequire} from 'node:module'
 import {fileURLToPath, pathToFileURL} from 'node:url'
 import {build} from 'esbuild'
@@ -12,6 +12,11 @@ import {JSDOM} from 'jsdom'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const require = createRequire(import.meta.url)
 const directory = await mkdtemp(`${root}node_modules/.section-preview-tests-`)
+const iconSource = await readFile(new URL('../components/SectionIcons.tsx', import.meta.url), 'utf8')
+const iconExports = [...new Set(iconSource.match(/\b[A-Z][A-Za-z0-9]*Icon\b/g) || [])]
+const iconModule = `import {jsx} from 'react/jsx-runtime'\n${
+  iconExports.map((name) => `export const ${name} = () => jsx('svg', {})`).join('\n')
+}`
 after(() => rm(directory, {recursive: true, force: true}))
 await build({
   stdin: {
@@ -34,6 +39,19 @@ await build({
   plugins: [{
     name: 'offline-preview',
     setup(builder) {
+      builder.onResolve({filter: /^@skatteetaten\/ds-icons$/}, (args) =>
+        args.importer.endsWith('/components/SectionIcons.tsx')
+          ? {
+              path: 'section-preview-icon-stubs',
+              namespace: 'section-preview-icon-stubs',
+            }
+          : undefined,
+      )
+      builder.onLoad({filter: /.*/, namespace: 'section-preview-icon-stubs'}, () => ({
+        contents: iconModule,
+        loader: 'js',
+        resolveDir: root,
+      }))
       builder.onResolve({filter: /^@skatteetaten\//}, (args) => ({
         path: require.resolve(args.path),
       }))
@@ -279,6 +297,29 @@ test('renders green boundaries matching the original section prototype', () => {
   assert.equal((html.match(/<h2\b/g) || []).length, 2)
   assert.equal((html.match(/<h3\b/g) || []).length, 2)
   assert.ok(html.includes('aria-hidden="true"'))
+  assert.equal((html.match(/class="section-icon-circle"/g) || []).length, 2)
+  assert.equal((html.match(/background:var\(--palette-graphite-100\)/g) || []).length, 2)
+  assert.equal((html.match(/color:var\(--palette-graphite-0\)/g) || []).length, 2)
+  assert.equal((html.match(/display:flex;gap:var\(--spacing-xl\);align-items:flex-start/g) || []).length, 2)
+})
+
+test('shows added system icons in centered white-on-black circles beside section text', () => {
+  const html = render(SectionPagePreview, {
+    title: 'Seksjonsside med nytt ikon',
+    sections: [{
+      _key: 'person-section',
+      heading: 'For personer',
+      icon: 'Person',
+      content: [text],
+    }],
+  })
+
+  assert.match(html, /class="section-icon-circle"[^>]*background:var\(--palette-graphite-100\)/)
+  assert.match(html, /class="section-icon-circle"[^>]*color:var\(--palette-graphite-0\)/)
+  assert.match(html, /class="section-icon-circle"[^>]*justify-content:center/)
+  assert.match(html, /align-items:flex-start/)
+  assert.ok(html.indexOf('section-icon-circle') < html.indexOf('For personer'))
+  assert.ok(html.includes('Underoverskrift'))
 })
 
 test('preserves regular article headings and does not add section borders', () => {

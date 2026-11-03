@@ -6,19 +6,12 @@ import {
 import {Link} from '@skatteetaten/ds-buttons'
 import {Panel, type PanelColor, type PanelVariant} from '@skatteetaten/ds-content'
 import {
-  BellIcon,
-  CalendarIcon,
-  ClockIcon,
-  CompletedIcon,
-  HelpOutlineIcon,
-  type IconProps,
-  type IconPropsWithoutSvgPath,
-  InfoIcon,
-  LockIcon,
-} from '@skatteetaten/ds-icons'
-import {Heading, List, Paragraph} from '@skatteetaten/ds-typography'
-import type {JSX} from 'react'
+  Heading,
+  List,
+  Paragraph,
+} from '@skatteetaten/ds-typography'
 
+import {sectionIconMap} from '../components/SectionIcons'
 import {withAlignmentOffset} from './panelUtilities'
 
 const colorMap: Record<string, {color: PanelColor; variant: PanelVariant}> = {
@@ -27,16 +20,6 @@ const colorMap: Record<string, {color: PanelColor; variant: PanelVariant}> = {
   'denim-outline': {color: 'denim', variant: 'outline'},
   'forest-outline': {color: 'forest', variant: 'outline'},
   white: {color: 'graphite', variant: 'outline'},
-}
-
-export const sectionIconMap: Record<string, (props: IconPropsWithoutSvgPath) => JSX.Element> = {
-  info: InfoIcon,
-  help: HelpOutlineIcon,
-  completed: CompletedIcon,
-  calendar: CalendarIcon,
-  clock: ClockIcon,
-  bell: BellIcon,
-  lock: LockIcon,
 }
 
 const bodyComponents = {

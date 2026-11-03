@@ -11,6 +11,7 @@ import {
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {ButtonDestinationInput} from '../components/ButtonDestinationInput'
 import {LinkListPagesInput} from '../components/LinkListPagesInput'
+export {sectionIconOptions} from '../components/SectionIcons'
 
 type PortableTextBlockPreview = {
   _type: string
@@ -642,16 +643,6 @@ export const articleAccordionGroupContentBlockType = defineType({
     },
   },
 })
-
-export const sectionIconOptions = [
-  {title: 'Informasjon', value: 'info'},
-  {title: 'Hjelp', value: 'help'},
-  {title: 'Fullført', value: 'completed'},
-  {title: 'Frist/dato', value: 'calendar'},
-  {title: 'Tid', value: 'clock'},
-  {title: 'Varsel', value: 'bell'},
-  {title: 'Personvern/sikkerhet', value: 'lock'},
-]
 
 export const articleContentBlocks = [
   defineArrayMember({type: 'tekst'}),

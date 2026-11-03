@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import {after, test} from 'node:test'
-import {mkdtemp, rm} from 'node:fs/promises'
+import {mkdtemp, readFile, rm} from 'node:fs/promises'
 import {fileURLToPath, pathToFileURL} from 'node:url'
 import {build} from 'esbuild'
 import {firstValueFrom, of} from 'rxjs'
@@ -10,6 +10,15 @@ import {resolveConfig, validateDocument} from 'sanity'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const directory = await mkdtemp(`${root}node_modules/.section-tests-`)
+const iconSource = await readFile(new URL('../components/SectionIcons.tsx', import.meta.url), 'utf8')
+const iconDefinitions = await readFile(
+  new URL('../node_modules/@skatteetaten/ds-icons/src/SystemIcons/index.d.ts', import.meta.url),
+  'utf8',
+)
+const iconExports = [...new Set(iconSource.match(/\b[A-Z][A-Za-z0-9]*Icon\b/g) || [])]
+const iconModule = `import {jsx} from 'react/jsx-runtime'\n${
+  iconExports.map((name) => `export const ${name} = () => jsx('svg', {})`).join('\n')
+}`
 after(() => rm(directory, {recursive: true, force: true}))
 await build({
   stdin: {
@@ -50,6 +59,20 @@ await build({
   platform: 'node',
   format: 'esm',
   jsx: 'automatic',
+  plugins: [{
+    name: 'section-icon-stubs',
+    setup(builder) {
+      builder.onResolve({filter: /^@skatteetaten\/ds-icons$/}, () => ({
+        path: 'section-icon-stubs',
+        namespace: 'section-icon-stubs',
+      }))
+      builder.onLoad({filter: /.*/, namespace: 'section-icon-stubs'}, () => ({
+        contents: iconModule,
+        loader: 'js',
+        resolveDir: root,
+      }))
+    },
+  }],
 })
 const {schemaTypes} = await import(pathToFileURL(`${directory}/schemas.mjs`).href)
 const [workspace] = await firstValueFrom(
@@ -146,30 +169,38 @@ test('requires section content, but name, heading and icon are optional', async 
 test('offers accordion groups and link lists on articles but not section pages', () => {
   const article = schemaTypes.find((type) => type.name === 'article')
   const sectionType = schemaTypes.find((type) => type.name === 'pageSection')
-  const directArticleBlocks = article.fields.find((field) => field.name === 'content').of
-    .filter((block) => block.name !== 'seksjon' && block.type !== 'reference')
-  const articleBlocks = article.fields.find((field) => field.name === 'content').of
-    .find((block) => block.name === 'seksjon').fields
-    .find((field) => field.name === 'content').of.filter((block) => block.type !== 'reference')
+  const articleContent = article.fields.find((field) => field.name === 'content')
+  const directArticleBlocks = articleContent.of.filter((block) => block.type !== 'reference')
   const sectionBlocks = sectionType.fields.find((field) => field.name === 'content').of
+  const page = schemaTypes.find((type) => type.name === 'sectionPage')
+  const sectionPageBuilder = page.fields.find((field) => field.name === 'sections')
+  const iconField = sectionType.fields.find((field) => field.name === 'icon')
+  const iconOptions = iconField.options.list
   assert.ok(directArticleBlocks.some((block) => block.type === 'accordionGroup'))
-  assert.ok(articleBlocks.some((block) => block.type === 'accordionGroup'))
   assert.ok(directArticleBlocks.some((block) => block.type === 'lenkeliste'))
-  assert.ok(articleBlocks.some((block) => block.type === 'lenkeliste'))
-  assert.deepEqual(
-    articleBlocks.map((block) => block.type === 'accordionGroup' ? block.type : block.name || block.type),
-    [...sectionBlocks.map((block) => block.name || block.type), 'accordionGroup', 'lenkeliste'],
-  )
+  assert.ok(articleContent.of.every((block) => block.name !== 'seksjon'))
   assert.deepEqual(
     sectionBlocks.map((block) => block.name || block.type),
     ['tekst', 'bilde', 'sitat', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel', 'openClose'],
   )
-  assert.equal(sectionType.options.collapsible, false)
-  const page = schemaTypes.find((type) => type.name === 'sectionPage')
-  assert.equal(
-    typeof page.fields.find((field) => field.name === 'sections').components.input,
-    'function',
-  )
+  assert.deepEqual(sectionPageBuilder.of.map((block) => block.type), ['pageSection'])
+  assert.equal(sectionPageBuilder.components, undefined)
+  assert.deepEqual(sectionType.options, {collapsible: true, collapsed: true})
+  assert.equal(sectionType.preview.prepare({content: [{}]}).subtitle, 'Seksjon · 1 blokk')
+  assert.equal(typeof iconField.components.input, 'function')
+  const legacyValues = {
+    Info: 'info',
+    Completed: 'completed',
+    Calendar: 'calendar',
+    Clock: 'clock',
+    Bell: 'bell',
+    Lock: 'lock',
+  }
+  const expectedOptions = [...iconDefinitions.matchAll(/export \* from '\.\/([^']+)'/g)]
+    .map(([, name]) => name)
+    .filter((name) => !name.toLowerCase().includes('outline'))
+    .map((name) => legacyValues[name] || name)
+  assert.deepEqual(iconOptions.map(({value}) => value), expectedOptions)
 })
 
 test('defines link lists with a list icon and uncapped ordered Sanity page references', async () => {
@@ -214,43 +245,39 @@ test('defines link lists with a list icon and uncapped ordered Sanity page refer
   assert.equal(rendered.onChange, inputProps.onChange)
   assert.equal(inputProps.schemaType.of.length, 2)
 
-  const validate = async (value, nested = false) => (await validateDocument({
+  const validate = async (value) => (await validateDocument({
     document: {
       ...document(undefined),
       _type: 'article',
-      content: nested
-        ? [{_key: 'section', _type: 'seksjon', content: [value]}]
-        : [value],
+      content: [value],
     },
     workspace,
     environment: 'cli',
     getDocumentExists: async () => true,
   })).filter((marker) => marker.level === 'error')
   const list = {_key: 'list', _type: 'lenkeliste'}
-  for (const nested of [false, true]) {
-    for (const label of [undefined, '', ' ', 'Egen lenketekst']) {
-      assert.deepEqual(await validate({
-        ...list, heading: 'Relaterte sider', ingress: 'Her finner du mer informasjon.', pages: [{
-          _key: 'link', _type: 'linkListItem',
-          page: {_type: 'reference', _ref: 'target'}, label,
-        }],
-      }, nested), [])
-    }
-    for (const count of [1, 100]) {
-      assert.deepEqual(await validate({
-        ...list,
-        pages: Array.from({length: count}, (_, index) => ({
-          _key: `page-${index}`, _type: 'reference', _ref: `target-${index}`,
-        })),
-      }, nested), [])
-    }
-    for (const pages of [
-      undefined, [], [{_key: 'empty', _type: 'reference'}],
-      [{_key: 'empty', _type: 'linkListItem', label: 'Tekst uten side'}],
-    ]) {
-      const result = await validate({...list, pages}, nested)
-      assert.ok(result.some((marker) => marker.path.includes('pages')), JSON.stringify(result))
-    }
+  for (const label of [undefined, '', ' ', 'Egen lenketekst']) {
+    assert.deepEqual(await validate({
+      ...list, heading: 'Relaterte sider', ingress: 'Her finner du mer informasjon.', pages: [{
+        _key: 'link', _type: 'linkListItem',
+        page: {_type: 'reference', _ref: 'target'}, label,
+      }],
+    }), [])
+  }
+  for (const count of [1, 100]) {
+    assert.deepEqual(await validate({
+      ...list,
+      pages: Array.from({length: count}, (_, index) => ({
+        _key: `page-${index}`, _type: 'reference', _ref: `target-${index}`,
+      })),
+    }), [])
+  }
+  for (const pages of [
+    undefined, [], [{_key: 'empty', _type: 'reference'}],
+    [{_key: 'empty', _type: 'linkListItem', label: 'Tekst uten side'}],
+  ]) {
+    const result = await validate({...list, pages})
+    assert.ok(result.some((marker) => marker.path.includes('pages')), JSON.stringify(result))
   }
 })
 
@@ -452,14 +479,11 @@ test('validates image alternative text inside sections', async () => {
   assert.deepEqual(await validateImage({...image, alt: 'Et bilde'}), [])
 })
 
-test('keeps article section blocks and shared content without allowing mixed top-level content', async () => {
+test('allows shared content directly in articles', async () => {
   const articleDocument = {
     ...document(undefined),
     _type: 'article',
-    content: [{
-      _key: 'article-section', _type: 'seksjon',
-      content: [text(), {_key: 'shared', _type: 'reference', _ref: 'shared-test'}],
-    }],
+    content: [text(), {_key: 'shared', _type: 'reference', _ref: 'shared-test'}],
   }
   const validateArticle = async (content) => (await validateDocument({
     document: {...articleDocument, content},
@@ -469,6 +493,4 @@ test('keeps article section blocks and shared content without allowing mixed top
   })).filter((marker) => marker.level === 'error')
   assert.deepEqual(await validateArticle(articleDocument.content), [])
   assert.deepEqual(await validateArticle([text()]), [])
-  assert.ok((await validateArticle([...articleDocument.content, text('other')]))
-    .some((marker) => marker.path[0] === 'content'))
 })

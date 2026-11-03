@@ -5,7 +5,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url'
 import {build} from 'esbuild'
 import {firstValueFrom, of} from 'rxjs'
 import {createClient} from '@sanity/client'
-import {ChevronDownIcon, UlistIcon} from '@sanity/icons'
+import {ChevronDownIcon, LinkIcon, UlistIcon} from '@sanity/icons'
 import {resolveConfig, validateDocument} from 'sanity'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
@@ -32,6 +32,7 @@ await build({
         articleButtonContentBlockType, articleOpenCloseContentBlockType,
         articleAccordionGroupContentBlockType,
         articleBlockquoteContentBlockType,
+        articleExampleContentBlockType,
         articleLinkListContentBlockType,
       } from './schemaTypes/articleContentBlocks'
       import {sharedContentType} from './schemaTypes/sharedContentType'
@@ -46,6 +47,7 @@ await build({
         articleButtonContentBlockType, articleOpenCloseContentBlockType, navigationPageTestType,
         articleAccordionGroupContentBlockType,
         articleBlockquoteContentBlockType,
+        articleExampleContentBlockType,
         articleLinkListContentBlockType,
         sharedContentType,
       ]
@@ -178,11 +180,14 @@ test('offers accordion groups and link lists on articles but not section pages',
   const iconOptions = iconField.options.list
   assert.ok(directArticleBlocks.some((block) => block.type === 'accordionGroup'))
   assert.ok(directArticleBlocks.some((block) => block.type === 'lenkeliste'))
+  assert.ok(directArticleBlocks.some((block) => block.type === 'eksempel'))
+  assert.ok(!directArticleBlocks.some((block) => block.type === 'sitat'))
   assert.ok(articleContent.of.every((block) => block.name !== 'seksjon'))
   assert.deepEqual(
     sectionBlocks.map((block) => block.name || block.type),
-    ['tekst', 'bilde', 'sitat', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel', 'openClose'],
+    ['tekst', 'bilde', 'eksempel', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel', 'openClose'],
   )
+  assert.ok(!sectionBlocks.some((block) => block.type === 'sitat'))
   assert.deepEqual(sectionPageBuilder.of.map((block) => block.type), ['pageSection'])
   assert.equal(sectionPageBuilder.components, undefined)
   assert.deepEqual(sectionType.options, {collapsible: true, collapsed: true})
@@ -344,18 +349,46 @@ test('supports OpenClose with a required heading and content and all three sizes
   )
 })
 
-test('requires quote content but allows an optional source and default border color', async () => {
-  const quote = {_key: 'quote', _type: 'sitat', text: text().text}
-  assert.deepEqual(await errors([{...section(1), content: [quote]}]), [])
+test('defines examples without a name or color field and validates rich text', async () => {
+  const example = schemaTypes.find((type) => type.name === 'eksempel')
+  assert.equal(example.title, 'Eksempel')
+  assert.deepEqual(example.fields.map((field) => field.name), ['text'])
+  const textField = example.fields[0]
+  const textBlock = textField.of[0]
+  assert.deepEqual(textBlock.styles.map(({title, value}) => [title, value]), [
+    ['Normal', 'normal'],
+    ['Underoverskrift (h2)', 'h2'],
+    ['Underoverskrift (h3)', 'h3'],
+  ])
+  assert.deepEqual(textBlock.lists.map(({title, value}) => [title, value]), [
+    ['Kulepunktliste', 'bullet'],
+    ['Nummerert liste', 'number'],
+  ])
+  assert.deepEqual(textBlock.marks.decorators.map(({title, value}) => [title, value]), [
+    ['Fet', 'strong'],
+    ['Kursiv', 'em'],
+  ])
+  const pageLink = textBlock.marks.annotations[0]
+  assert.equal(pageLink.name, 'pageLink')
+  assert.equal(pageLink.title, 'Lenke')
+  assert.equal(pageLink.icon, LinkIcon)
+  assert.deepEqual(pageLink.fields[0].to.map((target) => target.type), [
+    'article', 'sectionPage', 'navigationPage',
+  ])
+  assert.equal(pageLink.fields[0].validation({required: () => 'required'}), 'required')
+  assert.equal(example.preview.prepare({blocks: text().text}).title, 'Innhold')
+  assert.equal(example.preview.prepare({}).title, 'Eksempel')
+  assert.equal(example.preview.prepare({}).subtitle, 'Eksempel')
+
   assert.deepEqual(await errors([{
-    ...section(1), content: [{...quote, source: 'Skatteetaten', borderColor: 'forest'}],
+    ...section(1),
+    content: [{_key: 'example', _type: 'eksempel', text: text().text}],
   }]), [])
-  for (const content of [undefined, []]) {
-    const result = await errors([{
-      ...section(1), content: [{...quote, text: content}],
-    }])
-    assert.ok(result.some((marker) => marker.path.includes('text')), JSON.stringify(result))
-  }
+  const result = await errors([{
+    ...section(1),
+    content: [{_key: 'example', _type: 'eksempel', text: []}],
+  }])
+  assert.ok(result.some((marker) => marker.path.includes('text')), JSON.stringify(result))
 })
 
 test('requires button label and the selected link destination', async () => {

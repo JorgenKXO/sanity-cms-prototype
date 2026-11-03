@@ -213,7 +213,7 @@ test('renders optional link-list heading and ingress before links with contextua
   assert.ok(!renderList({ingress: 'Kun ingress'}).includes('<h2'))
 })
 
-test('resolves and deduplicates link-list and button references in articles and sections', async () => {
+test('resolves and deduplicates page references in examples, link lists and buttons', async () => {
   const dom = new JSDOM('<div id="root"></div>')
   globalThis.window = dom.window
   globalThis.document = dom.window.document
@@ -243,41 +243,79 @@ test('resolves and deduplicates link-list and button references in articles and 
     _key: 'button', _type: 'knapp', label: 'Knapp', appearance: 'secondary',
     linkType: 'internal', page: {_ref: 'page-a'},
   }
+  const example = {
+    _key: 'example', _type: 'eksempel',
+    text: [{
+      _key: 'paragraph',
+      _type: 'block',
+      style: 'normal',
+      markDefs: [{
+        _key: 'page-link',
+        _type: 'pageLink',
+        page: {_type: 'reference', _ref: 'page-c'},
+      }],
+      children: [{_key: 'span', _type: 'span', text: 'Se eksempelet', marks: ['page-link']}],
+    }],
+  }
   const renderArticle = async (content) => act(async () => {
     reactRoot.render(createElement(ArticlePreview, {document: {displayed: {content}}}))
   })
   try {
-    await renderArticle([list, button])
-    assert.deepEqual(pending[0].parameters, {ids: ['page-b', 'page-a']})
+    await renderArticle([list, button, example])
+    assert.deepEqual(pending[0].parameters, {ids: ['page-b', 'page-a', 'page-c']})
     assert.match(pending[0].query, /title/)
-    assert.match(document.body.textContent, /Laster sidene/)
+    assert.match(document.body.textContent, /Laster lenkemål/)
     await act(async () => pending[0].resolve([
       {_id: 'page-a', title: 'Side A', slug: {current: 'side-a'}},
       {_id: 'page-b', title: 'Side B', slug: {current: 'side-b'}},
+      {_id: 'page-c', title: 'Side C', slug: {current: 'side-c'}},
     ]))
     assert.deepEqual([...document.querySelectorAll('li a')].map((link) => [
       link.textContent, link.getAttribute('href'),
     ]), [['Egen tekst B', '/side-b'], ['Side A', '/side-a']])
     assert.equal(document.querySelector('a[href="/side-a"]:not(li a)').textContent, 'Knapp')
+    assert.equal(document.querySelector('blockquote a[href="/side-c"]').textContent, 'Se eksempelet')
     assert.equal(document.querySelector('h2').textContent, 'Relaterte sider')
 
-    await renderArticle([{_key: 'section', _type: 'seksjon', heading: 'Seksjon', content: [list]}])
+    await renderArticle([{_key: 'section', _type: 'seksjon', heading: 'Seksjon', content: [list, example]}])
     assert.equal(pending.length, 1)
     assert.equal(document.querySelectorAll('section li a').length, 2)
+    assert.equal(document.querySelector('section blockquote a[href="/side-c"]').textContent, 'Se eksempelet')
     assert.equal(document.querySelector('section h3').textContent, 'Relaterte sider')
-    await renderArticle([{_key: 'section', _type: 'seksjon', content: [list]}])
+    await renderArticle([{_key: 'section', _type: 'seksjon', content: [list, example]}])
     assert.equal(document.querySelector('section h2').textContent, 'Relaterte sider')
 
     await renderArticle([{...list, pages: [{_ref: 'stale'}]}])
-    await renderArticle([{...list, pages: [{_ref: 'new-page'}]}])
+    await renderArticle([example])
     await act(async () => pending[1].resolve([
       {_id: 'stale', title: 'Utdatert side', slug: {current: 'utdatert'}},
     ]))
     assert.ok(!document.body.textContent.includes('Utdatert side'))
     await act(async () => pending[2].reject(new Error('Nettverksfeil')))
-    assert.match(document.querySelector('[role="alert"]').textContent, /Nettverksfeil/)
+    assert.match(
+      document.querySelector('[role="alert"]').textContent,
+      /Kunne ikke hente lenkemålet: Nettverksfeil/,
+    )
     await renderArticle([])
     assert.equal(document.querySelector('[role="alert"]'), null)
+
+    await act(async () => reactRoot.render(createElement(SectionPagePreview, {
+      document: {displayed: {sections: [{_key: 'section', content: [{
+        ...example,
+        text: [{
+          ...example.text[0],
+          markDefs: [{
+            ...example.text[0].markDefs[0],
+            page: {_type: 'reference', _ref: 'section-target'},
+          }],
+        }],
+      }]}]}},
+    })))
+    assert.deepEqual(pending[3].parameters, {ids: ['section-target']})
+    await act(async () => pending[3].resolve([
+      {_id: 'section-target', title: 'Målside', slug: {current: 'malside'}},
+    ]))
+    assert.equal(document.querySelector('blockquote a[href="/malside"]').textContent, 'Se eksempelet')
   } finally {
     await act(async () => reactRoot.unmount())
     dom.window.close()
@@ -365,6 +403,31 @@ test('renders semantic quotes with rich text, all border colors and an optional 
     assert.ok(!empty.includes('<blockquote'), empty)
     assert.ok(!empty.includes('Skatteetaten'), empty)
   }
+})
+
+test('renders examples as a fixed yellow Blockquote with rich text and no author', () => {
+  const html = render(ArticlePreview, {
+    title: 'Artikkel med eksempel',
+    content: [{
+      _key: 'example',
+      _type: 'eksempel',
+      blockName: 'Skjult navn',
+      source: 'Skjult avsender',
+      text: [{
+        _key: 'paragraph',
+        _type: 'block',
+        style: 'h2',
+        markDefs: [],
+        children: [{_key: 'span', _type: 'span', text: 'Gjør dette', marks: ['strong']}],
+      }],
+    }],
+  })
+
+  assert.match(html, /<blockquote[^>]*data-border-color="ochre"/)
+  assert.match(html, /<h2\b/)
+  assert.match(html, /<strong>Gjør dette<\/strong>/)
+  assert.ok(!html.includes('Skjult navn'))
+  assert.ok(!html.includes('Skjult avsender'))
 })
 
 test('renders secondary, primary and mega article buttons as links', () => {

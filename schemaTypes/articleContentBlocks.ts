@@ -4,6 +4,7 @@ import {
   ErrorOutlineIcon,
   ImageIcon,
   InfoOutlineIcon,
+  LinkIcon,
   TextIcon,
   UlistIcon,
   WarningOutlineIcon,
@@ -41,6 +42,22 @@ export const linkAnnotation = {
   ],
 }
 
+const examplePageLinkAnnotation = {
+  name: 'pageLink',
+  title: 'Lenke',
+  type: 'object',
+  icon: LinkIcon,
+  fields: [
+    defineField({
+      name: 'page',
+      title: 'Side',
+      type: 'reference',
+      to: [{type: 'article'}, {type: 'sectionPage'}, {type: 'navigationPage'}],
+      validation: (rule) => rule.required(),
+    }),
+  ],
+}
+
 export const articleTextBlock = defineArrayMember({
   type: 'block',
   styles: [
@@ -54,6 +71,23 @@ export const articleTextBlock = defineArrayMember({
   ],
   marks: {
     annotations: [linkAnnotation],
+  },
+})
+
+const exampleTextBlock = defineArrayMember({
+  type: 'block',
+  styles: [
+    {title: 'Normal', value: 'normal'},
+    {title: 'Underoverskrift (h2)', value: 'h2'},
+    {title: 'Underoverskrift (h3)', value: 'h3'},
+  ],
+  lists: [
+    {title: 'Kulepunktliste', value: 'bullet'},
+    {title: 'Nummerert liste', value: 'number'},
+  ],
+  marks: {
+    decorators: [{title: 'Fet', value: 'strong'}, {title: 'Kursiv', value: 'em'}],
+    annotations: [examplePageLinkAnnotation],
   },
 })
 
@@ -279,6 +313,32 @@ export const articleBlockquoteContentBlockType = defineType({
       return {
         title: blockName || blockText(blocks) || 'Sitat',
         subtitle: source || 'Sitat',
+      }
+    },
+  },
+})
+
+export const articleExampleContentBlockType = defineType({
+  name: 'eksempel',
+  title: 'Eksempel',
+  type: 'object',
+  icon: TextIcon,
+  fields: [
+    defineField({
+      name: 'text',
+      title: 'Innhold',
+      description: 'Rik tekst med underoverskrifter, Sanity-lenker, lister og uthevet tekst.',
+      type: 'array',
+      of: [exampleTextBlock],
+      validation: (rule) => rule.required().min(1),
+    }),
+  ],
+  preview: {
+    select: {blocks: 'text'},
+    prepare({blocks}) {
+      return {
+        title: blockText(blocks) || 'Eksempel',
+        subtitle: 'Eksempel',
       }
     },
   },
@@ -647,7 +707,7 @@ export const articleAccordionGroupContentBlockType = defineType({
 export const articleContentBlocks = [
   defineArrayMember({type: 'tekst'}),
   defineArrayMember({type: 'bilde'}),
-  defineArrayMember({type: 'sitat'}),
+  defineArrayMember({type: 'eksempel'}),
   defineArrayMember({type: 'informasjon'}),
   defineArrayMember({type: 'knapp'}),
 defineArrayMember({

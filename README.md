@@ -87,10 +87,24 @@ nettstedet. Delt innhold er en innholdsressurs, ikke en egen nettside.
 
 Add **Seksjon** to **Innhold** to group content under an optional heading and
 optional icon. A section accepts the same blocks as the article itself (text,
-image, information, buttons, warning, crisis and legal-source panels), but not other
-sections. If an article contains any section, all top-level content must be
-sections; validation blocks publishing otherwise. The preview draws a green line
-above each section (and below the last one), with the icon in a black circle to the left of the heading and content.
+image, example, information, buttons, warning, crisis and legal-source panels),
+but not quotes or other sections. If an article contains any section, all
+top-level content must be sections; validation blocks publishing otherwise.
+The preview draws a green line above each section (and below the last one), with
+the icon in a black circle to the left of the heading and content.
+
+## Eksempler i artikler og seksjoner
+
+Legg til **Eksempel** direkte i en artikkel eller i en seksjon. Eksempelet vises
+med designsystemets `Blockquote`, alltid med gul (`ochre`) kant; redaktører kan
+ikke endre fargen eller legge til et avsendernavn. Innholdet kan ha
+underoverskrifter på nivå h2 og h3, lenker til artikler, seksjonssider og
+navigasjonssider, punktlister, nummererte lister, fet skrift og kursiv.
+
+**Sitat** kan ikke lenger velges i innholdslistene for artikler og seksjoner.
+Eksisterende sitatinnhold beholdes og vises fortsatt i forhåndsvisningen.
+En separat publiseringsfrontend må også støtte blokken `eksempel`, inkludert
+`pageLink`-referansene og den faste gule `Blockquote`-visningen.
 
 ## Seksjonssider (alternativ prototype)
 
@@ -102,8 +116,8 @@ vanlig blokkredigering.
 
 Siden må ha 1–10 seksjoner, med minst én innholdsblokk i hver seksjon før
 publisering. Bruk **Flytt opp**, **Flytt ned** og **Slett seksjon** for å
-organisere innholdet. Seksjonene støtter tekst, bilde, informasjon, knapp, varsel,
-krise og rettskilder, men ikke seksjoner inni seksjoner.
+organisere innholdet. Seksjonene støtter tekst, bilde, eksempel, informasjon,
+knapp, varsel, krise og rettskilder, men ikke seksjoner inni seksjoner.
 
 Fanen **Forhåndsvisning av seksjonsside** bruker artikkeloppsettet.
 Seksjonene har grønne skillelinjer over og mellom seg, samt under siste seksjon,
@@ -199,7 +213,9 @@ Designsystemets lokale MDX-kilder var ikke tilgjengelige ved implementeringen.
 Forhåndsvisningen gjenbruker eksisterende komponenter, semantiske tokens og
 artikkelmal; Storybook-eksempler og installerte komponenttyper brukes som
 dokumentasjonsfallback. Knappens modal følger Storybook-eksempelets mønster med
-en dialogreferanse og `showModal()`.
+en dialogreferanse og `showModal()`. For **Eksempel** ble
+`@skatteetaten/ds-typography` 2.10.0-typene brukt som fallback for `Blockquote`;
+derfor bruker blokken den støttede gule (`ochre`) fargen fast.
 
 For sammenligning kan denne arbeidsgrenen kjøres på en egen port:
 

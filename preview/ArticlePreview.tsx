@@ -79,6 +79,12 @@ type BlockquoteBlock = {
   borderColor?: 'ochre' | 'forest' | 'denim' | 'graphite'
 }
 
+type ExampleBlock = {
+  _key?: string
+  _type: 'eksempel'
+  text?: PortableTextBlock[]
+}
+
 type PanelBlock = {
   _key?: string
   _type: 'varsel' | 'krise'
@@ -98,6 +104,7 @@ type SharedContentReference = {_key?: string; _type: 'reference'; _ref: string}
 type InnholdBlock =
   | SharedContentBlock
   | BlockquoteBlock
+  | ExampleBlock
   | ArticleButtonBlock
   | ArticleLinkListBlock
   | ArticleOpenCloseBlock
@@ -153,6 +160,24 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function getString(value: Record<string, unknown>, key: string) {
   return typeof value[key] === 'string' ? value[key] : undefined
+}
+
+function getExamplePageLinkIds(block: ExampleBlock) {
+  return (block.text || []).flatMap((textBlock) => {
+    if (!isRecord(textBlock) || !Array.isArray(textBlock.markDefs)) {
+      return []
+    }
+
+    return textBlock.markDefs.flatMap((markDef) => {
+      if (!isRecord(markDef) || getString(markDef, '_type') !== 'pageLink') {
+        return []
+      }
+
+      const page = markDef.page
+      const id = isRecord(page) ? getString(page, '_ref') : undefined
+      return id ? [id] : []
+    })
+  })
 }
 
 const styles: Record<string, CSSProperties> = {
@@ -316,21 +341,28 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
   ]
   const sharedContentIdsKey = JSON.stringify(sharedContentIds)
 
+  const contentBlocks = props.isSectionPage
+    ? (article?.sections || []).flatMap((section) => section.content || [])
+    : (article?.content || []).flatMap((block) =>
+        block._type === 'seksjon' ? block.content || [] : [block],
+      )
+
   const destinationIds = [
     ...new Set(
-      (article?.content || [])
-        .flatMap((block) => (block._type === 'seksjon' ? block.content || [] : [block]))
-        .flatMap((block) => {
-          if (block._type === 'lenkeliste') {
-            return (block.pages || []).map(getLinkListPageId)
-          }
-          if (block._type === 'knapp') {
-            return getButtonLinks(block).map((link) => link.linkType === 'internal'
-              ? link.page?._ref
-              : link.linkType === 'file' ? link.file?.asset?._ref : undefined)
-          }
-          return []
-        })
+      contentBlocks.flatMap((block) => {
+        if (block._type === 'eksempel') {
+          return getExamplePageLinkIds(block)
+        }
+        if (block._type === 'lenkeliste') {
+          return (block.pages || []).map(getLinkListPageId)
+        }
+        if (block._type === 'knapp') {
+          return getButtonLinks(block).map((link) => link.linkType === 'internal'
+            ? link.page?._ref
+            : link.linkType === 'file' ? link.file?.asset?._ref : undefined)
+        }
+        return []
+      })
         .filter((id): id is string => Boolean(id)),
     ),
   ]
@@ -546,6 +578,49 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
           </Blockquote>
           {block.source ? <Paragraph hasSpacing>{block.source}</Paragraph> : null}
         </>
+      )
+    }
+
+    if (block._type === 'eksempel') {
+      if (!block.text?.length) {
+        return <p role="status">Legg til innhold for å forhåndsvise eksempelet.</p>
+      }
+
+      const exampleComponents: PortableTextComponents = {
+        ...components,
+        marks: {
+          ...components.marks,
+          pageLink: ({children, text, value}) => {
+            const page = isRecord(value) && isRecord(value.page) ? value.page : undefined
+            const pageId = page ? getString(page, '_ref') : undefined
+            if (!pageId) {
+              return <span role="alert">{children} (Lenkemålet mangler en side.)</span>
+            }
+            if (destinationError) {
+              return <span role="alert">{children} (Kunne ikke hente lenkemålet: {destinationError})</span>
+            }
+
+            const destination = destinationsById[pageId]
+            const slug = destination?.slug?.current
+            if (!slug) {
+              return (
+                <span role={isLoadingDestinations ? 'status' : 'alert'}>
+                  {children} ({isLoadingDestinations
+                    ? 'Laster lenkemål …'
+                    : 'Lenkemålet ble ikke funnet eller mangler nettadresse.'})
+                </span>
+              )
+            }
+
+            return <Link href={`/${slug}`}>{text}</Link>
+          },
+        },
+      }
+
+      return (
+        <Blockquote borderColor="ochre" hasSpacing>
+          <PortableText value={block.text} components={exampleComponents} />
+        </Blockquote>
       )
     }
 

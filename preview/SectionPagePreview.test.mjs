@@ -673,7 +673,114 @@ test('renders OpenClose objects inside accordion portable text', () => {
 
   assert.ok(html.includes('Spørsmål'), html)
   assert.ok(html.includes('Les mer'), html)
-  assert.ok(html.includes('medium'), html)
+  const dom = new JSDOM(html)
+  const button = [...dom.window.document.querySelectorAll('button[aria-expanded]')]
+    .find((element) => element.textContent.includes('Les mer'))
+  assert.ok(button)
+  assert.equal(button.closest('[data-size]')?.getAttribute('data-size'), 'large')
+  assert.ok(button.closest('.article-open-close'))
+  dom.window.close()
+})
+
+test('always renders standalone OpenClose as large regardless of legacy size', () => {
+  for (const size of [undefined, 'small', 'medium', 'large']) {
+    const dom = new JSDOM(render(ArticlePreview, {content: [{
+      _key: 'open-close', _type: 'openClose', title: 'Les mer', size, content: text.text,
+    }]}))
+    const button = dom.window.document.querySelector('button[aria-expanded]')
+    assert.ok(button)
+    assert.equal(button.closest('[data-size]')?.getAttribute('data-size'), 'large')
+    assert.ok(button.closest('.article-open-close'))
+    dom.window.close()
+  }
+})
+
+test('renders rich content blocks inside OpenClose portable text', async () => {
+  const dom = new JSDOM('<div id="root"></div>')
+  globalThis.window = dom.window
+  globalThis.document = dom.window.document
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true
+  globalThis.articlePreviewTestClient = {
+    config: () => ({projectId: 'test1234', dataset: 'production'}),
+    withConfig() {
+      return this
+    },
+    fetch: async () => [],
+  }
+  const reactRoot = createRoot(document.getElementById('root'))
+  try {
+    await act(async () => reactRoot.render(createElement(ArticlePreview, {
+      document: {displayed: {content: [{
+        _key: 'open-close',
+        _type: 'openClose',
+        title: 'Les mer',
+        size: 'medium',
+        content: [
+          {
+            _key: 'image',
+            _type: 'bilde',
+            image: {_type: 'image', asset: {_type: 'reference', _ref: 'image-test-10x10-png'}},
+            isDecorative: true,
+          },
+          {
+            _key: 'example',
+            _type: 'eksempel',
+            text: [{
+              _key: 'example-paragraph',
+              _type: 'block',
+              style: 'normal',
+              markDefs: [],
+              children: [{_key: 'span', _type: 'span', text: 'Eksempelinnhold', marks: []}],
+            }],
+          },
+          {_key: 'button', _type: 'knapp', label: 'Knapp', appearance: 'secondary'},
+          {_key: 'link-list', _type: 'lenkeliste', pages: []},
+          {
+            _key: 'nested-open-close',
+            _type: 'openClose',
+            title: 'Dypdykk',
+            size: 'small',
+            content: [{
+              _key: 'nested-example',
+              _type: 'eksempel',
+              text: [{
+                _key: 'nested-example-paragraph',
+                _type: 'block',
+                style: 'normal',
+                markDefs: [],
+                children: [{_key: 'span', _type: 'span', text: 'Nøstet eksempel', marks: []}],
+              }],
+            }],
+          },
+        ],
+      }] }},
+    })))
+
+    const openCloseButton = document.querySelector('button[aria-expanded]')
+    assert.ok(openCloseButton)
+    assert.equal(openCloseButton.firstElementChild?.tagName.toLowerCase(), 'svg')
+    assert.match(openCloseButton.textContent, /Les mer/)
+    await act(async () => openCloseButton.dispatchEvent(new dom.window.MouseEvent('click', {bubbles: true})))
+
+    assert.ok(document.querySelector('img[alt=""]'))
+    assert.ok(document.querySelector('blockquote')?.textContent.includes('Eksempelinnhold'))
+    assert.match(document.body.textContent, /Legg til minst ett lenkemål/)
+    assert.match(document.body.textContent, /Legg til minst én side/)
+    const nestedOpenCloseButton = [...document.querySelectorAll('button[aria-expanded]')]
+      .find((button) => button.textContent.includes('Dypdykk'))
+    assert.ok(nestedOpenCloseButton)
+    await act(async () => nestedOpenCloseButton.dispatchEvent(
+      new dom.window.MouseEvent('click', {bubbles: true}),
+    ))
+    assert.match(document.body.textContent, /Nøstet eksempel/)
+  } finally {
+    await act(async () => reactRoot.unmount())
+    dom.window.close()
+    delete globalThis.window
+    delete globalThis.document
+    delete globalThis.IS_REACT_ACT_ENVIRONMENT
+    delete globalThis.articlePreviewTestClient
+  }
 })
 
 test('only numbers accordion groups when enabled and restarts numbering for each group', () => {

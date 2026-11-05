@@ -19,6 +19,7 @@ import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
 import {sectionIconMap} from '../components/SectionIcons'
 import './numberedAccordion.css'
+import './openClose.css'
 import {ArticleButton, type ArticleButtonBlock, type ButtonDestination} from './ArticleButton'
 import {ArticleLinkList, type ArticleLinkListBlock} from './ArticleLinkList'
 
@@ -55,7 +56,6 @@ type ArticleOpenCloseBlock = {
   _key?: string
   _type: 'openClose'
   title?: string
-  size?: 'small' | 'medium' | 'large'
   content?: PortableTextBlock[]
 }
 
@@ -338,12 +338,14 @@ const components = {
       const content = Array.isArray(value.content)
         ? value.content as PortableTextBlock[]
         : undefined
-      const size = value.size === 'small' || value.size === 'medium' || value.size === 'large'
-        ? value.size
-        : undefined
-
       return (
-        <OpenClose title={title} size={size} titleAs="h3">
+        <OpenClose
+          title={title}
+          size="large"
+          titleAs="h3"
+          iconPosition="left"
+          className="article-open-close"
+        >
           {content ? (
             <PortableText value={content} components={components} />
           ) : (
@@ -552,6 +554,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
     const renderEmbeddedBlock = (value: unknown) => {
       if (!isRecord(value)) return null
       switch (getString(value, '_type')) {
+        case 'openClose':
         case 'bilde':
         case 'eksempel':
         case 'knapp':
@@ -570,6 +573,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
         eksempel: ({value}) => renderEmbeddedBlock(value),
         knapp: ({value}) => renderEmbeddedBlock(value),
         lenkeliste: ({value}) => renderEmbeddedBlock(value),
+        openClose: ({value}) => renderEmbeddedBlock(value),
       },
     }
     const panelComponents: PortableTextComponents = nested
@@ -595,7 +599,13 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
       }
 
       return (
-        <OpenClose title={block.title} size={block.size} titleAs={nested ? 'h3' : 'h2'}>
+        <OpenClose
+          title={block.title}
+          size="large"
+          titleAs={nested ? 'h3' : 'h2'}
+          iconPosition="left"
+          className="article-open-close"
+        >
           {block.content ? (
             <PortableText value={block.content} components={contentComponents} />
           ) : (

@@ -116,8 +116,16 @@ de eksisterende objektene **Åpne/Lukke**, **Bilde**, **Eksempel**, **Knapp** og
 **Lenkeliste**. Forhåndsvisningen henter også sidereferanser og fil-lenkemål
 fra innhold inne i accordioner.
 
+**Åpne/Lukke** har de samme riktekstvalgene som accordioner og kan inneholde
+bilde, eksempel, knapp og lenkeliste, men ikke en annen Åpne/Lukke-blokk.
+Accordioner kan fortsatt inneholde Åpne/Lukke. Chevron vises til venstre for teksten.
+Åpne/Lukke vises alltid i størrelse stor, uten størrelsesvalg i Studio.
+Tidligere lagrede størrelsesverdier ignoreres i forhåndsvisningen.
+Blokken har luft over og under med designsystemets `--spacing-l` (1,5 rem).
+
 En separat publiseringsfrontend må støtte accordionens `ingress`, de nestede
-blokktypene og `pageLink`-referansene.
+blokktypene og `pageLink`-referansene, samt vise Åpne/Lukke i størrelse stor med
+chevron til venstre, uavhengig av tidligere lagrede størrelsesverdier.
 
 ## Seksjonssider (alternativ prototype)
 
@@ -210,9 +218,9 @@ Legg til **Accordion-gruppe** i en artikkel eller artikkelseksjon, og slå på
 **Vis med tall** for å vise nummererte sirkler til venstre for accordionene.
 En linje forbinder sirklene og følger innholdet når accordionene åpnes.
 Nummereringen starter på 1 i hver gruppe og følger rekkefølgen i Studio.
-I hver accordion kan redaktører legge til tekst og **Åpne/Lukke**-objekter
-direkte i innholdsredigereren. Innstillingen er av som standard; eksisterende
-grupper vises som før.
+I hver accordion kan redaktører legge til riktekst og **Åpne/Lukke**-, **Bilde**-,
+**Eksempel**-, **Knapp**- og **Lenkeliste**-objekter direkte i innholdsredigereren.
+Innstillingen er av som standard; eksisterende grupper vises som før.
 
 Forhåndsvisningen bruker designsystemets `Accordion` med et tilpasset nummerert
 oppsett basert på skattemeldingssiden på skatteetaten.no. En separat

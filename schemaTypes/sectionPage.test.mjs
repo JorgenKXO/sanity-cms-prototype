@@ -379,12 +379,11 @@ test('defines accordion groups with required nested accordions and no size setti
   assert.equal(accordionsField.validation({required: () => ({min: () => 'validated'})}), 'validated')
 })
 
-test('supports OpenClose with a required heading and content and all three sizes', async () => {
+test('supports OpenClose with required heading and content and no size setting', async () => {
   const openClose = {
     _key: 'open-close',
     _type: 'openClose',
     title: 'Les mer',
-    size: 'medium',
     content: text().text,
   }
   const validateOpenClose = async (value) =>
@@ -397,7 +396,7 @@ test('supports OpenClose with a required heading and content and all three sizes
     ).filter((marker) => marker.level === 'error')
 
   assert.deepEqual(await validateOpenClose(openClose), [])
-  for (const field of ['title', 'size', 'content']) {
+  for (const field of ['title', 'content']) {
     const result = await validateOpenClose({...openClose, [field]: undefined})
     assert.ok(result.some((marker) => marker.path.includes(field)), JSON.stringify(result))
   }
@@ -405,18 +404,37 @@ test('supports OpenClose with a required heading and content and all three sizes
   const openCloseSchema = schemaTypes.find((type) => type.name === 'openClose')
   assert.equal(openCloseSchema.title, 'Åpne/Lukke')
   assert.equal(openCloseSchema.icon, ChevronDownIcon)
-  assert.deepEqual(openCloseSchema.preview.prepare({size: 'medium'}), {
+  assert.equal(openCloseSchema.fields.some((field) => field.name === 'size'), false)
+  const openCloseContent = openCloseSchema.fields.find((field) => field.name === 'content')
+  const accordionContent = schemaTypes
+    .find((type) => type.name === 'accordionGroup')
+    .fields.find((field) => field.name === 'accordions')
+    .of[0]
+    .fields.find((field) => field.name === 'content')
+  assert.deepEqual(
+    openCloseContent.of.map((member) => member.type || member.name),
+    ['block', 'bilde', 'eksempel', 'knapp', 'lenkeliste'],
+  )
+  assert.deepEqual(
+    openCloseContent.of.map((member) => member.type || member.name),
+    accordionContent.of
+      .filter((member) => member.type !== 'openClose')
+      .map((member) => member.type || member.name),
+  )
+  assert.deepEqual(
+    openCloseContent.of[0],
+    schemaTypes.find((type) => type.name === 'eksempel').fields[0].of[0],
+  )
+  assert.deepEqual(openCloseContent.of[0], accordionContent.of[0])
+  assert.match(openCloseContent.description, /samme formateringsvalg som Accordion/)
+  assert.deepEqual(openCloseSchema.preview.prepare({}), {
     title: 'Åpne/Lukke',
-    subtitle: 'Åpne/Lukke · Middels',
+    subtitle: 'Åpne/Lukke',
   })
   assert.equal(openCloseSchema.preview.prepare({
     blockName: 'Internt navn', title: 'Les mer', size: 'small',
   }).title, 'Internt navn')
   assert.equal(openCloseSchema.preview.prepare({title: 'Les mer', size: 'large'}).title, 'Les mer')
-  assert.deepEqual(
-    openCloseSchema.fields.find((field) => field.name === 'size').options.list.map(({value}) => value),
-    ['small', 'medium', 'large'],
-  )
 })
 
 test('defines examples without a name or color field and validates rich text', async () => {

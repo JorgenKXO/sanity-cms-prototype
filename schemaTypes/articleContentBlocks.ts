@@ -91,6 +91,15 @@ const exampleTextBlock = defineArrayMember({
   },
 })
 
+const nestedRichTextContentBlocks = [
+  exampleTextBlock,
+  defineArrayMember({type: 'openClose'}),
+  defineArrayMember({type: 'bilde'}),
+  defineArrayMember({type: 'eksempel'}),
+  defineArrayMember({type: 'knapp'}),
+  defineArrayMember({type: 'lenkeliste'}),
+]
+
 export const panelTextBlock = defineArrayMember({
   type: 'block',
   styles: [
@@ -704,39 +713,21 @@ export const articleOpenCloseContentBlockType = defineType({
       validation: (rule) => rule.required(),
     }),
     defineField({
-      name: 'size',
-      title: 'Størrelse',
-      type: 'string',
-      options: {
-        list: [
-          {title: 'Liten', value: 'small'},
-          {title: 'Middels', value: 'medium'},
-          {title: 'Stor', value: 'large'},
-        ],
-        layout: 'radio',
-      },
-      initialValue: 'large',
-      validation: (rule) => rule.required(),
-    }),
-    defineField({
       name: 'content',
       title: 'Innhold',
+      description:
+        'Rik tekst med samme formateringsvalg som Accordion, samt bilde, eksempel, knapp og lenkeliste. Åpne/Lukke kan ikke inneholde en annen Åpne/Lukke.',
       type: 'array',
-      of: [articleTextBlock],
+      of: nestedRichTextContentBlocks.filter((member) => member.type !== 'openClose'),
       validation: (rule) => rule.required().min(1),
     }),
   ],
   preview: {
-    select: {blockName: 'blockName', title: 'title', size: 'size'},
-    prepare({blockName, title, size}) {
-      const sizeTitles: Record<string, string> = {
-        small: 'Liten',
-        medium: 'Middels',
-        large: 'Stor',
-      }
+    select: {blockName: 'blockName', title: 'title'},
+    prepare({blockName, title}) {
       return {
         title: blockName || title || 'Åpne/Lukke',
-        subtitle: `Åpne/Lukke · ${sizeTitles[size || ''] || 'Velg størrelse'}`,
+        subtitle: 'Åpne/Lukke',
       }
     },
   },
@@ -785,14 +776,7 @@ export const articleAccordionGroupContentBlockType = defineType({
               description:
                 'Rik tekst med samme formateringsvalg som Eksempel, samt Åpne/Lukke, bilde, eksempel, knapp og lenkeliste.',
               type: 'array',
-              of: [
-                exampleTextBlock,
-                defineArrayMember({type: 'openClose'}),
-                defineArrayMember({type: 'bilde'}),
-                defineArrayMember({type: 'eksempel'}),
-                defineArrayMember({type: 'knapp'}),
-                defineArrayMember({type: 'lenkeliste'}),
-              ],
+              of: nestedRichTextContentBlocks,
               validation: (rule) => rule.required().min(1),
             }),
           ],

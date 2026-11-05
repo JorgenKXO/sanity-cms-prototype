@@ -1,0 +1,5 @@
+@media (min-width: 1024px) {
+  .information-panel-with-icon.information-panel-with-icon {
+    column-gap: var(--spacing-xxl);
+  }
+}

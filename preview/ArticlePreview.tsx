@@ -769,6 +769,11 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
           icon={block.icon}
           body={block.text}
           titleAs={nested ? 'h3' : 'h2'}
+          destinationContext={{
+            destinationsById,
+            error: destinationError,
+            isLoading: isLoadingDestinations,
+          }}
         />
       )
     }

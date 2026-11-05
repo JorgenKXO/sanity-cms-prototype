@@ -1,6 +1,6 @@
 import {ChevronDownIcon} from '@sanity/icons'
 import {Box, Button, Flex, Menu, MenuButton, MenuItem, Text} from '@sanity/ui'
-import {set, type StringInputProps} from 'sanity'
+import {set, unset, type StringInputProps} from 'sanity'
 import {sectionIconOptions} from './SectionIcons'
 
 export function SectionIconInput({id, value, onChange, readOnly}: StringInputProps) {
@@ -32,10 +32,17 @@ export function SectionIconInput({id, value, onChange, readOnly}: StringInputPro
       }
       menu={
         <Menu style={{maxHeight: '40vh', overflowY: 'auto'}}>
+          <MenuItem
+            text="Ingen ikon"
+            pressed={!value}
+            disabled={readOnly}
+            onClick={() => onChange(unset())}
+          />
           {sectionIconOptions.map(({title, value: optionValue, Icon}) => (
             <MenuItem
               key={optionValue}
               pressed={value === optionValue}
+              disabled={readOnly}
               onClick={() => onChange(set(optionValue))}
             >
               <Flex align="center" gap={3}>

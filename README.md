@@ -106,6 +106,22 @@ Eksisterende sitatinnhold beholdes og vises fortsatt i forhåndsvisningen.
 En separat publiseringsfrontend må også støtte blokken `eksempel`, inkludert
 `pageLink`-referansene og den faste gule `Blockquote`-visningen.
 
+## Informasjonspaneler
+
+Informasjonspaneler har samme ikonvelger som seksjoner. Velg **Ingen ikon** for
+å fjerne et valgt ikon. Bakgrunnsvalgene er blå, grønn eller hvit med blå/grønn
+ramme; ren hvit bakgrunn kan ikke lenger velges.
+
+Rikteksten støtter normal tekst, h2/h3, fet skrift, kursiv, lenker, punktlister
+og nummererte lister. Legg også til **Åpne/Lukke**, **Accordion-gruppe**,
+**Knapp** og **Lenkeliste** som objekter. Forhåndsvisningen henter sidene og
+filene som brukes av de nestede blokkene.
+
+Med ikon utvides panelrammen, mens teksten beholder samme bredde og venstrekant
+som teksten rundt. Ikonet vises i størrelse `extraLarge`, med større avstand
+til teksten på desktop. Panelet bruker designsystemets `xl`-padding.
+Uten ikon beholder panelet innholdsbredden.
+
 ## Accordioner i artikler
 
 Legg til **Accordion-gruppe** i artikkelinnholdet og opprett accordioner med

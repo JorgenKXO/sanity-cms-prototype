@@ -1,5 +1,8 @@
 import {BookIcon, ErrorOutlineIcon, InfoOutlineIcon, WarningOutlineIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {SectionIconInput} from '../components/SectionIconInput'
+import {sectionIconOptions} from '../components/SectionIcons'
+import {informationPanelContentBlocks} from './articleContentBlocks'
 
 // Delt lenke-annotasjon for portable text-feltene under.
 const linkAnnotation = {
@@ -95,7 +98,6 @@ export const informasjonPanelType = defineType({
           {title: 'Grønn bakgrunn (forest/10)', value: 'forest'},
           {title: 'Hvit bakgrunn med blå ramme', value: 'denim-outline'},
           {title: 'Hvit bakgrunn med grønn ramme', value: 'forest-outline'},
-          {title: 'Hvit bakgrunn', value: 'white'},
         ],
         layout: 'dropdown',
       },
@@ -107,18 +109,8 @@ export const informasjonPanelType = defineType({
       title: 'Ikon',
       type: 'string',
       description: 'Valgfritt.',
-      options: {
-        list: [
-          {title: 'Informasjon', value: 'info'},
-          {title: 'Hjelp', value: 'help'},
-          {title: 'Fullført', value: 'completed'},
-          {title: 'Frist/dato', value: 'calendar'},
-          {title: 'Tid', value: 'clock'},
-          {title: 'Varsel', value: 'bell'},
-          {title: 'Personvern/sikkerhet', value: 'lock'},
-        ],
-        layout: 'dropdown',
-      },
+      options: {list: sectionIconOptions.map(({title, value}) => ({title, value}))},
+      components: {input: SectionIconInput},
     }),
     defineField({
       name: 'heading',
@@ -128,8 +120,10 @@ export const informasjonPanelType = defineType({
     defineField({
       name: 'body',
       title: 'Innhold',
+      description:
+        'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, accordion-gruppe, knapp og lenkeliste.',
       type: 'array',
-      of: [informasjonTextBlock],
+      of: informationPanelContentBlocks,
     }),
   ],
   preview: {

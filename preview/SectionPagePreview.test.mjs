@@ -25,6 +25,7 @@ await build({
       export {ArticlePreview} from './preview/ArticlePreview'
       export {ArticleButton, getButtonLinks} from './preview/ArticleButton'
       export {ArticleLinkList} from './preview/ArticleLinkList'
+      export {InformasjonPanel} from './preview/InformasjonPanel'
     `,
     resolveDir: root,
     loader: 'ts',
@@ -56,7 +57,10 @@ await build({
         path: require.resolve(args.path),
       }))
       builder.onResolve({filter: /^sanity$/}, (args) => {
-        if (args.importer.endsWith('/ArticlePreview.tsx')) {
+        if (
+          args.importer.endsWith('/ArticlePreview.tsx') ||
+          args.importer.endsWith('/InformasjonPanel.tsx')
+        ) {
           return {path: 'preview-client', namespace: 'offline-client'}
         }
       })
@@ -77,7 +81,7 @@ await build({
     },
   }],
 })
-const {SectionPagePreview, ArticlePreview, ArticleButton, getButtonLinks, ArticleLinkList} = await import(
+const {SectionPagePreview, ArticlePreview, ArticleButton, getButtonLinks, ArticleLinkList, InformasjonPanel} = await import(
   pathToFileURL(`${directory}/preview.mjs`).href
 )
 const text = {
@@ -104,6 +108,37 @@ const page = {
 const render = (Component, displayed) => renderToStaticMarkup(
   createElement(Component, {document: {displayed}}),
 )
+
+test('renders information panel links and caps expanded panels at the Panel maximum width', () => {
+  const body = [{
+    _key: 'paragraph',
+    _type: 'block',
+    style: 'normal',
+    markDefs: [{_key: 'link', _type: 'link', href: '/skatt'}],
+    children: [{_key: 'span', _type: 'span', text: 'Les om skatt', marks: ['link']}],
+  }]
+  for (const color of ['denim', 'forest', 'denim-outline', 'forest-outline']) {
+    for (const icon of [undefined, 'info']) {
+      const html = renderToStaticMarkup(createElement(InformasjonPanel, {body, color, icon}))
+      const dom = new JSDOM(html)
+      const link = dom.window.document.querySelector('a')
+      assert.equal(link?.getAttribute('href'), '/skatt')
+      assert.equal(link?.textContent, 'Les om skatt')
+      const wrapper = dom.window.document.body.firstElementChild
+      const panel = wrapper.querySelector('.information-panel')
+      assert.ok(panel.className.includes('panel_paddingXL'))
+      if (icon) {
+        assert.ok(panel.classList.contains('information-panel-with-icon'))
+        assert.ok(wrapper.style.width.startsWith('min(var(--container-m),'))
+        assert.equal(wrapper.style.left, '50%')
+        assert.equal(wrapper.style.transform, 'translateX(-50%)')
+      } else {
+        assert.equal(wrapper.getAttribute('style'), null)
+      }
+      dom.window.close()
+    }
+  }
+})
 
 test('renders ordered semantic LinkGroup lists with page titles and internal URLs', () => {
   const pages = [

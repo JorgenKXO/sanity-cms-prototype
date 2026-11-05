@@ -6,7 +6,7 @@ import {build} from 'esbuild'
 import {firstValueFrom, of} from 'rxjs'
 import {createClient} from '@sanity/client'
 import {ChevronDownIcon, LinkIcon, UlistIcon} from '@sanity/icons'
-import {resolveConfig, validateDocument} from 'sanity'
+import {resolveConfig, unset, validateDocument} from 'sanity'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 const directory = await mkdtemp(`${root}node_modules/.section-tests-`)
@@ -26,7 +26,7 @@ await build({
       import {articleType} from './schemaTypes/articleType'
       import {pageSectionType, sectionPageType} from './schemaTypes/sectionPageType'
       import {defineType} from 'sanity'
-      import {rettskilderPanelType} from './schemaTypes/panelTypes'
+      import {informasjonPanelType, rettskilderPanelType} from './schemaTypes/panelTypes'
       import {
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType, articleOpenCloseContentBlockType,
@@ -43,7 +43,7 @@ await build({
         fields: [{name: 'title', type: 'string'}],
       })
       export const schemaTypes = [
-        articleType, pageSectionType, sectionPageType, rettskilderPanelType,
+        articleType, pageSectionType, sectionPageType, rettskilderPanelType, informasjonPanelType,
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType, articleOpenCloseContentBlockType, navigationPageTestType,
         articleAccordionGroupContentBlockType,
@@ -208,6 +208,70 @@ test('offers accordion groups and link lists on articles but not section pages',
     .filter((name) => !name.toLowerCase().includes('outline'))
     .map((name) => legacyValues[name] || name)
   assert.deepEqual(iconOptions.map(({value}) => value), expectedOptions)
+})
+
+test('uses the section icon selector and restricted rich text in information panels', () => {
+  const section = schemaTypes.find((type) => type.name === 'pageSection')
+  const sectionIcon = section.fields.find((field) => field.name === 'icon')
+  const informationPanel = schemaTypes.find((type) => type.name === 'informasjonPanel')
+  const articleInformationPanel = schemaTypes.find((type) => type.name === 'informasjon')
+
+  for (const [type, fieldName] of [
+    [informationPanel, 'body'],
+    [articleInformationPanel, 'text'],
+  ]) {
+    const icon = type.fields.find((field) => field.name === 'icon')
+    assert.deepEqual(icon.options.list, sectionIcon.options.list)
+    assert.equal(icon.components.input, sectionIcon.components.input)
+
+    const field = type.fields.find((item) => item.name === fieldName)
+    assert.deepEqual(
+      field.of.map((member) => member.type || member.name),
+      ['block', 'openClose', 'accordionGroup', 'knapp', 'lenkeliste'],
+    )
+    assert.deepEqual(
+      field.of[0].styles.map(({value}) => value),
+      ['normal', 'h2', 'h3'],
+    )
+    assert.deepEqual(
+      field.of[0].lists.map(({value}) => value),
+      ['bullet', 'number'],
+    )
+    assert.deepEqual(
+      field.of[0].marks.decorators.map(({value}) => value),
+      ['strong', 'em'],
+    )
+    assert.deepEqual(field.of[0].marks.annotations.map(({name}) => name), ['link'])
+    const color = type.fields.find((item) => item.name === 'color')
+    assert.deepEqual(color.options.list.map(({value}) => value), [
+      'denim', 'forest', 'denim-outline', 'forest-outline',
+    ])
+  }
+})
+
+test('allows removing and reselecting icons in sections and both information panels', () => {
+  for (const name of ['pageSection', 'informasjon', 'informasjonPanel']) {
+    const type = schemaTypes.find((type) => type.name === name)
+    const input = type.fields.find((field) => field.name === 'icon').components.input
+    const patches = []
+    const props = {id: 'icon', value: 'info', onChange: (patch) => patches.push(patch)}
+    const rendered = input(props)
+    const [remove, options] = rendered.props.menu.props.children
+    assert.equal(remove.props.text, 'Ingen ikon')
+    assert.equal(remove.props.pressed, false)
+    remove.props.onClick()
+    assert.deepEqual(patches, [unset()])
+    options[0].props.onClick()
+    assert.equal(patches[1].type, 'set')
+    assert.equal(typeof patches[1].value, 'string')
+
+    const empty = input({...props, value: undefined})
+    assert.equal(empty.props.menu.props.children[0].props.pressed, true)
+    const readOnly = input({...props, readOnly: true})
+    assert.equal(readOnly.props.button.props.disabled, true)
+    assert.equal(readOnly.props.menu.props.children[0].props.disabled, true)
+    assert.ok(readOnly.props.menu.props.children[1].every((item) => item.props.disabled))
+  }
 })
 
 test('configures the image and text block with required content and fixed color choices', async () => {

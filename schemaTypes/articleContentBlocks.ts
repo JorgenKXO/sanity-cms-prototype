@@ -12,7 +12,9 @@ import {
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {ButtonDestinationInput} from '../components/ButtonDestinationInput'
 import {LinkListPagesInput} from '../components/LinkListPagesInput'
-export {sectionIconOptions} from '../components/SectionIcons'
+import {SectionIconInput} from '../components/SectionIconInput'
+import {sectionIconOptions} from '../components/SectionIcons'
+export {sectionIconOptions}
 
 type PortableTextBlockPreview = {
   _type: string
@@ -111,6 +113,34 @@ export const panelTextBlock = defineArrayMember({
     annotations: [linkAnnotation],
   },
 })
+
+export const informationPanelTextBlock = defineArrayMember({
+  type: 'block',
+  styles: [
+    {title: 'Normal', value: 'normal'},
+    {title: 'Underoverskrift (h2)', value: 'h2'},
+    {title: 'Underoverskrift (h3)', value: 'h3'},
+  ],
+  lists: [
+    {title: 'Kulepunktliste', value: 'bullet'},
+    {title: 'Nummerert liste', value: 'number'},
+  ],
+  marks: {
+    decorators: [
+      {title: 'Fet', value: 'strong'},
+      {title: 'Kursiv', value: 'em'},
+    ],
+    annotations: [linkAnnotation],
+  },
+})
+
+export const informationPanelContentBlocks = [
+  informationPanelTextBlock,
+  defineArrayMember({type: 'openClose'}),
+  defineArrayMember({type: 'accordionGroup'}),
+  defineArrayMember({type: 'knapp'}),
+  defineArrayMember({type: 'lenkeliste'}),
+]
 
 export const blockNameField = defineField({
   name: 'blockName',
@@ -476,7 +506,6 @@ export const articleInformationContentBlockType = defineType({
           {title: 'Grønn bakgrunn', value: 'forest'},
           {title: 'Hvit bakgrunn med blå ramme', value: 'denim-outline'},
           {title: 'Hvit bakgrunn med grønn ramme', value: 'forest-outline'},
-          {title: 'Hvit bakgrunn', value: 'white'},
         ],
         layout: 'dropdown',
       },
@@ -489,25 +518,16 @@ export const articleInformationContentBlockType = defineType({
       type: 'string',
       description:
         'Valgfritt. Velg et ikon fra Skatteetatens designsystem som skal vises ved siden av overskriften.',
-      options: {
-        list: [
-          {title: 'Informasjon', value: 'info'},
-          {title: 'Hjelp', value: 'help'},
-          {title: 'Fullført', value: 'completed'},
-          {title: 'Frist/dato', value: 'calendar'},
-          {title: 'Tid', value: 'clock'},
-          {title: 'Varsel', value: 'bell'},
-          {title: 'Personvern/sikkerhet', value: 'lock'},
-        ],
-        layout: 'dropdown',
-      },
+      options: {list: sectionIconOptions.map(({title, value}) => ({title, value}))},
+      components: {input: SectionIconInput},
     }),
     defineField({
       name: 'text',
       title: 'Innhold',
-      description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
+      description:
+        'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, accordion-gruppe, knapp og lenkeliste.',
       type: 'array',
-      of: [panelTextBlock],
+      of: informationPanelContentBlocks,
       validation: (rule) => rule.required(),
     }),
   ],

@@ -228,7 +228,7 @@ function getDestinationIds(value: unknown): string[] {
     })
   }
 
-  return ['content', 'accordions', 'text'].flatMap((key) =>
+  return ['content', 'accordions', 'text', 'body'].flatMap((key) =>
     getDestinationIds(value[key]),
   )
 }
@@ -589,6 +589,13 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
           },
         }
       : components
+    const embeddedPanelComponents: PortableTextComponents = {
+      ...panelComponents,
+      types: {
+        ...panelComponents.types,
+        lenkeliste: ({value}) => renderEmbeddedBlock(value),
+      },
+    }
     if (block._type === 'tekst') {
       return block.text ? <PortableText value={block.text} components={contentComponents} /> : null
     }
@@ -748,7 +755,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
     if (block._type === 'rettskilderPanel') {
       return (
         <Panel
-          title={block.heading || 'Rettskilder'}
+          title={block.heading || 'Regelverk'}
           titleAs={nested ? 'h3' : 'h2'}
           color="graphite"
           variant="filled"
@@ -756,7 +763,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
           spacing="l"
           renderIcon={() => withAlignmentOffset(<SectionSignIcon />)}
         >
-          {block.body ? <PortableText value={block.body} components={panelComponents} /> : null}
+          {block.body ? <PortableText value={block.body} components={embeddedPanelComponents} /> : null}
         </Panel>
       )
     }

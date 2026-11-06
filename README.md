@@ -87,11 +87,14 @@ nettstedet. Delt innhold er en innholdsressurs, ikke en egen nettside.
 
 Add **Seksjon** to **Innhold** to group content under an optional heading and
 optional icon. A section accepts the same blocks as the article itself (text,
-image, example, information, buttons, warning, crisis and legal-source panels),
+image, example, information, buttons, warning, crisis and Regelverk panels),
 but not quotes or other sections. If an article contains any section, all
 top-level content must be sections; validation blocks publishing otherwise.
 The preview draws a green line above each section (and below the last one), with
 the icon in a black circle to the left of the heading and content.
+
+**Regelverk** panels use that heading by default and allow plain text, links,
+subheadings and **Lenkeliste** objects. Text formatting and lists are disabled.
 
 ## Eksempler i artikler og seksjoner
 

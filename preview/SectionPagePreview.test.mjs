@@ -423,13 +423,27 @@ test('resolves and deduplicates page references in examples, link lists and butt
     assert.equal(document.querySelectorAll('.information-panel li a').length, 2)
     assert.equal(document.querySelector('[role="alert"]'), null)
 
+    await renderArticle([{
+      _key: 'regelverk',
+      _type: 'rettskilderPanel',
+      body: [list],
+    }])
+    assert.deepEqual(pending[1].parameters, {ids: ['page-b', 'page-a']})
+    await act(async () => pending[1].resolve([
+      {_id: 'page-a', title: 'Side A', slug: {current: 'side-a'}},
+      {_id: 'page-b', title: 'Side B', slug: {current: 'side-b'}},
+    ]))
+    assert.equal(document.querySelector('h2').textContent, 'Regelverk')
+    assert.equal(document.querySelectorAll('li a').length, 2)
+    assert.equal(document.querySelector('[role="alert"]'), null)
+
     await renderArticle([{...list, pages: [{_ref: 'stale'}]}])
     await renderArticle([example])
-    await act(async () => pending[1].resolve([
+    await act(async () => pending[2].resolve([
       {_id: 'stale', title: 'Utdatert side', slug: {current: 'utdatert'}},
     ]))
     assert.ok(!document.body.textContent.includes('Utdatert side'))
-    await act(async () => pending[2].reject(new Error('Nettverksfeil')))
+    await act(async () => pending[3].reject(new Error('Nettverksfeil')))
     assert.match(
       document.querySelector('[role="alert"]').textContent,
       /Kunne ikke hente lenkemålet: Nettverksfeil/,
@@ -449,11 +463,53 @@ test('resolves and deduplicates page references in examples, link lists and butt
         }],
       }]}]}},
     })))
-    assert.deepEqual(pending[3].parameters, {ids: ['section-target']})
-    await act(async () => pending[3].resolve([
+    assert.deepEqual(pending[4].parameters, {ids: ['section-target']})
+    await act(async () => pending[4].resolve([
       {_id: 'section-target', title: 'Målside', slug: {current: 'malside'}},
     ]))
     assert.equal(document.querySelector('blockquote a[href="/malside"]').textContent, 'Se eksempelet')
+  } finally {
+    await act(async () => reactRoot.unmount())
+    dom.window.close()
+    delete globalThis.window
+    delete globalThis.document
+    delete globalThis.IS_REACT_ACT_ENVIRONMENT
+    delete globalThis.articlePreviewTestClient
+  }
+})
+
+test('resolves link-list pages inside Regelverk panels on navigation pages', async () => {
+  const dom = new JSDOM('<div id="root"></div>')
+  globalThis.window = dom.window
+  globalThis.document = dom.window.document
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true
+  const pending = []
+  globalThis.articlePreviewTestClient = {
+    fetch(query, parameters) {
+      return new Promise((resolve, reject) => pending.push({query, parameters, resolve, reject}))
+    },
+  }
+  const reactRoot = createRoot(document.getElementById('root'))
+  try {
+    await act(async () => reactRoot.render(createElement(NavigationPagePreview, {
+      document: {displayed: {tiles: [{
+        _key: 'regelverk',
+        _type: 'rettskilderPanel',
+        body: [{
+          _key: 'list',
+          _type: 'lenkeliste',
+          pages: [{_key: 'target', _type: 'linkListItem', page: {_ref: 'target'}, label: 'Regeltekst'}],
+        }],
+      }]}},
+    })))
+    assert.deepEqual(pending[0].parameters, {ids: ['target']})
+    assert.match(document.body.textContent, /Laster sidene i lenkelisten/)
+    await act(async () => pending[0].resolve([
+      {_id: 'target', title: 'Regelverksside', slug: {current: 'regelverksside'}},
+    ]))
+    assert.equal(document.querySelector('h2').textContent, 'Regelverk')
+    assert.equal(document.querySelector('li a').textContent, 'Regeltekst')
+    assert.equal(document.querySelector('li a').getAttribute('href'), '/regelverksside')
   } finally {
     await act(async () => reactRoot.unmount())
     dom.window.close()

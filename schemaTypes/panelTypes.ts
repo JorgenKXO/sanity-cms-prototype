@@ -13,7 +13,7 @@ const linkAnnotation = {
     defineField({
       name: 'href',
       title: 'Nettadresse',
-      type: 'string',
+      type: 'url',
       validation: (rule) =>
         rule.required().uri({
           allowRelative: true,
@@ -23,7 +23,7 @@ const linkAnnotation = {
   ],
 }
 
-// Ren tekst, lenker og underoverskrifter (ingen fet/kursiv skrift).
+// Ren tekst, lenker og underoverskrifter (ingen dekoratorer eller lister).
 const rettskilderTextBlock = defineArrayMember({
   type: 'block',
   styles: [
@@ -32,6 +32,7 @@ const rettskilderTextBlock = defineArrayMember({
   ],
   lists: [],
   marks: {
+    decorators: [],
     annotations: [linkAnnotation],
   },
 })
@@ -55,7 +56,7 @@ const informasjonTextBlock = defineArrayMember({
 
 export const rettskilderPanelType = defineType({
   name: 'rettskilderPanel',
-  title: 'Rettskilder',
+  title: 'Regelverk',
   type: 'object',
   icon: BookIcon,
   fields: [
@@ -63,21 +64,21 @@ export const rettskilderPanelType = defineType({
       name: 'heading',
       title: 'Overskrift',
       type: 'string',
-      description: 'Standardverdi er «Rettskilder», men kan overskrives.',
-      initialValue: 'Rettskilder',
+      description: 'Standardverdi er «Regelverk», men kan overskrives.',
+      initialValue: 'Regelverk',
     }),
     defineField({
       name: 'body',
       title: 'Innhold',
-      description: 'Ren tekst, lenker og underoverskrifter.',
+      description: 'Ren tekst, lenker, underoverskrifter og lenkelister.',
       type: 'array',
-      of: [rettskilderTextBlock],
+      of: [rettskilderTextBlock, defineArrayMember({type: 'lenkeliste'})],
     }),
   ],
   preview: {
     select: {title: 'heading'},
     prepare({title}) {
-      return {title: title || 'Rettskilder'}
+      return {title: title || 'Regelverk'}
     },
   },
 })

@@ -210,6 +210,22 @@ test('offers accordion groups and link lists on articles but not section pages',
   assert.deepEqual(iconOptions.map(({value}) => value), expectedOptions)
 })
 
+test('configures Regelverk panels with restricted text and link lists', () => {
+  const panel = schemaTypes.find((type) => type.name === 'rettskilderPanel')
+  const heading = panel.fields.find((field) => field.name === 'heading')
+  const body = panel.fields.find((field) => field.name === 'body')
+  const textBlock = body.of.find((member) => member.type === 'block')
+
+  assert.equal(panel.title, 'Regelverk')
+  assert.equal(heading.initialValue, 'Regelverk')
+  assert.equal(panel.preview.prepare({}).title, 'Regelverk')
+  assert.deepEqual(body.of.map((member) => member.type || member.name), ['block', 'lenkeliste'])
+  assert.deepEqual(textBlock.styles.map(({value}) => value), ['normal', 'h3'])
+  assert.deepEqual(textBlock.lists, [])
+  assert.deepEqual(textBlock.marks.decorators, [])
+  assert.deepEqual(textBlock.marks.annotations.map(({name}) => name), ['link'])
+})
+
 test('uses the section icon selector and restricted rich text in information panels', () => {
   const section = schemaTypes.find((type) => type.name === 'pageSection')
   const sectionIcon = section.fields.find((field) => field.name === 'icon')

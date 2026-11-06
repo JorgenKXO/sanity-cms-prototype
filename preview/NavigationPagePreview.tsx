@@ -12,6 +12,7 @@ import {fixedPanelAppearance} from './fixedPanelAppearance'
 import {InformasjonPanel} from './InformasjonPanel'
 import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
+import {ArticleLinkList, type ArticleLinkListBlock} from './ArticleLinkList'
 import {navigationTileReferences} from '../schemaTypes/shared/navigationTileReferences'
 
 type RettskilderPanelBlock = {
@@ -99,6 +100,25 @@ function getString(value: Record<string, unknown>, key: string) {
   return typeof value[key] === 'string' ? value[key] : undefined
 }
 
+function getLinkListReferences(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.flatMap(getLinkListReferences)
+  }
+  if (!isRecord(value)) {
+    return []
+  }
+  if (getString(value, '_type') === 'lenkeliste') {
+    const pages = Array.isArray(value.pages) ? value.pages : []
+    return pages.flatMap((item) => {
+      if (!isRecord(item)) return []
+      const page = getString(item, '_type') === 'linkListItem' ? item.page : item
+      const id = isRecord(page) ? getString(page, '_ref') : undefined
+      return id ? [id] : []
+    })
+  }
+  return Object.values(value).flatMap(getLinkListReferences)
+}
+
 const styles: Record<string, CSSProperties> = {
   shell: {
     minHeight: '100%',
@@ -157,38 +177,34 @@ const ingressComponents: PortableTextComponents = {
   },
 }
 
-const bodyComponents: PortableTextComponents = {
-  block: {
-    normal: ({children}) => <Paragraph hasSpacing>{children}</Paragraph>,
-    h3: ({children}) => <Heading as="h3" level={3}>{children}</Heading>,
-  },
-  marks: {
-    link: ({children, value}) => {
-      const href = isRecord(value) ? getString(value, 'href') || '#' : '#'
-      return <Link href={href}>{String(children)}</Link>
-    },
-  },
-}
-
 export function NavigationPagePreview(props: NavigationPagePreviewProps) {
   const page = props.document?.displayed
   const client = useClient({apiVersion: '2026-09-10'})
   const builder = imageUrlBuilder(client)
   const [referencedPages, setReferencedPages] = useState<Record<string, ReferencedPage>>({})
+  const [referencedPagesError, setReferencedPagesError] = useState<string>()
+  const [isLoadingReferencedPages, setIsLoadingReferencedPages] = useState(false)
 
   const tileRefs = [...new Set(navigationTileReferences(page?.tiles))]
+  const linkListRefs = getLinkListReferences(page?.tiles)
+  const referencedPageIds = [...new Set([...tileRefs, ...linkListRefs])]
 
   useEffect(() => {
-    if (tileRefs.length === 0) {
+    if (referencedPageIds.length === 0) {
       setReferencedPages({})
+      setReferencedPagesError(undefined)
+      setIsLoadingReferencedPages(false)
       return
     }
 
     let cancelled = false
+    setReferencedPages({})
+    setReferencedPagesError(undefined)
+    setIsLoadingReferencedPages(true)
     client
       .fetch<Record<string, ReferencedPage>>(
         `*[_id in $ids]{"_id": _id, title, slug} | order(_id) [0...200]`,
-        {ids: tileRefs},
+        {ids: referencedPageIds},
       )
       .then((results) => {
         if (cancelled) return
@@ -197,19 +213,48 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
           byId[result._id] = result
         }
         setReferencedPages(byId)
+        setIsLoadingReferencedPages(false)
       })
-      .catch(() => {
-        if (!cancelled) setReferencedPages({})
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setReferencedPages({})
+          setReferencedPagesError(error instanceof Error ? error.message : 'Ukjent feil')
+          setIsLoadingReferencedPages(false)
+        }
       })
 
     return () => {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(tileRefs)])
+  }, [JSON.stringify(referencedPageIds)])
 
   if (!page) {
     return <div style={styles.empty}>No navigation page content to preview yet.</div>
+  }
+
+  const bodyComponents: PortableTextComponents = {
+    block: {
+      normal: ({children}) => <Paragraph hasSpacing>{children}</Paragraph>,
+      h3: ({children}) => <Heading as="h3" level={3}>{children}</Heading>,
+    },
+    marks: {
+      link: ({children, value}) => {
+        const href = isRecord(value) ? getString(value, 'href') || '#' : '#'
+        return <Link href={href}>{String(children)}</Link>
+      },
+    },
+    types: {
+      lenkeliste: ({value}) =>
+        isRecord(value) && getString(value, '_type') === 'lenkeliste' ? (
+          <ArticleLinkList
+            block={value as ArticleLinkListBlock}
+            destinationsById={referencedPages}
+            error={referencedPagesError}
+            isLoading={isLoadingReferencedPages}
+          />
+        ) : null,
+    },
   }
 
   function renderPanel(panel: PanelEntry, index: number) {
@@ -217,7 +262,7 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
       return (
         <Panel
           key={panel._key || index}
-          title={panel.heading || 'Rettskilder'}
+          title={panel.heading || 'Regelverk'}
           titleAs="h2"
           color="graphite"
           variant="filled"

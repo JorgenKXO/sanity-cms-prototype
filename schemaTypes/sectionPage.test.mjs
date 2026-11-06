@@ -26,6 +26,8 @@ await build({
       import {articleType} from './schemaTypes/articleType'
       import {pageSectionType, sectionPageType} from './schemaTypes/sectionPageType'
       import {defineType} from 'sanity'
+      import {ContentBuilderInput} from './components/ContentBuilderInput'
+      import {NavigationContentInput} from './components/NavigationContentInput'
       import {informasjonPanelType, rettskilderPanelType, varselPanelType} from './schemaTypes/panelTypes'
       import {
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
@@ -53,6 +55,7 @@ await build({
         articleLinkListContentBlockType,
         sharedContentType,
       ]
+      export {ContentBuilderInput, NavigationContentInput}
     `,
     resolveDir: root,
     loader: 'ts',
@@ -78,7 +81,9 @@ await build({
     },
   }],
 })
-const {schemaTypes} = await import(pathToFileURL(`${directory}/schemas.mjs`).href)
+const {schemaTypes, ContentBuilderInput, NavigationContentInput} = await import(
+  pathToFileURL(`${directory}/schemas.mjs`).href,
+)
 const [workspace] = await firstValueFrom(
   resolveConfig({
     projectId: 'test1234',
@@ -178,6 +183,46 @@ test('does not define optional editor names on content blocks', () => {
       `${type.name} should not define an editor name field`,
     )
   }
+})
+
+test('hides shared content and crisis blocks from content builder insert menus', () => {
+  const article = schemaTypes.find((type) => type.name === 'article')
+  const section = schemaTypes.find((type) => type.name === 'pageSection')
+
+  for (const field of [
+    article.fields.find((item) => item.name === 'content'),
+    section.fields.find((item) => item.name === 'content'),
+  ]) {
+    assert.equal(field.components.input, ContentBuilderInput)
+    const filtered = ContentBuilderInput({
+      schemaType: {
+        ...field,
+        of: field.of.map((member) =>
+          member.type === 'reference' ? {...member, to: [{name: 'sharedContent'}]} : member,
+        ),
+      },
+      members: [],
+      renderDefault: (props) => props,
+    })
+    assert.ok(!filtered.schemaType.of.some((member) => member.name === 'krise'))
+    assert.ok(
+      !filtered.schemaType.of.some(
+        (member) => 'to' in member && member.to.some((target) => target.name === 'sharedContent'),
+      ),
+    )
+  }
+})
+
+test('hides crisis panels from navigation content insert menus', () => {
+  const filtered = NavigationContentInput({
+    schemaType: {
+      of: [{name: 'informasjonPanel'}, {name: 'krisePanel'}],
+    },
+    members: [],
+    renderDefault: (props) => props,
+  })
+
+  assert.deepEqual(filtered.schemaType.of.map((member) => member.name), ['informasjonPanel'])
 })
 
 test('offers accordion groups and link lists on articles but not section pages', () => {

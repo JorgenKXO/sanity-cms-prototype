@@ -1,5 +1,6 @@
 import {BlockContentIcon, EarthGlobeIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {ContentBuilderInput} from '../components/ContentBuilderInput'
 import {articleContentBlocks} from './articleContentBlocks'
 export {articleTextBlock} from './articleContentBlocks'
 
@@ -27,9 +28,7 @@ const ingressBlock = defineArrayMember({
 })
 
 const contentMembers = [
-  ...articleContentBlocks.slice(0, 3),
-  defineArrayMember({type: 'reference', to: [{type: 'sharedContent'}]}),
-  ...articleContentBlocks.slice(3),
+  ...articleContentBlocks,
   defineArrayMember({type: 'accordionGroup'}),
   defineArrayMember({type: 'lenkeliste'}),
 ]
@@ -79,9 +78,10 @@ export const articleType = defineType({
     defineField({
       name: 'content',
       title: 'Innhold',
-      description: 'Bygg opp artikkelen med lokale blokker eller innhold som deles på tvers av artikler.',
+      description: 'Bygg opp artikkelen med lokale innholdsblokker.',
       type: 'array',
       group: 'content',
+      components: {input: ContentBuilderInput},
       of: contentMembers,
       validation: (rule) => rule.required().min(1),
     }),

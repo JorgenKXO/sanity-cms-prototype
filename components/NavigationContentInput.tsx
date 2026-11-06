@@ -6,7 +6,10 @@ export function NavigationContentInput(props: ArrayOfObjectsInputProps) {
   const schemaType = {
     ...props.schemaType,
     of: props.schemaType.of.filter(
-      (member) => member.name !== 'navigationGroupHeading' && member.name !== 'navigationTilePage',
+      (member) =>
+        member.name !== 'navigationGroupHeading' &&
+        member.name !== 'navigationTilePage' &&
+        member.name !== 'krisePanel',
     ),
   }
 

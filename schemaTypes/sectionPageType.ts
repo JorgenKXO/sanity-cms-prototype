@@ -1,5 +1,6 @@
 import {BlockContentIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
+import {ContentBuilderInput} from '../components/ContentBuilderInput'
 import {SectionIconInput} from '../components/SectionIconInput'
 import {articleContentBlocks, sectionIconOptions} from './articleContentBlocks'
 import {articleType} from './articleType'
@@ -26,6 +27,7 @@ export const pageSectionType = defineType({
       name: 'content',
       title: 'Innhold',
       type: 'array',
+      components: {input: ContentBuilderInput},
       of: articleContentBlocks,
       validation: (rule) => rule.required().min(1),
     }),

@@ -67,11 +67,9 @@ The preview's typography and link styling (font stack, colors, weights, sizes) a
 
 ## Delt innhold i artikler
 
-Opprett et **Delt innhold**-dokument fra Studio-menyen, gi det et redaktørvennlig
-navn, og legg til tekst-, informasjons- og bildeblokker. I en artikkel kan du
-sette inn en referanse til dokumentet blant de vanlige lokale innholdsblokkene.
-Redigerer du det delte dokumentet og publiserer endringen, gjelder den for alle
-artiklene som refererer til det.
+Delt innhold er skjult fra Studio-strukturen og tilbys ikke lenger i
+innholdsbyggeren. Eksisterende dokumenter og referanser beholdes uendret i
+datasettet.
 
 Fanen **Brukes på** viser artiklene som refererer til dokumentet. Listen og
 antallet beregnes fra gjeldende referanser; de lagres ikke som egne datafelt.
@@ -87,9 +85,9 @@ nettstedet. Delt innhold er en innholdsressurs, ikke en egen nettside.
 
 Add **Seksjon** to **Innhold** to group content under an optional heading and
 optional icon. A section accepts the same blocks as the article itself (text,
-image, example, information, buttons, warning, crisis and Regelverk panels),
-but not quotes or other sections. If an article contains any section, all
-top-level content must be sections; validation blocks publishing otherwise.
+image, example, information, buttons, warning and Regelverk panels), but not
+crisis panels, quotes or other sections. If an article contains any section,
+all top-level content must be sections; validation blocks publishing otherwise.
 The preview draws a green line above each section (and below the last one), with
 the icon in a black circle to the left of the heading and content.
 
@@ -170,7 +168,8 @@ vanlig blokkredigering.
 Siden må ha 1–10 seksjoner, med minst én innholdsblokk i hver seksjon før
 publisering. Bruk **Flytt opp**, **Flytt ned** og **Slett seksjon** for å
 organisere innholdet. Seksjonene støtter tekst, bilde, eksempel, informasjon,
-knapp, varsel, krise og rettskilder, men ikke seksjoner inni seksjoner.
+knapp, varsel og rettskilder, men ikke krise, delt innhold eller seksjoner inni
+seksjoner.
 
 Fanen **Forhåndsvisning av seksjonsside** bruker artikkeloppsettet.
 Seksjonene har grønne skillelinjer over og mellom seg, samt under siste seksjon,
@@ -260,7 +259,7 @@ publiseringsfrontend må også støtte feltet `accordionGroup.showNumbers`.
 
 Begge måtene finnes på `master`: bruk **Artikkel → Innhold → Seksjon** for
 seksjonsblokker og **Seksjonsside → Seksjoner** for den åpne redigeringen.
-Artikler beholder også støtte for delt innhold, inkludert inne i seksjonsblokker.
+Eksisterende kriseblokker og referanser til delt innhold endres ikke i datasettet.
 
 Designsystemets lokale MDX-kilder var ikke tilgjengelige ved implementeringen.
 Forhåndsvisningen gjenbruker eksisterende komponenter, semantiske tokens og
@@ -292,8 +291,8 @@ card is excluded from the check, and homepage reference pickers are unchanged.
 
 Add **Gruppe navigasjonskort** to **Hovedinnhold**, optionally enter an
 **Overskrift**, and add **Navigasjonskort** one at a time inside the group.
-Each group requires at least one card. Groups and information, warning, and
-crisis panels can be reordered in the top-level list. Panels use the existing
+Each group requires at least one card. Groups and information and warning
+panels can be reordered in the top-level list. Panels use the existing
 design-system components at full width, with `--spacing-l` above each panel.
 Groups with headings render card titles as h3; groups without headings use h2.
 

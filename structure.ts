@@ -1,5 +1,4 @@
 import {
-  BlockContentIcon,
   EditIcon,
   EarthGlobeIcon,
   EyeOpenIcon,
@@ -103,19 +102,6 @@ const allNavigationPages = (S: Parameters<StructureResolver>[0]) =>
         .filter('_type == "navigationPage"'),
     )
 
-const allSharedContent = (S: Parameters<StructureResolver>[0]) =>
-  S.listItem()
-    .title('Delt innhold')
-    .id('allSharedContent')
-    .icon(BlockContentIcon)
-    .child(
-      S.documentTypeList('sharedContent')
-        .title('Delt innhold')
-        .id('allSharedContent-list')
-        .apiVersion('2026-09-10')
-        .filter('_type == "sharedContent"'),
-    )
-
 const globalerFolder = (S: Parameters<StructureResolver>[0]) =>
   S.listItem()
     .title('Globaler')
@@ -215,7 +201,6 @@ export const deskStructure: StructureResolver = (S) =>
       sectionPages(S),
       allNavigationPages(S),
       globalerFolder(S),
-      allSharedContent(S),
       S.divider(),
       ...kategoriFolders(S),
       S.divider(),

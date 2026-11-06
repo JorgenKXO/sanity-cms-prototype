@@ -66,7 +66,9 @@ export default defineConfig({
 
       return prev.filter(
         (option) =>
-          option.templateId !== 'forside' && !option.templateId.startsWith('forside-'),
+          option.templateId !== 'sharedContent' &&
+          option.templateId !== 'forside' &&
+          !option.templateId.startsWith('forside-'),
       )
     },
   },

@@ -159,13 +159,23 @@ test('requires one to ten sections, including exact boundary values', async () =
   assert.ok((await errors(undefined)).some((marker) => marker.path[0] === 'sections'))
 })
 
-test('requires section content, but name, heading and icon are optional', async () => {
+test('requires section content, but heading and icon are optional', async () => {
   assert.deepEqual(await errors([section(1)]), [])
   for (const content of [undefined, []]) {
     const result = await errors([{...section(1), content}])
     assert.ok(
       result.some((marker) => marker.path.includes('content')),
       JSON.stringify(result),
+    )
+  }
+})
+
+test('does not define optional editor names on content blocks', () => {
+  for (const type of schemaTypes) {
+    assert.equal(
+      type.fields?.some((field) => field.name === 'blockName') || false,
+      false,
+      `${type.name} should not define an editor name field`,
     )
   }
 })
@@ -536,7 +546,7 @@ test('supports OpenClose with required heading and content and no size setting',
   })
   assert.equal(openCloseSchema.preview.prepare({
     blockName: 'Internt navn', title: 'Les mer', size: 'small',
-  }).title, 'Internt navn')
+  }).title, 'Les mer')
   assert.equal(openCloseSchema.preview.prepare({title: 'Les mer', size: 'large'}).title, 'Les mer')
 })
 

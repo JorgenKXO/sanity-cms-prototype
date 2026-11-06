@@ -1,7 +1,7 @@
 import {BlockContentIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {SectionIconInput} from '../components/SectionIconInput'
-import {articleContentBlocks, blockNameField, sectionIconOptions} from './articleContentBlocks'
+import {articleContentBlocks, sectionIconOptions} from './articleContentBlocks'
 import {articleType} from './articleType'
 
 export const MAX_SECTIONS = 10
@@ -13,7 +13,6 @@ export const pageSectionType = defineType({
   icon: BlockContentIcon,
   options: {collapsible: true, collapsed: true},
   fields: [
-    blockNameField,
     defineField({name: 'heading', title: 'Overskrift (valgfritt)', type: 'string'}),
     defineField({
       name: 'icon',
@@ -32,11 +31,11 @@ export const pageSectionType = defineType({
     }),
   ],
   preview: {
-    select: {name: 'blockName', heading: 'heading', content: 'content'},
-    prepare: ({name, heading, content}) => {
+    select: {heading: 'heading', content: 'content'},
+    prepare: ({heading, content}) => {
       const count = Array.isArray(content) ? content.length : 0
       return {
-        title: name || heading || 'Seksjon',
+        title: heading || 'Seksjon',
         subtitle: `Seksjon · ${count} ${count === 1 ? 'blokk' : 'blokker'}`,
       }
     },

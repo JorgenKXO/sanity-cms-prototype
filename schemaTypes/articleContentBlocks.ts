@@ -145,14 +145,6 @@ export const warningPanelContentBlocks = informationPanelContentBlocks.filter(
   (member) => member.type !== 'accordionGroup',
 )
 
-export const blockNameField = defineField({
-  name: 'blockName',
-  title: 'Navn (valgfritt)',
-  description:
-    'Gi blokken et gjenkjennelig navn som vises i innholdslisten, slik at det blir enklere å orientere seg. Vises ikke for besøkende på nettsiden.',
-  type: 'string',
-})
-
 export const articleLinkListContentBlockType = defineType({
   name: 'lenkeliste',
   title: 'Lenkeliste',
@@ -236,7 +228,6 @@ export const articleTextContentBlockType = defineType({
   type: 'object',
   icon: TextIcon,
   fields: [
-    blockNameField,
     defineField({
       name: 'text',
       title: 'Tekst',
@@ -247,10 +238,10 @@ export const articleTextContentBlockType = defineType({
     }),
   ],
   preview: {
-    select: {blockName: 'blockName', blocks: 'text'},
-    prepare({blockName, blocks}) {
+    select: {blocks: 'text'},
+    prepare({blocks}) {
       return {
-        title: blockName || blockText(blocks) || 'Tekst',
+        title: blockText(blocks) || 'Tekst',
         subtitle: 'Tekst',
       }
     },
@@ -263,7 +254,6 @@ export const articleImageContentBlockType = defineType({
   type: 'object',
   icon: ImageIcon,
   fields: [
-    blockNameField,
     defineField({
       name: 'image',
       title: 'Bilde',
@@ -296,10 +286,10 @@ export const articleImageContentBlockType = defineType({
     }),
   ],
   preview: {
-    select: {media: 'image', alt: 'alt', isDecorative: 'isDecorative', blockName: 'blockName'},
-    prepare({media, alt, isDecorative, blockName}) {
+    select: {media: 'image', alt: 'alt', isDecorative: 'isDecorative'},
+    prepare({media, alt, isDecorative}) {
       return {
-        title: blockName || (isDecorative ? 'Bilde (dekorativt)' : alt || 'Bilde'),
+        title: isDecorative ? 'Bilde (dekorativt)' : alt || 'Bilde',
         media,
       }
     },
@@ -413,7 +403,6 @@ export const articleBlockquoteContentBlockType = defineType({
   type: 'object',
   icon: TextIcon,
   fields: [
-    blockNameField,
     defineField({
       name: 'text',
       title: 'Sitat',
@@ -451,10 +440,10 @@ export const articleBlockquoteContentBlockType = defineType({
     }),
   ],
   preview: {
-    select: {blockName: 'blockName', blocks: 'text', source: 'source'},
-    prepare({blockName, blocks, source}) {
+    select: {blocks: 'text', source: 'source'},
+    prepare({blocks, source}) {
       return {
-        title: blockName || blockText(blocks) || 'Sitat',
+        title: blockText(blocks) || 'Sitat',
         subtitle: source || 'Sitat',
       }
     },
@@ -493,7 +482,6 @@ export const articleInformationContentBlockType = defineType({
   type: 'object',
   icon: InfoOutlineIcon,
   fields: [
-    blockNameField,
     defineField({
       name: 'heading',
       title: 'Overskrift',
@@ -535,10 +523,10 @@ export const articleInformationContentBlockType = defineType({
     }),
   ],
   preview: {
-    select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
-    prepare({blockName, title, blocks}) {
+    select: {title: 'heading', blocks: 'text'},
+    prepare({title, blocks}) {
       return {
-        title: blockName || title || 'Informasjon',
+        title: title || 'Informasjon',
         subtitle: blockText(blocks),
       }
     },
@@ -551,7 +539,6 @@ export const articleButtonContentBlockType = defineType({
   type: 'object',
   icon: ArrowRightIcon,
   fields: [
-    blockNameField,
     defineField({
       name: 'label',
       title: 'Lenketekst',
@@ -703,9 +690,8 @@ export const articleButtonContentBlockType = defineType({
     }),
   ],
   preview: {
-    select: {blockName: 'blockName', label: 'label', appearance: 'appearance'},
-    prepare({blockName, label, appearance}: {
-      blockName?: string
+    select: {label: 'label', appearance: 'appearance'},
+    prepare({label, appearance}: {
       label?: string
       appearance?: string
     }) {
@@ -715,7 +701,7 @@ export const articleButtonContentBlockType = defineType({
         mega: 'Megaknapp',
       }
       return {
-        title: blockName || label || 'Knapp',
+        title: label || 'Knapp',
         subtitle: appearanceTitles[appearance || ''] || 'Knapp',
       }
     },
@@ -728,7 +714,6 @@ export const articleOpenCloseContentBlockType = defineType({
   type: 'object',
   icon: ChevronDownIcon,
   fields: [
-    blockNameField,
     defineField({
       name: 'title',
       title: 'Overskrift',
@@ -746,10 +731,10 @@ export const articleOpenCloseContentBlockType = defineType({
     }),
   ],
   preview: {
-    select: {blockName: 'blockName', title: 'title'},
-    prepare({blockName, title}) {
+    select: {title: 'title'},
+    prepare({title}) {
       return {
-        title: blockName || title || 'Åpne/Lukke',
+        title: title || 'Åpne/Lukke',
         subtitle: 'Åpne/Lukke',
       }
     },
@@ -762,7 +747,6 @@ export const articleAccordionGroupContentBlockType = defineType({
   type: 'object',
   icon: ChevronDownIcon,
   fields: [
-    blockNameField,
     defineField({
       name: 'showNumbers',
       title: 'Vis med tall',
@@ -815,11 +799,11 @@ export const articleAccordionGroupContentBlockType = defineType({
     }),
   ],
   preview: {
-    select: {blockName: 'blockName', accordions: 'accordions'},
-    prepare({blockName, accordions}) {
+    select: {accordions: 'accordions'},
+    prepare({accordions}) {
       const count = Array.isArray(accordions) ? accordions.length : 0
       return {
-        title: blockName || 'Accordion-gruppe',
+        title: 'Accordion-gruppe',
         subtitle: `${count} ${count === 1 ? 'accordion' : 'accordions'}`,
       }
     },
@@ -839,7 +823,6 @@ defineArrayMember({
     type: 'object',
     icon: WarningOutlineIcon,
     fields: [
-      blockNameField,
       defineField({
         name: 'heading',
         title: 'Overskrift',
@@ -856,10 +839,10 @@ defineArrayMember({
       }),
     ],
     preview: {
-      select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
-      prepare({blockName, title, blocks}) {
+      select: {title: 'heading', blocks: 'text'},
+      prepare({title, blocks}) {
         return {
-          title: blockName || title || 'Varselspanel',
+          title: title || 'Varselspanel',
           subtitle: blockText(blocks),
         }
       },
@@ -871,7 +854,6 @@ defineArrayMember({
     type: 'object',
     icon: WarningOutlineIcon,
     fields: [
-      blockNameField,
       defineField({
         name: 'heading',
         title: 'Overskrift',
@@ -887,10 +869,10 @@ defineArrayMember({
       }),
     ],
     preview: {
-      select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
-      prepare({blockName, title, blocks}) {
+      select: {title: 'heading', blocks: 'text'},
+      prepare({title, blocks}) {
         return {
-          title: blockName || title || 'Krise',
+          title: title || 'Krise',
           subtitle: blockText(blocks),
         }
       },

@@ -122,6 +122,19 @@ som teksten rundt. Ikonet vises i størrelse `extraLarge`, med større avstand
 til teksten på desktop. Panelet bruker designsystemets `xl`-padding.
 Uten ikon beholder panelet innholdsbredden.
 
+## Varselspaneler
+
+**Varselspanel** bruker samme riktekst og forhåndsvisning som informasjonspanelet,
+men tillater ikke **Accordion-gruppe**. **Åpne/Lukke**, **Knapp** og
+**Lenkeliste** er tillatt. Panelet har alltid gul (`ochre`) bakgrunn og
+designsystemets `WarningIcon`; redaktører har ikke ikon- eller fargevalg.
+Innholdsbyggeren bruker Sanitys advarselsikon.
+
+Eksisterende innhold og feltnavn beholdes (`varsel` med `text` i artikler og
+seksjoner, `varselPanel` med `body` på navigasjonssider). En separat
+publiseringsfrontend må støtte de utvidede innholdsvalgene og den faste
+visningen.
+
 ## Accordioner i artikler
 
 Legg til **Accordion-gruppe** i artikkelinnholdet og opprett accordioner med

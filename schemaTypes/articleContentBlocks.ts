@@ -1,7 +1,6 @@
 import {
   ArrowRightIcon,
   ChevronDownIcon,
-  ErrorOutlineIcon,
   ImageIcon,
   InfoOutlineIcon,
   LinkIcon,
@@ -141,6 +140,10 @@ export const informationPanelContentBlocks = [
   defineArrayMember({type: 'knapp'}),
   defineArrayMember({type: 'lenkeliste'}),
 ]
+
+export const warningPanelContentBlocks = informationPanelContentBlocks.filter(
+  (member) => member.type !== 'accordionGroup',
+)
 
 export const blockNameField = defineField({
   name: 'blockName',
@@ -832,9 +835,9 @@ export const articleContentBlocks = [
   defineArrayMember({type: 'knapp'}),
 defineArrayMember({
     name: 'varsel',
-    title: 'Varsel',
+    title: 'Varselspanel',
     type: 'object',
-    icon: ErrorOutlineIcon,
+    icon: WarningOutlineIcon,
     fields: [
       blockNameField,
       defineField({
@@ -845,9 +848,10 @@ defineArrayMember({
       defineField({
         name: 'text',
         title: 'Innhold',
-        description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
+        description:
+          'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, knapp og lenkeliste.',
         type: 'array',
-        of: [panelTextBlock],
+        of: warningPanelContentBlocks,
         validation: (rule) => rule.required(),
       }),
     ],
@@ -855,7 +859,7 @@ defineArrayMember({
       select: {blockName: 'blockName', title: 'heading', blocks: 'text'},
       prepare({blockName, title, blocks}) {
         return {
-          title: blockName || title || 'Varsel',
+          title: blockName || title || 'Varselspanel',
           subtitle: blockText(blocks),
         }
       },

@@ -1,8 +1,8 @@
-import {BookIcon, ErrorOutlineIcon, InfoOutlineIcon, WarningOutlineIcon} from '@sanity/icons'
+import {BookIcon, InfoOutlineIcon, WarningOutlineIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {SectionIconInput} from '../components/SectionIconInput'
 import {sectionIconOptions} from '../components/SectionIcons'
-import {informationPanelContentBlocks} from './articleContentBlocks'
+import {informationPanelContentBlocks, warningPanelContentBlocks} from './articleContentBlocks'
 
 // Delt lenke-annotasjon for portable text-feltene under.
 const linkAnnotation = {
@@ -136,9 +136,9 @@ export const informasjonPanelType = defineType({
 
 export const varselPanelType = defineType({
   name: 'varselPanel',
-  title: 'Varsel',
+  title: 'Varselspanel',
   type: 'object',
-  icon: ErrorOutlineIcon,
+  icon: WarningOutlineIcon,
   fields: [
     defineField({
       name: 'heading',
@@ -148,14 +148,16 @@ export const varselPanelType = defineType({
     defineField({
       name: 'body',
       title: 'Innhold',
+      description:
+        'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, knapp og lenkeliste.',
       type: 'array',
-      of: [informasjonTextBlock],
+      of: warningPanelContentBlocks,
     }),
   ],
   preview: {
     select: {title: 'heading'},
     prepare({title}) {
-      return {title: title || 'Varsel'}
+      return {title: title || 'Varselspanel'}
     },
   },
 })

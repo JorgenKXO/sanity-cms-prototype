@@ -26,6 +26,8 @@ await build({
       export {ArticleButton, getButtonLinks} from './preview/ArticleButton'
       export {ArticleLinkList} from './preview/ArticleLinkList'
       export {InformasjonPanel} from './preview/InformasjonPanel'
+      export {NavigationPagePreview} from './preview/NavigationPagePreview'
+      export {WarningIcon} from '@skatteetaten/ds-icons'
     `,
     resolveDir: root,
     loader: 'ts',
@@ -59,6 +61,7 @@ await build({
       builder.onResolve({filter: /^sanity$/}, (args) => {
         if (
           args.importer.endsWith('/ArticlePreview.tsx') ||
+          args.importer.endsWith('/NavigationPagePreview.tsx') ||
           args.importer.endsWith('/InformasjonPanel.tsx')
         ) {
           return {path: 'preview-client', namespace: 'offline-client'}
@@ -81,7 +84,7 @@ await build({
     },
   }],
 })
-const {SectionPagePreview, ArticlePreview, ArticleButton, getButtonLinks, ArticleLinkList, InformasjonPanel} = await import(
+const {SectionPagePreview, ArticlePreview, ArticleButton, getButtonLinks, ArticleLinkList, InformasjonPanel, NavigationPagePreview, WarningIcon} = await import(
   pathToFileURL(`${directory}/preview.mjs`).href
 )
 const text = {
@@ -138,6 +141,76 @@ test('renders information panel links and caps expanded panels at the Panel maxi
       dom.window.close()
     }
   }
+})
+
+test('warning panels use the shared layout, fixed yellow appearance and rich content on every page', () => {
+  const body = [
+    {
+      _key: 'intro', _type: 'block', style: 'h2', markDefs: [],
+      children: [{_key: 'bold', _type: 'span', text: 'Viktig informasjon', marks: ['strong']}],
+    },
+    {
+      _key: 'list', _type: 'block', style: 'normal', listItem: 'bullet', level: 1,
+      markDefs: [],
+      children: [{_key: 'span', _type: 'span', text: 'Husk fristen', marks: ['em']}],
+    },
+    {
+      _key: 'details', _type: 'openClose', title: 'Les detaljer',
+      content: [{
+        _key: 'detail', _type: 'block', style: 'normal', markDefs: [],
+        children: [{_key: 'span', _type: 'span', text: 'Flere detaljer', marks: []}],
+      }],
+    },
+    {
+      _key: 'button', _type: 'knapp', label: 'Søk nå',
+      appearance: 'secondary', linkType: 'external', url: 'https://example.no/sok',
+    },
+    {
+      _key: 'links', _type: 'lenkeliste', heading: 'Relaterte sider',
+      pages: [{_type: 'reference', _ref: 'target'}],
+    },
+  ]
+  const warning = {_key: 'warning', _type: 'varsel', text: body}
+  const renders = [
+    render(ArticlePreview, {content: [warning]}),
+    render(SectionPagePreview, {sections: [{_key: 'section', content: [warning]}]}),
+    render(NavigationPagePreview, {tiles: [{...warning, _type: 'varselPanel', body}]}),
+    renderToStaticMarkup(createElement(InformasjonPanel, {
+      kind: 'varsel', body, color: 'forest', icon: 'info',
+      destinationContext: {
+        destinationsById: {target: {title: 'Målside', slug: {current: 'malside'}}},
+        isLoading: false,
+      },
+    })),
+  ]
+  const expectedIcon = new JSDOM(renderToStaticMarkup(createElement(WarningIcon)))
+  const expectedPath = expectedIcon.window.document.querySelector('path').getAttribute('d')
+  expectedIcon.window.close()
+  for (const [index, html] of renders.entries()) {
+    const dom = new JSDOM(html)
+    const panel = dom.window.document.querySelector('.information-panel')
+    assert.ok(panel, html)
+    assert.match(panel.className, /panel_ochre/)
+    assert.match(panel.className, /panel_filled/)
+    assert.match(panel.className, /panel_paddingXL/)
+    assert.ok(panel.classList.contains('information-panel-with-icon'))
+    assert.equal(panel.querySelector('svg path').getAttribute('d'), expectedPath)
+    assert.ok(panel.textContent.includes('Varselspanel'))
+    assert.equal(panel.querySelector('strong').textContent, 'Viktig informasjon')
+    assert.equal(panel.querySelector('ul li em').textContent, 'Husk fristen')
+    assert.ok(panel.textContent.includes('Les detaljer'))
+    assert.equal(panel.querySelector('a[href="https://example.no/sok"]').textContent, 'Søk nå')
+    if (index === renders.length - 1) {
+      assert.ok(panel.textContent.includes('Relaterte sider'))
+      assert.equal(panel.querySelector('a[href="/malside"]').textContent, 'Målside')
+    } else {
+      assert.match(panel.querySelector('[role="alert"]').textContent, /En side i lenkelisten ble ikke funnet/)
+    }
+    assert.ok(panel.parentElement.style.width.startsWith('min(var(--container-m),'))
+    dom.window.close()
+  }
+  const custom = render(ArticlePreview, {content: [{...warning, heading: 'Frist 1. mai'}]})
+  assert.ok(custom.includes('Frist 1. mai'))
 })
 
 test('renders ordered semantic LinkGroup lists with page titles and internal URLs', () => {
@@ -336,6 +409,18 @@ test('resolves and deduplicates page references in examples, link lists and butt
     assert.equal(document.querySelectorAll('a[href="/side-c"]').length, 2)
     assert.equal(document.querySelectorAll('li a').length, 2)
     assert.match(document.querySelector('button[aria-expanded]').textContent, /Kort forklaring/)
+    assert.equal(document.querySelector('[role="alert"]'), null)
+
+    await renderArticle([{
+      _key: 'warning', _type: 'varsel',
+      text: [list, button, {_key: 'details', _type: 'openClose', title: 'Detaljer', content: [example]}],
+    }])
+    assert.equal(pending.length, 1)
+    assert.equal(document.querySelector('.information-panel a[href="/side-a"]:not(li a)').textContent, 'Knapp')
+    await act(async () => document.querySelector('.information-panel button[aria-expanded]')
+      .dispatchEvent(new dom.window.MouseEvent('click', {bubbles: true})))
+    assert.equal(document.querySelector('.information-panel blockquote a[href="/side-c"]').textContent, 'Se eksempelet')
+    assert.equal(document.querySelectorAll('.information-panel li a').length, 2)
     assert.equal(document.querySelector('[role="alert"]'), null)
 
     await renderArticle([{...list, pages: [{_ref: 'stale'}]}])

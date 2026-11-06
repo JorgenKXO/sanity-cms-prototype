@@ -230,25 +230,26 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
       )
     }
 
-    if (panel._type === 'informasjonPanel') {
+    if (panel._type === 'informasjonPanel' || panel._type === 'varselPanel') {
       return (
         <InformasjonPanel
           key={panel._key || index}
+          kind={panel._type === 'varselPanel' ? 'varsel' : 'informasjon'}
           heading={panel.heading}
-          color={panel.color}
-          icon={panel.icon}
+          color={panel._type === 'informasjonPanel' ? panel.color : undefined}
+          icon={panel._type === 'informasjonPanel' ? panel.icon : undefined}
           body={panel.body}
         />
       )
     }
 
-    const kind = panel._type === 'varselPanel' ? 'varsel' : 'krise'
+    const kind = 'krise'
     const appearance = fixedPanelAppearance[kind]
     const Icon = appearance.icon
     return (
       <Panel
         key={panel._key || index}
-        title={panel.heading || (kind === 'varsel' ? 'Varsel' : 'Krise')}
+        title={panel.heading || 'Krise'}
         titleAs="h2"
         color={appearance.color}
         variant={appearance.variant}

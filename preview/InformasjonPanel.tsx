@@ -16,6 +16,7 @@ import {sectionIconMap} from '../components/SectionIcons'
 import {ArticleButton, type ArticleButtonBlock, type ButtonDestination} from './ArticleButton'
 import {ArticleLinkList, type ArticleLinkListBlock} from './ArticleLinkList'
 import {withAlignmentOffset} from './panelUtilities'
+import {fixedPanelAppearance} from './fixedPanelAppearance'
 import './numberedAccordion.css'
 import './openClose.css'
 import './informasjonPanel.css'
@@ -65,6 +66,7 @@ function getReferenceIds(value: unknown): string[] {
 }
 
 type InformasjonPanelProps = {
+  kind?: 'informasjon' | 'varsel'
   heading?: string
   color?: string
   icon?: string
@@ -74,6 +76,7 @@ type InformasjonPanelProps = {
 }
 
 export function InformasjonPanel({
+  kind = 'informasjon',
   heading,
   color,
   icon,
@@ -81,8 +84,12 @@ export function InformasjonPanel({
   titleAs = 'h2',
   destinationContext,
 }: InformasjonPanelProps) {
-  const appearance = colorMap[color || 'denim'] || colorMap.denim
-  const Icon = icon ? sectionIconMap[icon] : undefined
+  const appearance = kind === 'varsel'
+    ? fixedPanelAppearance.varsel
+    : colorMap[color || 'denim'] || colorMap.denim
+  const Icon = kind === 'varsel'
+    ? fixedPanelAppearance.varsel.icon
+    : icon ? sectionIconMap[icon] : undefined
   const client = useClient({apiVersion: '2026-09-10'})
   const imageBuilder = createImageUrlBuilder(client)
   const [localDestinationContext, setLocalDestinationContext] = useState<DestinationContext>({
@@ -352,7 +359,7 @@ export function InformasjonPanel({
   return (
     <div style={panelStyle}>
       <Panel
-        title={heading || 'Informasjon'}
+        title={heading || (kind === 'varsel' ? 'Varselspanel' : 'Informasjon')}
         titleAs={titleAs}
         color={appearance.color}
         variant={appearance.variant}

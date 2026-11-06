@@ -157,7 +157,7 @@ export type ArticleDocument = {
 }
 
 const panelTitle: Record<PanelBlock['_type'], string> = {
-  varsel: 'Varsel',
+  varsel: 'Varselspanel',
   krise: 'Krise',
 }
 
@@ -761,12 +761,13 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
       )
     }
 
-    if (block._type === 'informasjon') {
+    if (block._type === 'informasjon' || block._type === 'varsel') {
       return (
         <InformasjonPanel
+          kind={block._type}
           heading={block.heading}
-          color={block.color}
-          icon={block.icon}
+          color={block._type === 'informasjon' ? block.color : undefined}
+          icon={block._type === 'informasjon' ? block.icon : undefined}
           body={block.text}
           titleAs={nested ? 'h3' : 'h2'}
           destinationContext={{

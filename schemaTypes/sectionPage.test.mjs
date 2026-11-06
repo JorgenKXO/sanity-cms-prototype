@@ -5,7 +5,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url'
 import {build} from 'esbuild'
 import {firstValueFrom, of} from 'rxjs'
 import {createClient} from '@sanity/client'
-import {ChevronDownIcon, LinkIcon, UlistIcon} from '@sanity/icons'
+import {ChevronDownIcon, LinkIcon, UlistIcon, WarningOutlineIcon} from '@sanity/icons'
 import {resolveConfig, unset, validateDocument} from 'sanity'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
@@ -26,7 +26,7 @@ await build({
       import {articleType} from './schemaTypes/articleType'
       import {pageSectionType, sectionPageType} from './schemaTypes/sectionPageType'
       import {defineType} from 'sanity'
-      import {informasjonPanelType, rettskilderPanelType} from './schemaTypes/panelTypes'
+      import {informasjonPanelType, rettskilderPanelType, varselPanelType} from './schemaTypes/panelTypes'
       import {
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType, articleOpenCloseContentBlockType,
@@ -43,7 +43,7 @@ await build({
         fields: [{name: 'title', type: 'string'}],
       })
       export const schemaTypes = [
-        articleType, pageSectionType, sectionPageType, rettskilderPanelType, informasjonPanelType,
+        articleType, pageSectionType, sectionPageType, rettskilderPanelType, informasjonPanelType, varselPanelType,
         articleTextContentBlockType, articleImageContentBlockType, articleInformationContentBlockType,
         articleButtonContentBlockType, articleOpenCloseContentBlockType, navigationPageTestType,
         articleAccordionGroupContentBlockType,
@@ -271,6 +271,29 @@ test('allows removing and reselecting icons in sections and both information pan
     assert.equal(readOnly.props.button.props.disabled, true)
     assert.equal(readOnly.props.menu.props.children[0].props.disabled, true)
     assert.ok(readOnly.props.menu.props.children[1].every((item) => item.props.disabled))
+  }
+})
+
+test('warning panels reuse information content without accordions or appearance choices', () => {
+  const information = schemaTypes.find((type) => type.name === 'informasjon')
+  const expectedContent = information.fields.find((field) => field.name === 'text').of
+    .filter((member) => member.type !== 'accordionGroup')
+  const article = schemaTypes.find((type) => type.name === 'article')
+  const warning = article.fields.find((field) => field.name === 'content').of
+    .find((member) => member.name === 'varsel')
+  const navigationWarning = schemaTypes.find((type) => type.name === 'varselPanel')
+
+  for (const [type, fieldName] of [[warning, 'text'], [navigationWarning, 'body']]) {
+    assert.equal(type.title, 'Varselspanel')
+    assert.equal(type.icon, WarningOutlineIcon)
+    assert.ok(!type.fields.some((field) => ['color', 'icon'].includes(field.name)))
+    const field = type.fields.find((item) => item.name === fieldName)
+    assert.deepEqual(field.of, expectedContent)
+    assert.deepEqual(field.of.map((member) => member.type), [
+      'block', 'openClose', 'knapp', 'lenkeliste',
+    ])
+    assert.equal(type.preview.prepare({}).title, 'Varselspanel')
+    assert.equal(type.preview.prepare({title: 'Viktig frist'}).title, 'Viktig frist')
   }
 })
 

@@ -53,6 +53,15 @@ type InformasjonBlock = {
   text?: PortableTextBlock[]
 }
 
+type InformasjonPanelBlock = {
+  _key?: string
+  _type: 'informasjonPanel'
+  heading?: string
+  color?: string
+  icon?: string
+  body?: PortableTextBlock[]
+}
+
 type ArticleOpenCloseBlock = {
   _key?: string
   _type: 'openClose'
@@ -116,6 +125,7 @@ type SharedContentBlock = TekstBlock | BildeBlock | InformasjonBlock
 type SharedContentReference = {_key?: string; _type: 'reference'; _ref: string}
 type InnholdBlock =
   | SharedContentBlock
+  | InformasjonPanelBlock
   | BildeOgTekstBlock
   | BlockquoteBlock
   | ExampleBlock
@@ -503,7 +513,11 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
     ? builder.image(article.heroImage).width(400).fit('max').auto('format').url()
     : undefined
 
-  function renderContentBlock(block: InnholdBlock, nested = false) {
+  function renderContentBlock(
+    block: InnholdBlock,
+    nested = false,
+    informationPanelInDisclosure = false,
+  ) {
     if (block._type === 'reference') {
       const sharedContent = sharedContentById[block._ref]
       if (!sharedContent) {
@@ -569,15 +583,20 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
         return <Link href={`/${slug}`}>{text}</Link>
       },
     } satisfies NonNullable<PortableTextComponents['marks']>
-    const renderEmbeddedBlock = (value: unknown) => {
+    const renderEmbeddedBlock = (value: unknown, isInformationPanelInDisclosure = false) => {
       if (!isRecord(value)) return null
       switch (getString(value, '_type')) {
+        case 'informasjonPanel':
         case 'openClose':
         case 'bilde':
         case 'eksempel':
         case 'knapp':
         case 'lenkeliste':
-          return renderContentBlock(value as InnholdBlock, nested)
+          return renderContentBlock(
+            value as InnholdBlock,
+            nested,
+            isInformationPanelInDisclosure,
+          )
         default:
           return null
       }
@@ -592,6 +611,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
         knapp: ({value}) => renderEmbeddedBlock(value),
         lenkeliste: ({value}) => renderEmbeddedBlock(value),
         openClose: ({value}) => renderEmbeddedBlock(value),
+        informasjonPanel: ({value}) => renderEmbeddedBlock(value, true),
       },
     }
     const panelComponents: PortableTextComponents = nested
@@ -616,6 +636,24 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
     }
     if (block._type === 'tekst') {
       return block.text ? <PortableText value={block.text} components={contentComponents} /> : null
+    }
+
+    if (block._type === 'informasjonPanel') {
+      return (
+        <InformasjonPanel
+          heading={block.heading}
+          color={block.color}
+          icon={block.icon}
+          body={block.body}
+          titleAs={nested || informationPanelInDisclosure ? 'h3' : 'h2'}
+          stackedIcon={informationPanelInDisclosure}
+          destinationContext={{
+            destinationsById,
+            error: destinationError,
+            isLoading: isLoadingDestinations,
+          }}
+        />
+      )
     }
 
     if (block._type === 'openClose') {
@@ -674,7 +712,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
       })
 
       return (
-        <Accordion size="large">
+        <Accordion size="large" className="article-accordion-group">
           {block.showNumbers ? <div role="list">{items}</div> : items}
         </Accordion>
       )

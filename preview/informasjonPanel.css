@@ -1,5 +1,16 @@
 @media (min-width: 1024px) {
-  .information-panel-with-icon.information-panel-with-icon {
+  .information-panel-with-icon.information-panel-with-icon:not(.information-panel-icon-above) {
     column-gap: var(--spacing-xxl);
   }
+}
+
+.information-panel-icon-above.information-panel-icon-above {
+  grid-template: 'graphic' 'article' / 1fr;
+  row-gap: var(--spacing-m);
+}
+
+.information-panel-icon-above.information-panel-icon-above > :first-child {
+  width: 100%;
+  max-width: var(--semantic-responsive-article);
+  margin-inline: auto;
 }

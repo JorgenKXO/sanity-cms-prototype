@@ -196,6 +196,16 @@ test('renders information panel links and caps expanded panels at the Panel maxi
       }
       dom.window.close()
     }
+
+    const nestedHtml = renderToStaticMarkup(
+      createElement(InformasjonPanel, {body, color, icon: 'info', stackedIcon: true}),
+    )
+    const nestedDom = new JSDOM(nestedHtml)
+    const nestedWrapper = nestedDom.window.document.body.firstElementChild
+    const nestedPanel = nestedWrapper.querySelector('.information-panel')
+    assert.ok(nestedPanel.classList.contains('information-panel-icon-above'))
+    assert.equal(nestedWrapper.getAttribute('style'), null)
+    nestedDom.window.close()
   }
 })
 
@@ -816,6 +826,44 @@ test('renders accordion groups with large accordions and their nested rich text'
   assert.ok(html.includes('large'), html)
 })
 
+test('renders information panels inside accordion content without breaking out', () => {
+  const informationPanel = {
+    _key: 'information-panel',
+    _type: 'informasjonPanel',
+    heading: 'Informasjon inne i en boks',
+    color: 'forest',
+    icon: 'info',
+    body: [{
+      _key: 'body',
+      _type: 'block',
+      style: 'normal',
+      markDefs: [],
+      children: [{_key: 'text', _type: 'span', text: 'Panelinnhold', marks: []}],
+    }],
+  }
+  const html = render(ArticlePreview, {
+    title: 'Artikkel med informasjonspaneler',
+    content: [
+      {
+        _key: 'accordion',
+        _type: 'accordionGroup',
+        accordions: [{
+          _key: 'accordion-item',
+          title: 'Accordion',
+          content: [informationPanel],
+        }],
+      },
+    ],
+  })
+  const dom = new JSDOM(html)
+  const panels = [...dom.window.document.querySelectorAll('.information-panel-icon-above')]
+
+  assert.equal(panels.length, 1, html)
+  assert.equal(panels[0].parentElement.getAttribute('style'), null)
+  assert.ok(panels[0].textContent.includes('Panelinnhold'))
+  dom.window.close()
+})
+
 test('renders existing content blocks and example rich text inside accordion portable text', () => {
   const html = render(ArticlePreview, {
     title: 'Artikkel med rik accordion',
@@ -984,6 +1032,20 @@ test('renders rich content blocks inside OpenClose portable text', async () => {
               }],
             }],
           },
+          {
+            _key: 'information-panel',
+            _type: 'informasjonPanel',
+            heading: 'Informasjon inne i Åpne/Lukke',
+            color: 'forest',
+            icon: 'info',
+            body: [{
+              _key: 'information-panel-text',
+              _type: 'block',
+              style: 'normal',
+              markDefs: [],
+              children: [{_key: 'span', _type: 'span', text: 'Informasjonspanelinnhold', marks: []}],
+            }],
+          },
         ],
       }] }},
     })))
@@ -996,6 +1058,10 @@ test('renders rich content blocks inside OpenClose portable text', async () => {
 
     assert.ok(document.querySelector('img[alt=""]'))
     assert.ok(document.querySelector('blockquote')?.textContent.includes('Eksempelinnhold'))
+    const informationPanel = document.querySelector('.information-panel-icon-above')
+    assert.ok(informationPanel)
+    assert.equal(informationPanel.parentElement.getAttribute('style'), null)
+    assert.match(informationPanel.textContent, /Informasjonspanelinnhold/)
     assert.match(document.body.textContent, /Legg til minst ett lenkemål/)
     assert.match(document.body.textContent, /Legg til minst én side/)
     const nestedOpenCloseButton = [...document.querySelectorAll('button[aria-expanded]')]
@@ -1041,6 +1107,30 @@ test('only numbers accordion groups when enabled and restarts numbering for each
   assert.equal((html.match(/class="numbered-accordion-marker">1</g) || []).length, 2)
   assert.equal((html.match(/class="numbered-accordion-marker">2</g) || []).length, 2)
   assert.equal((html.match(/aria-expanded="false"/g) || []).length, 4)
+})
+
+test('adds spacing after accordion groups before information panels', async () => {
+  const css = await readFile(new URL('./numberedAccordion.css', import.meta.url), 'utf8')
+  for (const showNumbers of [false, true]) {
+    const group = {
+      _key: 'group', _type: 'accordionGroup', showNumbers,
+      accordions: [{_key: 'item', title: 'Spørsmål', content: text.text}],
+    }
+    const previews = [
+      render(ArticlePreview, {content: [
+        group,
+        {_key: 'panel', _type: 'informasjon', heading: 'Informasjon', icon: 'info'},
+      ]}),
+      renderToStaticMarkup(createElement(InformasjonPanel, {body: [group]})),
+    ]
+    for (const html of previews) {
+      const dom = new JSDOM(`<style>${css}</style>${html}`)
+      const accordion = dom.window.document.querySelector('.article-accordion-group')
+      assert.ok(accordion)
+      assert.equal(dom.window.getComputedStyle(accordion).marginBlockEnd, 'var(--spacing-l)')
+      dom.window.close()
+    }
+  }
 })
 
 test('supports numbered accordion groups inside article sections and incomplete drafts', () => {

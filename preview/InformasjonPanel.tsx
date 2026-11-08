@@ -72,6 +72,7 @@ type InformasjonPanelProps = {
   icon?: string
   body?: PortableTextBlock[]
   titleAs?: 'h2' | 'h3'
+  stackedIcon?: boolean
   destinationContext?: DestinationContext
 }
 
@@ -82,6 +83,7 @@ export function InformasjonPanel({
   icon,
   body,
   titleAs = 'h2',
+  stackedIcon = false,
   destinationContext,
 }: InformasjonPanelProps) {
   const appearance = kind === 'varsel'
@@ -139,7 +141,7 @@ export function InformasjonPanel({
   }, [client, destinationIdsKey, hasDestinationContext])
 
   const destinations = destinationContext || localDestinationContext
-  const panelStyle: CSSProperties | undefined = Icon
+  const panelStyle: CSSProperties | undefined = Icon && !stackedIcon
     ? {
         width:
           'min(var(--container-m), var(--semantic-responsive-container), calc(100vw - var(--spacing-m) - var(--spacing-m)))',
@@ -278,7 +280,7 @@ export function InformasjonPanel({
           ) : item
         })
         return (
-          <Accordion size="large">
+          <Accordion size="large" className="article-accordion-group">
             {showNumbers ? <div role="list">{items}</div> : items}
           </Accordion>
         )
@@ -292,6 +294,20 @@ export function InformasjonPanel({
             isLoading={destinations.isLoading}
           />
         ) : null,
+      informasjonPanel: ({value}) => {
+        if (!isRecord(value)) return null
+        return (
+        <InformasjonPanel
+          heading={typeof value.heading === 'string' ? value.heading : undefined}
+          color={typeof value.color === 'string' ? value.color : undefined}
+          icon={typeof value.icon === 'string' ? value.icon : undefined}
+          body={Array.isArray(value.body) ? (value.body as PortableTextBlock[]) : undefined}
+          titleAs="h3"
+          stackedIcon
+          destinationContext={destinations}
+        />
+        )
+      },
       lenkeliste: ({value}) =>
         isRecord(value) && value._type === 'lenkeliste' ? (
           <ArticleLinkList
@@ -363,7 +379,13 @@ export function InformasjonPanel({
         titleAs={titleAs}
         color={appearance.color}
         variant={appearance.variant}
-        className={Icon ? 'information-panel information-panel-with-icon' : 'information-panel'}
+        className={[
+          'information-panel',
+          Icon ? 'information-panel-with-icon' : '',
+          Icon && stackedIcon ? 'information-panel-icon-above' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         padding="xl"
         spacing="l"
         renderIcon={Icon ? () => withAlignmentOffset(<Icon size="extraLarge" />) : undefined}

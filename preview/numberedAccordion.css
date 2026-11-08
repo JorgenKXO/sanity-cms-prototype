@@ -1,3 +1,7 @@
+.article-accordion-group {
+  margin-block-end: var(--spacing-l);
+}
+
 .numbered-accordion-row {
   /* Match the centre of the first title line, including the accordion's top border. */
   --numbered-accordion-centre: calc(

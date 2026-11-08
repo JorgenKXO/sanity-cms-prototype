@@ -566,7 +566,7 @@ test('defines accordion groups with required nested accordions and no size setti
   const content = accordion.fields.find((field) => field.name === 'content')
   assert.deepEqual(
     content.of.map((member) => member.type || member.name),
-    ['block', 'openClose', 'bilde', 'eksempel', 'knapp', 'lenkeliste'],
+    ['block', 'informasjonPanel', 'openClose', 'bilde', 'eksempel', 'knapp', 'lenkeliste'],
   )
   assert.deepEqual(
     content.of[0],
@@ -616,7 +616,7 @@ test('supports OpenClose with required heading and content and no size setting',
     .fields.find((field) => field.name === 'content')
   assert.deepEqual(
     openCloseContent.of.map((member) => member.type || member.name),
-    ['block', 'bilde', 'eksempel', 'knapp', 'lenkeliste'],
+    ['block', 'informasjonPanel', 'bilde', 'eksempel', 'knapp', 'lenkeliste'],
   )
   assert.deepEqual(
     openCloseContent.of.map((member) => member.type || member.name),

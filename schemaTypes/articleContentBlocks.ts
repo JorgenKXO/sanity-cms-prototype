@@ -94,6 +94,7 @@ const exampleTextBlock = defineArrayMember({
 
 const nestedRichTextContentBlocks = [
   exampleTextBlock,
+  defineArrayMember({type: 'informasjonPanel'}),
   defineArrayMember({type: 'openClose'}),
   defineArrayMember({type: 'bilde'}),
   defineArrayMember({type: 'eksempel'}),
@@ -724,7 +725,7 @@ export const articleOpenCloseContentBlockType = defineType({
       name: 'content',
       title: 'Innhold',
       description:
-        'Rik tekst med samme formateringsvalg som Accordion, samt bilde, eksempel, knapp og lenkeliste. Åpne/Lukke kan ikke inneholde en annen Åpne/Lukke.',
+        'Rik tekst med samme formateringsvalg som Accordion, samt informasjonspanel, bilde, eksempel, knapp og lenkeliste. Åpne/Lukke kan ikke inneholde en annen Åpne/Lukke.',
       type: 'array',
       of: nestedRichTextContentBlocks.filter((member) => member.type !== 'openClose'),
       validation: (rule) => rule.required().min(1),
@@ -781,7 +782,7 @@ export const articleAccordionGroupContentBlockType = defineType({
               name: 'content',
               title: 'Innhold',
               description:
-                'Rik tekst med samme formateringsvalg som Eksempel, samt Åpne/Lukke, bilde, eksempel, knapp og lenkeliste.',
+                'Rik tekst med samme formateringsvalg som Eksempel, samt informasjonspanel, Åpne/Lukke, bilde, eksempel, knapp og lenkeliste.',
               type: 'array',
               of: nestedRichTextContentBlocks,
               validation: (rule) => rule.required().min(1),

@@ -175,6 +175,51 @@ test('requires section content, but heading and icon are optional', async () => 
   }
 })
 
+test('supports the navigation-page highlighted intro on articles and section pages', async () => {
+  for (const typeName of ['article', 'sectionPage']) {
+    const type = schemaTypes.find((schemaType) => schemaType.name === typeName)
+    const heroGroup = type.groups.find((group) => group.name === 'hero')
+    const heroEnabled = type.fields.find((field) => field.name === 'heroEnabled')
+    const heroBackgroundColor = type.fields.find((field) => field.name === 'heroBackgroundColor')
+    const heroImage = type.fields.find((field) => field.name === 'heroImage')
+
+    assert.equal(heroGroup.title, 'Fremhevet intro')
+    assert.equal(heroEnabled.group, 'hero')
+    assert.equal(heroEnabled.initialValue, false)
+    assert.equal(heroBackgroundColor.initialValue, 'white')
+    assert.equal(heroBackgroundColor.hidden({parent: {heroEnabled: false}}), true)
+    assert.equal(heroBackgroundColor.hidden({parent: {heroEnabled: true}}), false)
+    assert.equal(heroImage.hidden({parent: {heroEnabled: false}}), true)
+    assert.equal(heroImage.hidden({parent: {heroEnabled: true}}), false)
+    assert.deepEqual(
+      heroBackgroundColor.options.list.map(({value}) => value),
+      ['blue', 'green', 'yellow', 'white'],
+    )
+  }
+
+  const validDocument = {
+    ...document([section(1)]),
+    heroEnabled: true,
+    heroBackgroundColor: 'blue',
+  }
+  assert.deepEqual(
+    (await validateDocument({document: validDocument, workspace, environment: 'cli'}))
+      .filter((marker) => marker.level === 'error'),
+    [],
+  )
+
+  const missingBackground = {
+    ...validDocument,
+    heroBackgroundColor: undefined,
+  }
+  const validationErrors = (await validateDocument({
+    document: missingBackground,
+    workspace,
+    environment: 'cli',
+  })).filter((marker) => marker.level === 'error')
+  assert.ok(validationErrors.some((marker) => marker.path[0] === 'heroBackgroundColor'))
+})
+
 test('does not define optional editor names on content blocks', () => {
   for (const type of schemaTypes) {
     assert.equal(

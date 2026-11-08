@@ -2,6 +2,7 @@ import {BlockContentIcon, EarthGlobeIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {ContentBuilderInput} from '../components/ContentBuilderInput'
 import {articleContentBlocks} from './articleContentBlocks'
+import {highlightedIntroFields, highlightedIntroGroup} from './shared/highlightedIntroFields'
 export {articleTextBlock} from './articleContentBlocks'
 
 import {kategoriOptions} from './kategoriOptions'
@@ -38,6 +39,7 @@ export const articleType = defineType({
   title: 'Artikkel',
   type: 'document',
   groups: [
+    highlightedIntroGroup(),
     {name: 'content', title: 'Hovedinnhold', icon: BlockContentIcon},
     {name: 'navigationSeo', title: 'Kategori og SEO', icon: EarthGlobeIcon},
   ],
@@ -64,6 +66,7 @@ export const articleType = defineType({
       of: [ingressBlock],
       validation: (rule) => rule.required(),
     }),
+    ...highlightedIntroFields(),
     defineField({
       name: 'kategori',
       title: 'Kategori',

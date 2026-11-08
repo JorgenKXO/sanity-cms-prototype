@@ -9,6 +9,7 @@ import type {CSSProperties, JSX} from 'react'
 import {useEffect, useState} from 'react'
 import {useClient} from 'sanity'
 import {fixedPanelAppearance} from './fixedPanelAppearance'
+import {HighlightedIntro} from './HighlightedIntro'
 import {InformasjonPanel} from './InformasjonPanel'
 import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
@@ -77,15 +78,6 @@ type ReferencedPage = {
   slug?: {current?: string}
 }
 
-// Bakgrunnsfargen på den fremhevede introen, som ekte palette-fargetokens
-// (verifisert mot @skatteetaten/ds-core-designtokens/designtokens/palette.css).
-const heroBackgroundMap: Record<string, string> = {
-  blue: 'var(--palette-denim-10)',
-  green: 'var(--palette-forest-10)',
-  yellow: 'var(--palette-ochre-10)',
-  white: 'var(--semantic-page-background)',
-}
-
 type NavigationPagePreviewProps = {
   document?: {
     displayed?: NavigationPageDocument
@@ -129,24 +121,6 @@ const styles: Record<string, CSSProperties> = {
     maxWidth: 'var(--semantic-responsive-wide-content)',
     margin: '0 auto',
     padding: 'var(--spacing-xl) var(--spacing-m) var(--spacing-mega)',
-  },
-  hero: {
-    display: 'grid',
-    gridTemplateColumns: 'minmax(0, 1fr) auto',
-    gap: 'var(--spacing-l)',
-    alignItems: 'center',
-    maxWidth: 'var(--semantic-responsive-wide-content)',
-    margin: '0 auto',
-    padding: 'var(--spacing-xl) var(--spacing-m)',
-  },
-  heroBand: {
-    width: '100%',
-  },
-  heroImage: {
-    display: 'block',
-    maxWidth: '220px',
-    height: 'auto',
-    borderRadius: '4px',
   },
   empty: {
     padding: 'var(--spacing-xl)',
@@ -395,20 +369,10 @@ export function NavigationPagePreview(props: NavigationPagePreviewProps) {
   return (
     <main style={styles.shell}>
       {page.heroEnabled ? (
-        <div
-          style={{
-            ...styles.heroBand,
-            background: heroBackgroundMap[page.heroBackgroundColor || 'white'],
-          }}
-        >
-          <div style={styles.hero}>
-            <div>
-              <Heading as="h1" level={1}>{page.title || 'Untitled navigation page'}</Heading>
-              {page.ingress ? <PortableText value={page.ingress} components={ingressComponents} /> : null}
-            </div>
-            {heroImageSrc ? <img src={heroImageSrc} alt="" style={styles.heroImage} /> : null}
-          </div>
-        </div>
+        <HighlightedIntro backgroundColor={page.heroBackgroundColor} imageUrl={heroImageSrc}>
+          <Heading as="h1" level={1}>{page.title || 'Untitled navigation page'}</Heading>
+          {page.ingress ? <PortableText value={page.ingress} components={ingressComponents} /> : null}
+        </HighlightedIntro>
       ) : null}
 
       <div style={styles.page}>

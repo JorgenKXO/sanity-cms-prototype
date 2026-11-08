@@ -14,6 +14,7 @@ import type {CSSProperties, JSX} from 'react'
 import {useEffect, useState} from 'react'
 import {useClient} from 'sanity'
 import {fixedPanelAppearance} from './fixedPanelAppearance'
+import {HighlightedIntro} from './HighlightedIntro'
 import {InformasjonPanel} from './InformasjonPanel'
 import {withAlignmentOffset} from './panelUtilities'
 import {SectionSignIcon} from './SectionSignIcon'
@@ -145,6 +146,9 @@ type SharedContentDocument = {
 export type ArticleDocument = {
   title?: string
   ingress?: PortableTextBlock[]
+  heroEnabled?: boolean
+  heroBackgroundColor?: string
+  heroImage?: SanityImageSource
   breadcrumbs?: Breadcrumb[]
   content?: ArticleContentBlock[]
   updatedAt?: string
@@ -484,6 +488,20 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
   }
 
   const breadcrumbs = article.breadcrumbs?.filter((item) => item.label) || []
+  const breadcrumbTrail = breadcrumbs.length > 0 ? (
+    <Breadcrumbs>
+      <Breadcrumbs.List showLastItemAsCurrentPage>
+        {breadcrumbs.map((item) => (
+          <Breadcrumbs.Item key={item._key || item.label}>
+            <Breadcrumbs.Link href={item.href || '#'}>{item.label || ''}</Breadcrumbs.Link>
+          </Breadcrumbs.Item>
+        ))}
+      </Breadcrumbs.List>
+    </Breadcrumbs>
+  ) : null
+  const heroImageSrc = article.heroImage
+    ? builder.image(article.heroImage).width(400).fit('max').auto('format').url()
+    : undefined
 
   function renderContentBlock(block: InnholdBlock, nested = false) {
     if (block._type === 'reference') {
@@ -881,25 +899,30 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
           }
         }
       `}</style>
-      <div style={styles.page}>
-        {breadcrumbs.length > 0 ? (
-          <Breadcrumbs>
-            <Breadcrumbs.List showLastItemAsCurrentPage>
-              {breadcrumbs.map((item) => (
-                <Breadcrumbs.Item key={item._key || item.label}>
-                  <Breadcrumbs.Link href={item.href || '#'}>{item.label || ''}</Breadcrumbs.Link>
-                </Breadcrumbs.Item>
-              ))}
-            </Breadcrumbs.List>
-          </Breadcrumbs>
-        ) : null}
-
-        <article style={styles.article}>
+      {article.heroEnabled ? (
+        <HighlightedIntro backgroundColor={article.heroBackgroundColor} imageUrl={heroImageSrc}>
+          {breadcrumbTrail}
           <Heading as="h1" level={1}>
             {article.title || 'Untitled article'}
           </Heading>
           {article.ingress ? (
             <PortableText value={article.ingress} components={ingressComponents} />
+          ) : null}
+        </HighlightedIntro>
+      ) : null}
+      <div style={styles.page}>
+        {!article.heroEnabled ? breadcrumbTrail : null}
+
+        <article style={styles.article}>
+          {!article.heroEnabled ? (
+            <>
+              <Heading as="h1" level={1}>
+                {article.title || 'Untitled article'}
+              </Heading>
+              {article.ingress ? (
+                <PortableText value={article.ingress} components={ingressComponents} />
+              ) : null}
+            </>
           ) : null}
           {sharedContentError ? (
             <p role="alert">Kunne ikke hente delt innhold: {sharedContentError}</p>

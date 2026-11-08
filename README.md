@@ -65,6 +65,18 @@ The article preview intentionally omits the header, footer, feedback widget, and
 
 The preview's typography and link styling (font stack, colors, weights, sizes) are sampled from skatteetaten.no's live article template, for internal Skatteetaten prototyping. The header, footer, feedback widget, and top-of-page button are still intentionally left out. Article body text is placeholder content — replace it with real content as needed.
 
+## Fremhevet intro
+
+Artikler, seksjonssider og navigasjonssider har fanen **Fremhevet intro**.
+Slå på funksjonen for å vise tittel og ingress med blå, grønn, gul eller hvit
+bakgrunn og et valgfritt dekorativt bilde. Bakgrunnsfarge må velges når
+funksjonen er aktivert. Bildet er skjult for skjermlesere.
+
+Når funksjonen er av, beholdes det vanlige introoppsettet. Eksisterende
+dokumenter endres ikke automatisk. Studio-forhåndsvisningene bruker samme
+introkomponent; en separat publiseringsfrontend må også støtte feltene
+`heroEnabled`, `heroBackgroundColor` og `heroImage` på alle tre sidetypene.
+
 ## Delt innhold i artikler
 
 Delt innhold er skjult fra Studio-strukturen og tilbys ikke lenger i

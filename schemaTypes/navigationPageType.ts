@@ -3,13 +3,13 @@ import {
   DocumentIcon,
   EarthGlobeIcon,
   MasterDetailIcon,
-  PresentationIcon,
 } from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 import {kategoriOptions} from './kategoriOptions'
 import {NavigationContentInput} from '../components/NavigationContentInput'
 import {NavigationTileReferenceInput} from '../components/NavigationTileReferenceInput'
 import {navigationTileFields} from './shared/navigationTileFields'
+import {highlightedIntroFields, highlightedIntroGroup} from './shared/highlightedIntroFields'
 
 // Ingressen tillater kun ren tekst, uten formatering eller lenker.
 const ingressBlock = defineArrayMember({
@@ -105,7 +105,7 @@ export const navigationPageType = defineType({
   type: 'document',
   icon: MasterDetailIcon,
   groups: [
-    {name: 'hero', title: 'Fremhevet intro', icon: PresentationIcon},
+    highlightedIntroGroup(),
     {name: 'content', title: 'Hovedinnhold', icon: BlockContentIcon},
     {name: 'navigationSeo', title: 'Kategori og SEO', icon: EarthGlobeIcon},
   ],
@@ -130,48 +130,7 @@ export const navigationPageType = defineType({
       of: [ingressBlock],
       validation: (rule) => rule.required(),
     }),
-    defineField({
-      name: 'heroEnabled',
-      title: 'Fremhevet intro',
-      description: 'Intro med bakgrunnsfarge og valgfritt bilde.',
-      type: 'boolean',
-      group: 'hero',
-      initialValue: false,
-    }),
-    defineField({
-      name: 'heroBackgroundColor',
-      title: 'Bakgrunnsfarge',
-      type: 'string',
-      group: 'hero',
-      options: {
-        list: [
-          {title: 'Blå', value: 'blue'},
-          {title: 'Grønn', value: 'green'},
-          {title: 'Gul', value: 'yellow'},
-          {title: 'Hvit', value: 'white'},
-        ],
-        layout: 'dropdown',
-      },
-      initialValue: 'white',
-      hidden: ({parent}) => !(parent as {heroEnabled?: boolean} | undefined)?.heroEnabled,
-      validation: (rule) =>
-        rule.custom((value, context) => {
-          const parent = context.parent as {heroEnabled?: boolean} | undefined
-          if (parent?.heroEnabled && !value) {
-            return 'Velg en bakgrunnsfarge når fremhevet intro er aktivert.'
-          }
-          return true
-        }),
-    }),
-    defineField({
-      name: 'heroImage',
-      title: 'Bilde/illustrasjon',
-      description: 'Dekorativt bilde, skjult for skjermlesere.',
-      type: 'image',
-      group: 'hero',
-      options: {hotspot: true},
-      hidden: ({parent}) => !(parent as {heroEnabled?: boolean} | undefined)?.heroEnabled,
-    }),
+    ...highlightedIntroFields(),
     defineField({
       name: 'tiles',
       title: 'Hovedinnhold',

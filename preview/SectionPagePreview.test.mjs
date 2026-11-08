@@ -112,6 +112,62 @@ const render = (Component, displayed) => renderToStaticMarkup(
   createElement(Component, {document: {displayed}}),
 )
 
+test('renders the same highlighted intro on articles, section pages and navigation pages', () => {
+  const ingress = [{
+    _key: 'intro',
+    _type: 'block',
+    style: 'normal',
+    markDefs: [],
+    children: [{_key: 'text', _type: 'span', text: 'Kort introduksjon', marks: []}],
+  }]
+  const heroImage = {
+    _type: 'image',
+    asset: {_type: 'reference', _ref: 'image-test-10x10-png'},
+  }
+  const pages = [
+    [ArticlePreview, {content: []}],
+    [SectionPagePreview, {sections: []}],
+    [NavigationPagePreview, {tiles: []}],
+  ]
+
+  const backgrounds = {
+    blue: 'var(--palette-denim-10)',
+    green: 'var(--palette-forest-10)',
+    yellow: 'var(--palette-ochre-10)',
+    white: 'var(--semantic-page-background)',
+  }
+  for (const [Preview, pageContent] of pages) {
+    for (const [color, expectedBackground] of Object.entries(backgrounds)) {
+      const html = render(Preview, {
+        ...pageContent,
+        title: 'Testside',
+        ingress,
+        heroEnabled: true,
+        heroBackgroundColor: color,
+        heroImage,
+      })
+      const dom = new JSDOM(html)
+      const hero = dom.window.document.querySelector('main > div')
+
+      assert.equal(hero?.style.background, expectedBackground)
+      assert.equal(hero?.querySelector('h1')?.textContent, 'Testside')
+      assert.ok(hero?.textContent.includes('Kort introduksjon'))
+      assert.equal(hero?.querySelector('img')?.getAttribute('alt'), '')
+      assert.match(hero?.querySelector('img')?.getAttribute('src') || '', /test-10x10/)
+      dom.window.close()
+    }
+
+    const withoutHero = render(Preview, {
+      ...pageContent,
+      title: 'Testside',
+      ingress,
+      heroEnabled: false,
+    })
+    assert.ok(!withoutHero.includes('var(--palette-denim-10)'))
+    assert.match(withoutHero, /<h1\b[^>]*>Testside<\/h1>/)
+  }
+})
+
 test('renders information panel links and caps expanded panels at the Panel maximum width', () => {
   const body = [{
     _key: 'paragraph',

@@ -84,6 +84,12 @@ await build({
 const {schemaTypes, ContentBuilderInput, NavigationContentInput} = await import(
   pathToFileURL(`${directory}/schemas.mjs`).href,
 )
+test('hides the manually managed last-updated field from article and section pages', () => {
+  for (const name of ['article', 'sectionPage']) {
+    const type = schemaTypes.find((schemaType) => schemaType.name === name)
+    assert.equal(type.fields.some((field) => field.name === 'updatedAt'), false)
+  }
+})
 const [workspace] = await firstValueFrom(
   resolveConfig({
     projectId: 'test1234',

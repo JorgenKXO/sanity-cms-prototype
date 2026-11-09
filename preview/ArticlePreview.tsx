@@ -161,7 +161,6 @@ export type ArticleDocument = {
   heroImage?: SanityImageSource
   breadcrumbs?: Breadcrumb[]
   content?: ArticleContentBlock[]
-  updatedAt?: string
   sections?: {
     _key: string
     heading?: string

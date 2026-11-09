@@ -25,7 +25,7 @@ export default defineConfig({
   ],
   schema: {
     types: schemaTypes,
-    // Gjør det mulig å opprette artikler/navigasjonssider med kategori forhåndsutfylt
+    // Gjør det mulig å opprette artikler/seksjonssider med kategori forhåndsutfylt
     // når de opprettes fra en kategorimappe i strukturen.
     templates: (prev): Template[] => [
       ...prev,
@@ -43,34 +43,15 @@ export default defineConfig({
         parameters: [{name: 'kategori', type: 'string'}],
         value: (params: {kategori?: string}) => ({kategori: params.kategori}),
       },
-      {
-        id: 'navigationPage-with-kategori',
-        title: 'Navigasjonsside med kategori',
-        schemaType: 'navigationPage',
-        parameters: [{name: 'kategori', type: 'string'}],
-        value: (params: {kategori?: string}) => ({kategori: params.kategori}),
-      },
-      {
-        id: 'forside-ny',
-        title: 'Forside',
-        schemaType: 'forside',
-        value: () => ({screenReaderTitle: 'Forside'}),
-      },
     ],
   },
   document: {
-    newDocumentOptions: (prev, {creationContext}) => {
-      if (creationContext.type === 'structure' && creationContext.schemaType === 'forside') {
-        return prev.filter((option) => option.templateId === 'forside-ny')
-      }
-
-      return prev.filter(
-        (option) =>
-          option.templateId !== 'sharedContent' &&
-          option.templateId !== 'forside' &&
-          !option.templateId.startsWith('forside-'),
-      )
-    },
+    newDocumentOptions: (prev) =>
+      prev.filter((option) =>
+        ['article', 'article-with-kategori', 'sectionPage', 'sectionPage-with-kategori'].includes(
+          option.templateId,
+        ),
+      ),
   },
   i18n: {
     locales: [{id: 'nb-NO', title: 'Norsk bokmål', weekInfo: {firstDay: 1, weekend: [6, 7], minimalDays: 4}}],

@@ -88,12 +88,6 @@ export const articleType = defineType({
       of: contentMembers,
       validation: (rule) => rule.required().min(1),
     }),
-    defineField({
-      name: 'updatedAt',
-      title: 'Sist oppdatert',
-      type: 'date',
-      group: 'navigationSeo',
-    }),
   ],
   preview: {
     select: {

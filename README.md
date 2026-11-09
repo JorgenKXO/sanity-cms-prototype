@@ -54,6 +54,16 @@ npm run dev
 
 Open <http://localhost:3333> and sign in with your Sanity account.
 
+## Avgrensning for brukertest
+
+Studio-menyen og opprettingsvalgene viser bare artikler og seksjonssider.
+Globaler med forsider, navigasjonssider og nettstedsinnstillinger er skjult.
+Eksisterende dokumenter, skjematyper og referanser beholdes i datasettet.
+Dette er en avgrensning av redaktørgrensesnittet, ikke tilgangskontroll.
+
+Det manuelt redigerte feltet **Sist oppdatert** er fjernet fra artikler og
+seksjonssider. Tidligere lagrede verdier slettes ikke fra datasettet.
+
 ## Make a simple article page
 
 1. Open Studio.

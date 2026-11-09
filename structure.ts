@@ -1,6 +1,5 @@
 import {
   EditIcon,
-  EarthGlobeIcon,
   EyeOpenIcon,
   FolderIcon,
   MasterDetailIcon,
@@ -87,48 +86,8 @@ const sectionPages = (S: Parameters<StructureResolver>[0], title = 'Alle seksjon
           : [S.initialValueTemplateItem('sectionPage')]),
     )
 
-// Alle navigasjonssider i én flat liste, uavhengig av kategori.
-const allNavigationPages = (S: Parameters<StructureResolver>[0]) =>
-  S.listItem()
-    .title('Alle navigasjonssider')
-    .id('allNavigationPages')
-    .icon(MasterDetailIcon)
-    .child(
-      S.documentList()
-        .title('Alle navigasjonssider')
-        .id('allNavigationPages-list')
-        .schemaType('navigationPage')
-        .apiVersion('2026-09-10')
-        .filter('_type == "navigationPage"'),
-    )
-
-const globalerFolder = (S: Parameters<StructureResolver>[0]) =>
-  S.listItem()
-    .title('Globaler')
-    .id('globaler')
-    .icon(EarthGlobeIcon)
-    .child(
-      S.list()
-        .title('Globaler')
-        .id('globaler-list')
-        .items([
-          S.listItem()
-            .title('Forsider')
-            .id('globaler-forsider')
-            .icon(FolderIcon)
-            .child(
-              S.documentTypeList('forside')
-                .title('Forsider')
-                .id('globaler-forsider-list')
-                .apiVersion('2026-09-10')
-                .filter('_type == "forside"')
-                .initialValueTemplates([S.initialValueTemplateItem('forside-ny')]),
-            ),
-        ]),
-    )
-
-// Bygger én kategorimappe med "Artikler"- og "Navigasjonssider"-undermapper,
-// begge forhåndsutfylt med kategorien når nye dokumenter opprettes herfra.
+// Bygger én kategorimappe med artikler og seksjonssider, forhåndsutfylt
+// med kategorien når nye dokumenter opprettes herfra.
 function kategoriFolder(
   S: Parameters<StructureResolver>[0],
   title: string,
@@ -164,30 +123,11 @@ function kategoriFolder(
                   value ? [S.initialValueTemplateItem('article-with-kategori', {kategori: value})] : [],
                 ),
             ),
-          S.listItem()
-            .title('Navigasjonssider')
-            .id(`kategori-${idSuffix}-navigasjonssider`)
-            .icon(MasterDetailIcon)
-            .child(
-              S.documentList()
-                .title(`Navigasjonssider – ${title}`)
-                .id(`kategori-${idSuffix}-navigasjonssider-list`)
-                .schemaType('navigationPage')
-                .apiVersion('2026-09-10')
-                .filter(`_type == "navigationPage" ${filterSuffix}`)
-                .params(params)
-                .initialValueTemplates(
-                  value
-                    ? [S.initialValueTemplateItem('navigationPage-with-kategori', {kategori: value})]
-                    : [],
-                ),
-            ),
         ]),
     )
 }
 
-// Én mappe per kategori (artikler + navigasjonssider samlet), med en egen mappe
-// til slutt for innhold som mangler kategori.
+// Én mappe per kategori, med en egen mappe til slutt for innhold som mangler kategori.
 const kategoriFolders = (S: Parameters<StructureResolver>[0]) => [
   ...kategoriOptions.map(({title, value}) => kategoriFolder(S, title, value, value)),
   kategoriFolder(S, 'Uten kategori', undefined, 'none'),
@@ -199,18 +139,6 @@ export const deskStructure: StructureResolver = (S) =>
     .items([
       allArticles(S),
       sectionPages(S),
-      allNavigationPages(S),
-      globalerFolder(S),
       S.divider(),
       ...kategoriFolders(S),
-      S.divider(),
-      S.listItem()
-        .title('Nettstedsinnstillinger')
-        .id('siteSettings')
-        .child(
-          S.document()
-            .schemaType('siteSettings')
-            .documentId('siteSettings')
-            .title('Nettstedsinnstillinger'),
-        ),
     ])

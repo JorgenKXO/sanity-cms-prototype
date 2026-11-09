@@ -790,7 +790,7 @@ test('shows explicit empty, loading, missing-reference and error states without 
 
 test('renders accordion groups with large accordions and their nested rich text', () => {
   const html = render(ArticlePreview, {
-    title: 'Artikkel med accordioner',
+    title: 'Artikkel med trekkspill',
     content: [{
       _key: 'accordion-group',
       _type: 'accordionGroup',
@@ -842,7 +842,7 @@ test('renders information panels inside accordion content without breaking out',
         _type: 'accordionGroup',
         accordions: [{
           _key: 'accordion-item',
-          title: 'Accordion',
+          title: 'Trekkspill',
           content: [informationPanel],
         }],
       },
@@ -859,7 +859,7 @@ test('renders information panels inside accordion content without breaking out',
 
 test('renders existing content blocks and example rich text inside accordion portable text', () => {
   const html = render(ArticlePreview, {
-    title: 'Artikkel med rik accordion',
+    title: 'Artikkel med rikt trekkspill',
     content: [{
       _key: 'accordion-group',
       _type: 'accordionGroup',
@@ -895,7 +895,7 @@ test('renders existing content blocks and example rich text inside accordion por
           {
             _key: 'button',
             _type: 'knapp',
-            label: 'Knapp i accordion',
+            label: 'Knapp i trekkspill',
             appearance: 'secondary',
           },
           {
@@ -1140,7 +1140,7 @@ test('supports numbered accordion groups inside article sections and incomplete 
 
   for (const accordions of [undefined, []]) {
     const empty = render(ArticlePreview, {content: [{...group, accordions}]})
-    assert.ok(empty.includes('Legg til minst én accordion'), empty)
+    assert.ok(empty.includes('Legg til minst ett trekkspill'), empty)
     assert.ok(!empty.includes('numbered-accordion-marker'), empty)
   }
   const incomplete = render(ArticlePreview, {

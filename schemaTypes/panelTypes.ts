@@ -122,7 +122,7 @@ export const informasjonPanelType = defineType({
       name: 'body',
       title: 'Innhold',
       description:
-        'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, accordion-gruppe, knapp og lenkeliste.',
+        'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, trekkspill-gruppe, knapp og lenkeliste.',
       type: 'array',
       of: informationPanelContentBlocks,
     }),

@@ -680,7 +680,7 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
 
     if (block._type === 'accordionGroup') {
       if (!block.accordions?.length) {
-        return <p role="status">Legg til minst én accordion for å forhåndsvise gruppen.</p>
+        return <p role="status">Legg til minst ett trekkspill for å forhåndsvise gruppen.</p>
       }
 
       const items = block.accordions.map((accordion, index) => {
@@ -694,12 +694,12 @@ export function ArticlePreview(props: ArticlePreviewProps & {isSectionPage?: boo
             {accordion.content ? (
               <PortableText value={accordion.content} components={contentComponents} />
             ) : (
-              <p role="status">Legg til innhold i accordionen.</p>
+              <p role="status">Legg til innhold i trekkspillet.</p>
             )}
           </Accordion.Item>
         ) : (
           <p key={accordion._key || index} role="status">
-            Legg til en overskrift for å forhåndsvise accordionen.
+            Legg til en overskrift for å forhåndsvise trekkspillet.
           </p>
         )
 

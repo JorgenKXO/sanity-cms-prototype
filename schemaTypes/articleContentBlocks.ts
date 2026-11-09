@@ -517,7 +517,7 @@ export const articleInformationContentBlockType = defineType({
       name: 'text',
       title: 'Innhold',
       description:
-        'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, accordion-gruppe, knapp og lenkeliste.',
+        'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, trekkspill-gruppe, knapp og lenkeliste.',
       type: 'array',
       of: informationPanelContentBlocks,
       validation: (rule) => rule.required(),
@@ -717,7 +717,7 @@ export const articleOpenCloseContentBlockType = defineType({
       name: 'content',
       title: 'Innhold',
       description:
-        'Rik tekst med samme formateringsvalg som Accordion, samt informasjonspanel, bilde, eksempel, knapp og lenkeliste. Åpne/Lukke kan ikke inneholde en annen Åpne/Lukke.',
+        'Rik tekst med samme formateringsvalg som trekkspill, samt informasjonspanel, bilde, eksempel, knapp og lenkeliste. Åpne/Lukke kan ikke inneholde en annen Åpne/Lukke.',
       type: 'array',
       of: nestedRichTextContentBlocks.filter((member) => member.type !== 'openClose'),
       validation: (rule) => rule.required().min(1),
@@ -736,26 +736,26 @@ export const articleOpenCloseContentBlockType = defineType({
 
 export const articleAccordionGroupContentBlockType = defineType({
   name: 'accordionGroup',
-  title: 'Accordion-gruppe',
+  title: 'Trekkspill-gruppe',
   type: 'object',
   icon: ChevronDownIcon,
   fields: [
     defineField({
       name: 'showNumbers',
       title: 'Vis med tall',
-      description: 'Vis et tall til venstre for hver accordion, med en linje mellom tallene.',
+      description: 'Vis et tall til venstre for hvert trekkspill, med en linje mellom tallene.',
       type: 'boolean',
       initialValue: false,
     }),
     defineField({
       name: 'accordions',
-      title: 'Accordioner',
-      description: 'Legg til accordionene som skal inngå i gruppen.',
+      title: 'Trekkspill',
+      description: 'Legg til trekkspillene som skal inngå i gruppen.',
       type: 'array',
       of: [
         defineArrayMember({
           name: 'accordion',
-          title: 'Accordion',
+          title: 'Trekkspill',
           type: 'object',
           fields: [
             defineField({
@@ -783,7 +783,7 @@ export const articleAccordionGroupContentBlockType = defineType({
           preview: {
             select: {title: 'title'},
             prepare({title}) {
-              return {title: title || 'Accordion'}
+              return {title: title || 'Trekkspill'}
             },
           },
         }),
@@ -796,8 +796,8 @@ export const articleAccordionGroupContentBlockType = defineType({
     prepare({accordions}) {
       const count = Array.isArray(accordions) ? accordions.length : 0
       return {
-        title: 'Accordion-gruppe',
-        subtitle: `${count} ${count === 1 ? 'accordion' : 'accordions'}`,
+        title: 'Trekkspill-gruppe',
+        subtitle: `${count} trekkspill`,
       }
     },
   },

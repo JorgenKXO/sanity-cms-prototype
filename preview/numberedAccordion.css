@@ -3,7 +3,7 @@
 }
 
 .numbered-accordion-row {
-  /* Match the centre of the first title line, including the accordion's top border. */
+  /* Match the centre of the first title line, including the trekkspill's top border. */
   --numbered-accordion-centre: calc(
     1px + var(--spacing-s) + var(--font-size-xl) * var(--semantic-line-height-default) / 2
   );

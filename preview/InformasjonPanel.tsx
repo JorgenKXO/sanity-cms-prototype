@@ -254,7 +254,7 @@ export function InformasjonPanel({
         const accordions =
           isRecord(value) && Array.isArray(value.accordions) ? value.accordions : []
         if (!accordions.length) {
-          return <p role="status">Legg til minst én accordion for å forhåndsvise gruppen.</p>
+          return <p role="status">Legg til minst ett trekkspill for å forhåndsvise gruppen.</p>
         }
         const showNumbers = isRecord(value) && value.showNumbers === true
         const items = accordions.map((accordion, index) => {
@@ -271,12 +271,12 @@ export function InformasjonPanel({
                   components={bodyComponents}
                 />
               ) : (
-                <p role="status">Legg til innhold i accordionen.</p>
+                <p role="status">Legg til innhold i trekkspillet.</p>
               )}
             </Accordion.Item>
           ) : (
             <p key={index} role="status">
-              Legg til en overskrift for å forhåndsvise accordionen.
+              Legg til en overskrift for å forhåndsvise trekkspillet.
             </p>
           )
           return showNumbers ? (

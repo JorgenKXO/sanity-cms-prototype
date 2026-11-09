@@ -554,7 +554,7 @@ test('defines accordion groups with required nested accordions and no size setti
   const accordionsField = accordionGroup.fields.find((field) => field.name === 'accordions')
   const accordion = accordionsField.of[0]
 
-  assert.equal(accordionGroup.title, 'Accordion-gruppe')
+  assert.equal(accordionGroup.title, 'Trekkspill-gruppe')
   assert.equal(accordionGroup.fields.some((field) => field.name === 'size'), false)
   const showNumbers = accordionGroup.fields.find((field) => field.name === 'showNumbers')
   assert.equal(showNumbers.title, 'Vis med tall')
@@ -577,8 +577,8 @@ test('defines accordion groups with required nested accordions and no size setti
     accordion.fields.map((field) => field.name),
     ['title', 'ingress', 'content'],
   )
-  assert.equal(accordionGroup.preview.prepare({accordions: [{}, {}]}).subtitle, '2 accordions')
-  assert.equal(accordionGroup.preview.prepare({accordions: [{}]}).subtitle, '1 accordion')
+  assert.equal(accordionGroup.preview.prepare({accordions: [{}, {}]}).subtitle, '2 trekkspill')
+  assert.equal(accordionGroup.preview.prepare({accordions: [{}]}).subtitle, '1 trekkspill')
   assert.equal(accordionsField.validation({required: () => ({min: () => 'validated'})}), 'validated')
 })
 
@@ -629,7 +629,7 @@ test('supports OpenClose with required heading and content and no size setting',
     schemaTypes.find((type) => type.name === 'eksempel').fields[0].of[0],
   )
   assert.deepEqual(openCloseContent.of[0], accordionContent.of[0])
-  assert.match(openCloseContent.description, /samme formateringsvalg som Accordion/)
+  assert.match(openCloseContent.description, /samme formateringsvalg som trekkspill/)
   assert.deepEqual(openCloseSchema.preview.prepare({}), {
     title: 'Åpne/Lukke',
     subtitle: 'Åpne/Lukke',

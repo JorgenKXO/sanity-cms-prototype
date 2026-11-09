@@ -126,7 +126,7 @@ Informasjonspaneler har samme ikonvelger som seksjoner. Velg **Ingen ikon** for
 ramme; ren hvit bakgrunn kan ikke lenger velges.
 
 Rikteksten støtter normal tekst, h2/h3, fet skrift, kursiv, lenker, punktlister
-og nummererte lister. Legg også til **Åpne/Lukke**, **Accordion-gruppe**,
+og nummererte lister. Legg også til **Åpne/Lukke**, **Trekkspill-gruppe**,
 **Knapp** og **Lenkeliste** som objekter. Forhåndsvisningen henter sidene og
 filene som brukes av de nestede blokkene.
 
@@ -138,7 +138,7 @@ Uten ikon beholder panelet innholdsbredden.
 ## Varselspaneler
 
 **Varselspanel** bruker samme riktekst og forhåndsvisning som informasjonspanelet,
-men tillater ikke **Accordion-gruppe**. **Åpne/Lukke**, **Knapp** og
+men tillater ikke **Trekkspill-gruppe**. **Åpne/Lukke**, **Knapp** og
 **Lenkeliste** er tillatt. Panelet har alltid gul (`ochre`) bakgrunn og
 designsystemets `WarningIcon`; redaktører har ikke ikon- eller fargevalg.
 Innholdsbyggeren bruker Sanitys advarselsikon.
@@ -148,24 +148,24 @@ seksjoner, `varselPanel` med `body` på navigasjonssider). En separat
 publiseringsfrontend må støtte de utvidede innholdsvalgene og den faste
 visningen.
 
-## Accordioner i artikler
+## Trekkspill i artikler
 
-Legg til **Accordion-gruppe** i artikkelinnholdet og opprett accordioner med
+Legg til **Trekkspill-gruppe** i artikkelinnholdet og opprett trekkspill med
 overskrift, valgfri **Ingress** og innhold. Ingressen vises som designsystemets
-`subtitle` under overskriften, og er synlig selv når accordionen er lukket.
+`subtitle` under overskriften, og er synlig selv når trekkspillet er lukket.
 Innholdet har samme riktekstvalg som **Eksempel**, og kan i tillegg inneholde
 de eksisterende objektene **Åpne/Lukke**, **Bilde**, **Eksempel**, **Knapp** og
 **Lenkeliste**. Forhåndsvisningen henter også sidereferanser og fil-lenkemål
-fra innhold inne i accordioner.
+fra innhold inne i trekkspill.
 
-**Åpne/Lukke** har de samme riktekstvalgene som accordioner og kan inneholde
+**Åpne/Lukke** har de samme riktekstvalgene som trekkspill og kan inneholde
 bilde, eksempel, knapp og lenkeliste, men ikke en annen Åpne/Lukke-blokk.
-Accordioner kan fortsatt inneholde Åpne/Lukke. Chevron vises til venstre for teksten.
+Trekkspill kan fortsatt inneholde Åpne/Lukke. Chevron vises til venstre for teksten.
 Åpne/Lukke vises alltid i størrelse stor, uten størrelsesvalg i Studio.
 Tidligere lagrede størrelsesverdier ignoreres i forhåndsvisningen.
 Blokken har luft over og under med designsystemets `--spacing-l` (1,5 rem).
 
-En separat publiseringsfrontend må støtte accordionens `ingress`, de nestede
+En separat publiseringsfrontend må støtte trekkspillets `ingress`, de nestede
 blokktypene og `pageLink`-referansene, samt vise Åpne/Lukke i størrelse stor med
 chevron til venstre, uavhengig av tidligere lagrede størrelsesverdier.
 
@@ -255,17 +255,17 @@ sidetittelen. Eldre referanser kan ikke legges til fra menyen lenger. Erstatt en
 eldre referanse med **Lenke** for å gi den egen lenketekst. Feltene `heading` og
 `ingress` er valgfrie strenger.
 
-## Nummererte accordion-grupper
+## Nummererte trekkspill-grupper
 
-Legg til **Accordion-gruppe** i en artikkel eller artikkelseksjon, og slå på
-**Vis med tall** for å vise nummererte sirkler til venstre for accordionene.
-En linje forbinder sirklene og følger innholdet når accordionene åpnes.
+Legg til **Trekkspill-gruppe** i en artikkel eller artikkelseksjon, og slå på
+**Vis med tall** for å vise nummererte sirkler til venstre for trekkspillene.
+En linje forbinder sirklene og følger innholdet når trekkspillene åpnes.
 Nummereringen starter på 1 i hver gruppe og følger rekkefølgen i Studio.
-I hver accordion kan redaktører legge til riktekst og **Åpne/Lukke**-, **Bilde**-,
+I hvert trekkspill kan redaktører legge til riktekst og **Åpne/Lukke**-, **Bilde**-,
 **Eksempel**-, **Knapp**- og **Lenkeliste**-objekter direkte i innholdsredigereren.
 Innstillingen er av som standard; eksisterende grupper vises som før.
 
-Forhåndsvisningen bruker designsystemets `Accordion` med et tilpasset nummerert
+Forhåndsvisningen bruker designsystemets `Accordion`-komponent med et tilpasset nummerert
 oppsett basert på skattemeldingssiden på skatteetaten.no. En separat
 publiseringsfrontend må også støtte feltet `accordionGroup.showNumbers`.
 

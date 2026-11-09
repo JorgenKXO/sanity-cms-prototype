@@ -714,15 +714,11 @@ test('requires button label and the selected link destination', async () => {
   }
 })
 
-test('validates mixed button targets, required destinations and uploaded file assets', async () => {
+test('requires a single page or uploaded file and defaults to the link radio option', async () => {
   const button = {
     _key: 'button', _type: 'knapp', label: 'Velg tjeneste', appearance: 'mega',
-    destinations: [
-      {_key: 'internal', _type: 'buttonDestination', label: 'Les mer', linkType: 'internal',
-        page: {_type: 'reference', _ref: 'article-target'}},
-      {_key: 'file', _type: 'buttonDestination', label: 'Last ned', linkType: 'file',
-        file: {_type: 'file', asset: {_type: 'reference', _ref: 'file-test-pdf'}}},
-    ],
+    linkType: 'internal',
+    page: {_type: 'reference', _ref: 'article-target'},
   }
   const validate = async (value) => (await validateDocument({
     document: document([{...section(1), content: [value]}]),
@@ -732,55 +728,48 @@ test('validates mixed button targets, required destinations and uploaded file as
   })).filter((marker) => marker.level === 'error')
 
   assert.deepEqual(await validate(button), [])
-  for (const target of button.destinations) {
-    assert.deepEqual(await validate({...button, destinations: [target]}), [])
-    for (const field of ['label', 'linkType', {
-      internal: 'page', file: 'file',
-    }[target.linkType]]) {
-      const result = await validate({...button, destinations: [{...target, [field]: undefined}]})
-      assert.ok(result.some((marker) => marker.path.includes(field)), `${target.linkType}.${field}: ${JSON.stringify(result)}`)
-    }
+  const fileButton = {
+    ...button, linkType: 'file', page: undefined,
+    file: {_type: 'file', asset: {_type: 'reference', _ref: 'file-test-pdf'}},
   }
-  for (const destinations of [undefined, []]) {
-    assert.ok((await validate({...button, destinations}))
-      .some((marker) => marker.path.includes('destinations')))
+  assert.deepEqual(await validate(fileButton), [])
+  for (const file of [undefined, {_type: 'file'}]) {
+    assert.ok((await validate({...fileButton, file})).some((marker) => marker.path.includes('file')))
   }
-  assert.ok((await validate({...button, destinations: [{
-    ...button.destinations[1], file: {_type: 'file'},
-  }]})).some((marker) => marker.path.includes('file')))
-  assert.deepEqual(await validate({...button, linkType: 'internal'}), [])
-  assert.deepEqual(await validate({...button, linkType: 'external', url: 'https://old.no'}), [])
-  for (const url of [undefined, 'https://example.no']) {
-    const external = {
-      _key: 'external', _type: 'buttonDestination', label: 'Ekstern tjeneste', linkType: 'external', url,
-    }
-    for (const destinations of [[external], [...button.destinations, external]]) {
-      const result = await validate({...button, destinations})
-      assert.ok(result.some((marker) =>
-        marker.path.includes('linkType') && marker.message.includes('Eksterne lenker er ikke lenger tillatt')),
-      JSON.stringify(result))
-    }
+  for (const page of [undefined, {_type: 'reference'}]) {
+    assert.ok((await validate({...button, page})).some((marker) => marker.path.includes('page')))
+  }
+  for (const linkType of [undefined, 'external', 'invalid']) {
+    assert.ok((await validate({...button, linkType})).some((marker) => marker.path.includes('linkType')))
   }
 
   const type = schemaTypes.find((type) => type.name === 'knapp')
-  const legacyField = type.fields.find((field) => field.name === 'linkType')
-  assert.equal(legacyField.initialValue, undefined)
-  assert.equal(legacyField.hidden({parent: button}), true)
-  assert.equal(legacyField.hidden({parent: {linkType: 'external'}}), false)
+  const linkType = type.fields.find((field) => field.name === 'linkType')
+  assert.equal(linkType.initialValue, 'internal')
+  assert.equal(linkType.options.layout, 'radio')
+  assert.notEqual(linkType.readOnly, true)
+  assert.deepEqual(linkType.options.list, [
+    {title: 'Lenke', value: 'internal'}, {title: 'Fil', value: 'file'},
+  ])
+  assert.equal(typeof type.components.input, 'function')
   const destinationsField = type.fields.find((field) => field.name === 'destinations')
-  const targetFields = destinationsField.of[0].fields
-  assert.equal(targetFields[0].name, 'linkType')
-  assert.equal(targetFields.at(-1).name, 'label')
-  assert.equal(typeof destinationsField.of[0].components.input, 'function')
-  assert.equal(legacyField.readOnly, true)
-  assert.equal(legacyField.options, undefined)
-  assert.deepEqual(targetFields.find((field) => field.name === 'linkType')
-    .options.list.map((option) => option.value), ['internal', 'file'])
-  for (const field of [type.fields, targetFields].map((fields) =>
-    fields.find((field) => field.name === 'url'))) {
-    assert.equal(field.readOnly, true)
-    assert.ok(field.deprecated.reason)
+  assert.equal(destinationsField.hidden, true)
+  assert.equal(destinationsField.readOnly, true)
+  assert.ok((await validate({
+    ...button,
+    destinations: [
+      {_key: 'first', _type: 'buttonDestination', linkType: 'internal', page: button.page},
+      {_key: 'second', _type: 'buttonDestination', linkType: 'file', file: fileButton.file},
+    ],
+  })).some((marker) => marker.path.includes('destinations')))
+  for (const [fieldName, selectedType] of [['page', 'internal'], ['file', 'file']]) {
+    const field = type.fields.find((field) => field.name === fieldName)
+    assert.equal(field.hidden({parent: {linkType: selectedType}}), false)
+    assert.equal(field.hidden({parent: {linkType: selectedType === 'file' ? 'internal' : 'file'}}), true)
   }
+  const url = type.fields.find((field) => field.name === 'url')
+  assert.equal(url.readOnly, true)
+  assert.ok(url.deprecated.reason)
 })
 
 test('validates image alternative text inside sections', async () => {

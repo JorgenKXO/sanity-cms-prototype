@@ -752,22 +752,15 @@ test('one target navigates directly for all destination types and appearances', 
   }
 })
 
-test('two or more targets render a modal trigger and ordered navigation tiles', () => {
+test('older multi-target buttons use only the first target without a modal', () => {
   for (const appearance of ['secondary', 'primary', 'mega']) {
     for (const count of [2, 3]) {
       const html = renderButton(buttonLinks.slice(0, count), {}, appearance)
-      assert.match(html, /<button[^>]*type="button"[^>]*>[\s\S]*?Velg tjeneste/)
-      assert.match(html, /<dialog\b/)
-      assert.equal((html.match(/<a\b/g) || []).length, count)
-      const links = html.match(/<a\b[^>]*>/g) || []
-      assert.ok(links.every((link) => /class="[^"]*navigationTile/.test(link)), html)
-      assert.ok(!html.includes('linkGroup'), html)
-      assert.ok(html.indexOf('Intern side') < html.indexOf('Ekstern side'), html)
-      if (count === 3) {
-        const fileTile = html.match(/<a\b[^>]*href="[^"]*\?dl=[^"]*"[\s\S]*?<\/a>/)?.[0]
-        assert.ok(fileTile, html)
-        assert.ok(!fileTile.includes('<svg'), fileTile)
-      }
+      assert.equal((html.match(/<a\b/g) || []).length, 1)
+      assert.ok(html.includes('href="/intern-side"'), html)
+      assert.ok(!html.includes('<dialog'), html)
+      assert.ok(!html.includes('<button'), html)
+      assert.ok(!html.includes('Ekstern side'), html)
     }
   }
 })
@@ -777,12 +770,12 @@ test('keeps legacy button destinations until an explicit replacement list is pop
   assert.deepEqual(getButtonLinks(legacy), [legacy])
   const empty = {...legacy, destinations: []}
   assert.deepEqual(getButtonLinks(empty), [empty])
-  assert.deepEqual(getButtonLinks({...legacy, destinations: buttonLinks}), buttonLinks)
+  assert.deepEqual(getButtonLinks({...legacy, destinations: buttonLinks}), [buttonLinks[0]])
 })
 
 test('shows explicit empty, loading, missing-reference and error states without partial navigation', () => {
-  assert.match(renderButton([]), /role="status"[^>]*>Legg til minst ett lenkemål/)
-  assert.match(renderButton([{...buttonLinks[1], label: ''}]), /Legg til tekst/)
+  assert.match(renderButton([]), /role="status"[^>]*>Velg en lenke eller fil/)
+  assert.match(renderButton([{...buttonLinks[1], label: ''}]), /href="https:\/\/example.no"/)
   assert.match(renderButton([{...buttonLinks[1], url: 'javascript:alert(1)'}]), /role="alert"/)
   for (const link of [buttonLinks[0], buttonLinks[2]]) {
     const loading = renderButton([link, buttonLinks[1]], {destinationsById: {}, isLoading: true})
@@ -921,7 +914,7 @@ test('renders existing content blocks and example rich text inside accordion por
   assert.ok(html.includes('<img'), html)
   assert.ok(html.includes('alt=""'), html)
   assert.ok(html.includes('Eksempelinnhold'), html)
-  assert.ok(html.includes('Legg til minst ett lenkemål for å forhåndsvise knappen.'), html)
+  assert.ok(html.includes('Velg en lenke eller fil for å forhåndsvise knappen.'), html)
   assert.ok(html.includes('Legg til minst én side for å forhåndsvise lenkelisten.'), html)
 })
 
@@ -1062,7 +1055,7 @@ test('renders rich content blocks inside OpenClose portable text', async () => {
     assert.ok(informationPanel)
     assert.equal(informationPanel.parentElement.getAttribute('style'), null)
     assert.match(informationPanel.textContent, /Informasjonspanelinnhold/)
-    assert.match(document.body.textContent, /Legg til minst ett lenkemål/)
+    assert.match(document.body.textContent, /Velg en lenke eller fil/)
     assert.match(document.body.textContent, /Legg til minst én side/)
     const nestedOpenCloseButton = [...document.querySelectorAll('button[aria-expanded]')]
       .find((button) => button.textContent.includes('Dypdykk'))

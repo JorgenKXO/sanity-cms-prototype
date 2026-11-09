@@ -51,6 +51,13 @@ function getReferenceIds(value: unknown): string[] {
     return [value._ref]
   }
 
+  if (value._type === 'knapp') {
+    const target = Array.isArray(value.destinations) && value.destinations.length
+      ? value.destinations[0] : value
+    if (!isRecord(target)) return []
+    return getReferenceIds(target.linkType === 'file' ? target.file : target.page)
+  }
+
   return [
     'page',
     'file',

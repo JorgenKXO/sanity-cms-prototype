@@ -539,6 +539,7 @@ export const articleButtonContentBlockType = defineType({
   title: 'Knapp',
   type: 'object',
   icon: ArrowRightIcon,
+  components: {input: ButtonDestinationInput},
   fields: [
     defineField({
       name: 'label',
@@ -565,17 +566,17 @@ export const articleButtonContentBlockType = defineType({
     }),
     defineField({
       name: 'destinations',
-      title: 'Lenkemål',
-      description:
-        'Legg til Sanity-sider og filer i ønsket rekkefølge. Flere mål åpner en modal. For eksisterende knapper erstatter denne listen det gamle lenkemålet når du legger til valg.',
+      title: 'Tidligere lenkemål',
       type: 'array',
+      hidden: true,
+      readOnly: true,
+      validation: (rule) => rule.max(1).error('Åpne knappen for å beholde kun det første lenkemålet.'),
       of: [
         defineArrayMember({
           name: 'buttonDestination',
           title: 'Lenkemål',
           type: 'object',
           icon: ArrowRightIcon,
-          components: {input: ButtonDestinationInput},
           fields: [
             defineField({
               name: 'linkType',
@@ -589,10 +590,6 @@ export const articleButtonContentBlockType = defineType({
                 layout: 'radio',
               },
               initialValue: 'internal',
-              validation: (rule) => rule.required().custom((value) =>
-                value === 'external'
-                  ? 'Eksterne lenker er ikke lenger tillatt. Velg en Sanity-side eller fil, eller fjern lenkemålet.'
-                  : true),
             }),
             defineField({
               name: 'page',
@@ -600,11 +597,6 @@ export const articleButtonContentBlockType = defineType({
               type: 'reference',
               to: [{type: 'article'}, {type: 'sectionPage'}, {type: 'navigationPage'}],
               hidden: ({parent}) => parent?.linkType !== 'internal',
-              validation: (rule) => rule.custom((value, context) => {
-                const parent = context.parent as {linkType?: string} | undefined
-                return parent?.linkType !== 'internal' || value?._ref
-                  ? true : 'Velg en Sanity-side.'
-              }),
             }),
             defineField({
               name: 'url',
@@ -619,19 +611,11 @@ export const articleButtonContentBlockType = defineType({
               title: 'Vedlegg/fil',
               type: 'file',
               hidden: ({parent}) => parent?.linkType !== 'file',
-              validation: (rule) => rule.custom((value, context) => {
-                const parent = context.parent as {linkType?: string} | undefined
-                return parent?.linkType !== 'file' || value?.asset?._ref
-                  ? true : 'Last opp eller velg en fil.'
-              }),
             }),
             defineField({
               name: 'label',
               title: 'Tekst for valget',
-              description:
-                'Vises på navigasjonskortet når knappen har flere mål. Fylles inn fra sidetittelen når feltet er tomt. Du kan endre teksten.',
               type: 'string',
-              validation: (rule) => rule.required(),
             }),
           ],
           preview: {
@@ -647,25 +631,22 @@ export const articleButtonContentBlockType = defineType({
           },
         }),
       ],
-      validation: (rule) => rule.custom((value, context) => {
-        const parent = context.parent as {linkType?: string} | undefined
-        return value?.length || parent?.linkType
-          ? true : 'Legg til minst ett lenkemål.'
-      }),
     }),
     defineField({
       name: 'linkType',
       title: 'Lenketype',
       type: 'string',
-      description: 'Tidligere lenketype. Bruk Lenkemål for å erstatte den gamle lenken.',
-      readOnly: true,
-      hidden: ({parent}) => !parent?.linkType || Boolean(parent?.destinations?.length),
-      validation: (rule) => rule.custom((value, context) => {
-        const parent = context.parent as {destinations?: unknown[]} | undefined
-        return value === 'external' && !parent?.destinations?.length
-          ? 'Eksterne lenker er ikke lenger tillatt. Legg til en Sanity-side eller fil under Lenkemål.'
-          : true
-      }),
+      options: {
+        list: [
+          {title: 'Lenke', value: 'internal'},
+          {title: 'Fil', value: 'file'},
+        ],
+        layout: 'radio',
+      },
+      initialValue: 'internal',
+      validation: (rule) => rule.required().custom((value) =>
+        value === 'internal' || value === 'file'
+          ? true : 'Velg Lenke eller Fil. Eksterne lenker er ikke lenger tillatt.'),
     }),
     defineField({
       name: 'url',
@@ -674,20 +655,31 @@ export const articleButtonContentBlockType = defineType({
       deprecated: {reason: 'Eksterne lenker er ikke lenger tillatt på knapper.'},
       readOnly: true,
       hidden: ({parent, value}) =>
-        parent?.linkType !== 'external' || Boolean(parent?.destinations?.length) || !value,
+        parent?.linkType !== 'external' || !value,
     }),
     defineField({
       name: 'page',
       title: 'Side',
       type: 'reference',
       to: [{type: 'article'}, {type: 'sectionPage'}, {type: 'navigationPage'}],
-      hidden: ({parent}) => parent?.linkType !== 'internal' || Boolean(parent?.destinations?.length),
+      hidden: ({parent}) => parent?.linkType !== 'internal',
       validation: (rule) =>
         rule.custom((value, context) => {
-          const parent = context.parent as {linkType?: string; destinations?: unknown[]} | undefined
-          if (parent?.destinations?.length || parent?.linkType !== 'internal' || value) return true
+          const parent = context.parent as {linkType?: string} | undefined
+          if (parent?.linkType !== 'internal' || value?._ref) return true
           return 'Velg en Sanity-side.'
         }),
+    }),
+    defineField({
+      name: 'file',
+      title: 'Fil',
+      type: 'file',
+      hidden: ({parent}) => parent?.linkType !== 'file',
+      validation: (rule) => rule.custom((value, context) => {
+        const parent = context.parent as {linkType?: string} | undefined
+        return parent?.linkType !== 'file' || value?.asset?._ref
+          ? true : 'Last opp eller velg en fil.'
+      }),
     }),
   ],
   preview: {

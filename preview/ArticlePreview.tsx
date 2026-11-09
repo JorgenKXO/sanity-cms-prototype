@@ -217,7 +217,7 @@ function getDestinationIds(value: unknown): string[] {
 
   if (getString(value, '_type') === 'knapp') {
     const links = Array.isArray(value.destinations) && value.destinations.length
-      ? value.destinations
+      ? value.destinations.slice(0, 1)
       : [value]
     return links.flatMap((link) => {
       if (!isRecord(link)) return []

@@ -29,12 +29,14 @@ await build({
           export const useClient = () => globalThis.buttonInputTest.client
           export const useToast = () => globalThis.buttonInputTest.toast
           export const set = (value, path) => ({type: 'set', value, path})
+          export const unset = (path) => ({type: 'unset', path})
         `,
         loader: 'js',
       }))
     },
   }],
 })
+
 const {ButtonDestinationInput} = await import(pathToFileURL(`${directory}/input.mjs`).href)
 const dom = new JSDOM('<div id="root"></div>')
 globalThis.window = dom.window
@@ -48,6 +50,61 @@ after(() => {
   delete globalThis.buttonInputTest
 })
 
+test('flattens only the first old target and removes the list without changing button text', async () => {
+  const patches = []
+  globalThis.buttonInputTest = {
+    client: {},
+    toast: {push: () => assert.fail('Unexpected notification')},
+  }
+  const reactRoot = createRoot(document.getElementById('root'))
+  const page = {_ref: 'page-a'}
+  const file = {asset: {_ref: 'file-a'}}
+  const render = async (value, readOnly = false) => act(async () => {
+    reactRoot.render(createElement(ButtonDestinationInput, {
+      value, readOnly,
+      onChange: (patch) => patches.push(patch),
+      renderDefault: () => createElement('div', null, 'Standard input'),
+    }))
+  })
+  try {
+    await render({label: 'Knapp', destinations: [
+      {linkType: 'internal', page, label: 'Ikke bruk denne teksten'},
+      {linkType: 'file', file},
+    ]})
+    assert.deepEqual(patches.pop(), [
+      {type: 'set', path: ['linkType'], value: 'internal'},
+      {type: 'set', path: ['page'], value: page},
+      {type: 'unset', path: ['file']},
+      {type: 'unset', path: ['url']},
+      {type: 'unset', path: ['destinations']},
+    ])
+    await render({label: 'Knapp', destinations: [{linkType: 'file', file}, {linkType: 'internal', page}]})
+    assert.deepEqual(patches.pop(), [
+      {type: 'set', path: ['linkType'], value: 'file'},
+      {type: 'unset', path: ['page']},
+      {type: 'set', path: ['file'], value: file},
+      {type: 'unset', path: ['url']},
+      {type: 'unset', path: ['destinations']},
+    ])
+    await render({linkType: 'internal', label: 'Behold', page, destinations: []})
+    assert.deepEqual(patches.pop(), [{type: 'unset', path: ['destinations']}])
+    await render({label: 'Eldre eksternlenke', destinations: [
+      {linkType: 'external', url: 'https://example.no'}, {linkType: 'file', file},
+    ]})
+    assert.deepEqual(patches.pop(), [
+      {type: 'set', path: ['linkType'], value: 'external'},
+      {type: 'unset', path: ['page']},
+      {type: 'unset', path: ['file']},
+      {type: 'set', path: ['url'], value: 'https://example.no'},
+      {type: 'unset', path: ['destinations']},
+    ])
+    await render({destinations: [{linkType: 'file', file}]}, true)
+    await render({linkType: 'file', file})
+    assert.equal(patches.length, 0)
+  } finally {
+    await act(async () => reactRoot.unmount())
+  }
+})
 test('fills empty labels without overwriting text or applying stale requests', async () => {
   const pending = []
   const patches = []

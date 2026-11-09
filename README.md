@@ -194,39 +194,39 @@ Eksisterende artikler og dokumenter endres ikke automatisk.
 
 Legg til **Knapp** i innholdet på en artikkel eller i en seksjon.
 Skriv inn **Lenketekst**, velg **Sekundærknapp**, **Primærknapp** eller
-**Megaknapp**, og legg til ett eller flere **Lenkemål** i ønsket rekkefølge.
-Hvert mål har egen **Tekst for valget** og kan være:
+**Megaknapp**, og velg **Lenke** eller **Fil** med radioknappene.
+**Lenke** er standardvalget. Hver knapp har kun ett mål:
 
-- **Sanity-side**: referanse til en artikkel, seksjonsside eller navigasjonsside.
+- **Lenke**: referanse til en artikkel, seksjonsside eller navigasjonsside.
   Forhåndsvisningen bruker målsidens nettadresse (slug).
-- **Vedlegg/fil for nedlasting**: last opp eller velg en fil i Sanity.
+- **Fil**: last opp eller velg en fil i Sanity.
   Filen lenkes med Sanity CDN sin `dl`-parameter for nedlasting.
 
-I redigeringen av et lenkemål vises **Lenketype** først, deretter side eller fil
-og **Tekst for valget**. Når en Sanity-side velges og tekstfeltet er tomt,
-fylles teksten inn fra sidens tittel. Teksten kan redigeres og blir ikke
+Kun feltet for valgt måltype vises. Når en Sanity-side velges og **Lenketekst**
+er tomt, fylles teksten inn fra sidens tittel. Teksten kan redigeres og blir ikke
 overskrevet ved sidebytte dersom den allerede er fylt ut. For filer fylles
 teksten inn manuelt.
 
-Med ett mål går knappen direkte til siden eller filen. Med to eller flere
-åpner knappen designsystemets `Modal`, med `NavigationTile` for hvert valg.
-Filer vises uten ikon.
-Modalen har lukkeknapp, Escape-støtte og tastaturfokus som håndteres av
-designsystemet og nettleserens dialog.
+Knappen går direkte til siden eller filen. Det er ikke lenger mulig å legge til
+flere mål, og knapper åpner ikke en valgmodal.
 
 Eksterne nettsider kan ikke lenger velges som lenkemål. Eksisterende eksterne
 lenkemål må fjernes eller erstattes med en Sanity-side eller fil før publisering.
 Lagrede nettadresser beholdes som skrivebeskyttede felt for opprydding.
 Forhåndsvisningen kan fortsatt vise eldre innhold mens redaktøren erstatter det.
 
-Eksisterende knapper med internlenke fungerer fortsatt uten migrering.
-Når listen **Lenkemål** fylles ut, erstatter den det gamle lenkemålet.
-Hvis listen tømmes igjen, brukes det gamle lenkemålet dersom det finnes.
+Eksisterende knapper med flere mål bruker automatisk første mål i
+forhåndsvisningen. Når knappen åpnes for redigering i Studio, flyttes første mål
+til enkeltfeltene `linkType`, `page` eller `file` (og `url` for eldre
+eksternlenker), og hele den gamle listen `destinations` fjernes. Knappens
+lenketekst beholdes. Dette lagres som en vanlig Studio-endring; publisert
+innhold endres først ved publisering. Skrivebeskyttet innhold endres ikke.
 
 Knappene vises med designsystemets `Button` og `MegaButton`, med luft over
 og under hver knapp. Bruk megaknapp til én tydelig hovedhandling.
 Dette gjelder Studio-forhåndsvisningen; en separat publiseringsfrontend må
-også støtte innholdsblokken `knapp`.
+også støtte enkeltfeltene på innholdsblokken `knapp` og bruke kun første mål
+for eldre `destinations`-lister.
 
 ## Lenkelister i artikler
 
@@ -276,8 +276,8 @@ Eksisterende kriseblokker og referanser til delt innhold endres ikke i datasette
 Designsystemets lokale MDX-kilder var ikke tilgjengelige ved implementeringen.
 Forhåndsvisningen gjenbruker eksisterende komponenter, semantiske tokens og
 artikkelmal; Storybook-eksempler og installerte komponenttyper brukes som
-dokumentasjonsfallback. Knappens modal følger Storybook-eksempelets mønster med
-en dialogreferanse og `showModal()`. For **Eksempel** ble
+dokumentasjonsfallback. Knappens målvalg bruker Sanitys innebygde radiofelt.
+For **Eksempel** ble
 `@skatteetaten/ds-typography` 2.10.0-typene brukt som fallback for `Blockquote`;
 derfor bruker blokken den støttede gule (`ochre`) fargen fast.
 

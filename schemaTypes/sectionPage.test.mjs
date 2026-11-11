@@ -332,6 +332,20 @@ test('configures Regelverk panels with restricted text and link lists', () => {
   assert.deepEqual(textBlock.marks.annotations.map(({name}) => name), ['link'])
 })
 
+test('configures article text blocks without code, underline, or strikethrough', () => {
+  const text = schemaTypes.find((type) => type.name === 'tekst')
+  const field = text.fields.find((item) => item.name === 'text')
+  const textBlock = field.of[0]
+
+  assert.deepEqual(textBlock.styles.map(({title, value}) => [title, value]), [
+    ['Normal', 'normal'],
+    ['Underoverskrift (h2)', 'h2'],
+    ['Underoverskrift (h3)', 'h3'],
+  ])
+  assert.deepEqual(textBlock.marks.decorators.map(({value}) => value), ['strong', 'em'])
+  assert.deepEqual(textBlock.marks.annotations.map(({name}) => name), ['link'])
+})
+
 test('uses the section icon selector and restricted rich text in information panels', () => {
   const section = schemaTypes.find((type) => type.name === 'pageSection')
   const sectionIcon = section.fields.find((field) => field.name === 'icon')

@@ -75,6 +75,23 @@ export const articleTextBlock = defineArrayMember({
   },
 })
 
+const sectionArticleTextBlock = defineArrayMember({
+  type: 'block',
+  styles: [
+    {title: 'Normal', value: 'normal'},
+    {title: 'Underoverskrift (h2)', value: 'h2'},
+    {title: 'Underoverskrift (h3)', value: 'h3'},
+  ],
+  lists: [
+    {title: 'Punktliste', value: 'bullet'},
+    {title: 'Nummerert liste', value: 'number'},
+  ],
+  marks: {
+    decorators: [{title: 'Fet', value: 'strong'}, {title: 'Kursiv', value: 'em'}],
+    annotations: [linkAnnotation],
+  },
+})
+
 const exampleTextBlock = defineArrayMember({
   type: 'block',
   styles: [
@@ -234,7 +251,7 @@ export const articleTextContentBlockType = defineType({
       title: 'Tekst',
       description: 'Rik tekst med overskrifter, lister og lenker.',
       type: 'array',
-      of: [articleTextBlock],
+      of: [sectionArticleTextBlock],
       validation: (rule) => rule.required(),
     }),
   ],

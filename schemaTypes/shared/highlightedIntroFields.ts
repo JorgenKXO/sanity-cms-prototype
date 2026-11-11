@@ -44,7 +44,7 @@ export const highlightedIntroFields = () => [
   defineField({
     name: 'heroImage',
     title: 'Bilde/illustrasjon',
-    description: 'Dekorativt bilde, skjult for skjermlesere.',
+    description: 'Dekorativt, skjult for skjermlesere.',
     type: 'image',
     group: 'hero',
     options: {hotspot: true},

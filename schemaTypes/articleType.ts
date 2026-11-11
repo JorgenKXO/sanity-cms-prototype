@@ -60,8 +60,6 @@ export const articleType = defineType({
     defineField({
       name: 'ingress',
       title: 'Ingress',
-      description:
-        'Kort innledende avsnitt som vises under tittelen. Kun ren tekst, uten lenker eller formatering.',
       type: 'array',
       of: [ingressBlock],
       validation: (rule) => rule.required(),
@@ -81,7 +79,6 @@ export const articleType = defineType({
     defineField({
       name: 'content',
       title: 'Innhold',
-      description: 'Bygg opp artikkelen med lokale innholdsblokker.',
       type: 'array',
       group: 'content',
       components: {input: ContentBuilderInput},

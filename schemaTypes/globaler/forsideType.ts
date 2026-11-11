@@ -25,7 +25,6 @@ export const forsideNavigasjonskortType = defineType({
       name: 'icon',
       title: 'Ikon',
       type: 'string',
-      description: 'Velg et ikon fra Skatteetatens forsider.',
       options: {
         list: homepageIconOptions.map(({title, value}) => ({title, value})),
       },
@@ -92,7 +91,6 @@ export const bildeOgTekstPanelType = defineType({
     defineField({
       name: 'body',
       title: 'Innhold',
-      description: 'Rik tekst med overskrifter, lister og lenker.',
       type: 'array',
       of: [articleTextBlock],
       validation: (rule) => rule.required(),
@@ -122,14 +120,13 @@ export const bildeOgTekstPanelType = defineType({
       name: 'isDecorative',
       title: 'Dekorativt bilde',
       type: 'boolean',
-      description:
-        'Slå på hvis bildet er rent dekorativt og ikke formidler informasjon som er viktig for innholdet. Skjermlesere hopper da over bildet, og alternativ tekst er ikke nødvendig.',
+      description: 'Slå på hvis bildet er dekorativt.',
       initialValue: false,
     }),
     defineField({
       name: 'alt',
       title: 'Alternativ tekst',
-      description: 'Beskriv hva bildet viser, slik at skjermlesere kan formidle innholdet til brukeren.',
+      description: 'Beskriv bildet for skjermlesere.',
       type: 'string',
       hidden: ({parent}) => Boolean(parent?.isDecorative),
       validation: (rule) =>
@@ -186,14 +183,14 @@ export const forsideType = defineType({
     defineField({
       name: 'hideTitle',
       title: 'Skjul hovedtittel visuelt',
-      description: 'Skjuler hovedtittelen visuelt. Skjermlesere får tittelen nedenfor.',
+      description: 'Skjules visuelt, men leses fortsatt av skjermlesere.',
       type: 'boolean',
       initialValue: false,
     }),
     defineField({
       name: 'screenReaderTitle',
       title: 'Tittel for skjermlesere',
-      description: 'Leses opp av skjermlesere i stedet for hovedtittelen.',
+      description: 'Leses opp når hovedtittelen er skjult.',
       type: 'string',
       initialValue: 'Forside',
       hidden: ({parent}) => !(parent as {hideTitle?: boolean} | undefined)?.hideTitle,
@@ -208,7 +205,6 @@ export const forsideType = defineType({
     defineField({
       name: 'slug',
       title: 'Nettadresse',
-      description: 'Lag en nettadresse fra hovedtittelen, eller skriv den inn selv.',
       type: 'slug',
       options: {source: 'title'},
       validation: (rule) => rule.required(),
@@ -216,7 +212,6 @@ export const forsideType = defineType({
     defineField({
       name: 'content',
       title: 'Innhold',
-      description: 'Legg til og ordne innholdsblokker på forsiden.',
       type: 'array',
       of: [
         defineArrayMember({type: 'forsideNavigasjonsgruppe'}),

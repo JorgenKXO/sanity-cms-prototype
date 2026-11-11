@@ -17,7 +17,7 @@ export const navigationTileFields = [
   defineField({
     name: 'ingressOverride',
     title: 'Ingress på kortet',
-    description: 'Valgfritt. Vises kun på dette kortet.',
+    description: 'Vises kun på dette kortet.',
     type: 'text',
     rows: 2,
   }),

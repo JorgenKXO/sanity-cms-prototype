@@ -18,7 +18,6 @@ export const pageSectionType = defineType({
     defineField({
       name: 'icon',
       title: 'Ikon (valgfritt)',
-      description: 'Velg et ikon fra Skatteetatens designsystem som skal vises ved seksjonen.',
       type: 'string',
       options: {list: sectionIconOptions.map(({title, value}) => ({title, value}))},
       components: {input: SectionIconInput},
@@ -55,7 +54,7 @@ export const sectionPageType = defineType({
     defineField({
       name: 'sections',
       title: 'Seksjoner',
-      description: 'Bygg opp siden med opptil 10 seksjoner.',
+      description: 'Maks. 10 seksjoner.',
       type: 'array',
       group: 'content',
       of: [defineArrayMember({type: 'pageSection'})],

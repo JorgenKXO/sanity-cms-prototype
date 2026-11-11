@@ -64,13 +64,11 @@ export const rettskilderPanelType = defineType({
       name: 'heading',
       title: 'Overskrift',
       type: 'string',
-      description: 'Standardverdi er «Regelverk», men kan overskrives.',
       initialValue: 'Regelverk',
     }),
     defineField({
       name: 'body',
       title: 'Innhold',
-      description: 'Ren tekst, lenker, underoverskrifter og lenkelister.',
       type: 'array',
       of: [rettskilderTextBlock, defineArrayMember({type: 'lenkeliste'})],
     }),
@@ -109,7 +107,6 @@ export const informasjonPanelType = defineType({
       name: 'icon',
       title: 'Ikon',
       type: 'string',
-      description: 'Valgfritt.',
       options: {list: sectionIconOptions.map(({title, value}) => ({title, value}))},
       components: {input: SectionIconInput},
     }),
@@ -121,8 +118,6 @@ export const informasjonPanelType = defineType({
     defineField({
       name: 'body',
       title: 'Innhold',
-      description:
-        'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, trekkspill-gruppe, knapp og lenkeliste.',
       type: 'array',
       of: informationPanelContentBlocks,
     }),
@@ -149,8 +144,6 @@ export const varselPanelType = defineType({
     defineField({
       name: 'body',
       title: 'Innhold',
-      description:
-        'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, knapp og lenkeliste.',
       type: 'array',
       of: warningPanelContentBlocks,
     }),

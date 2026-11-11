@@ -10,14 +10,14 @@ export const sharedContentType = defineType({
     defineField({
       name: 'title',
       title: 'Navn',
-      description: 'Et redaktørvennlig navn som gjør innholdet lett å finne i referansevelgeren.',
+      description: 'Navn som vises i referansevelgeren.',
       type: 'string',
       validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'content',
       title: 'Innhold',
-      description: 'Dette innholdet vises på alle artikler som refererer til dokumentet.',
+      description: 'Vises på alle artikler som bruker innholdet.',
       type: 'array',
       of: [
         defineArrayMember({type: 'tekst'}),

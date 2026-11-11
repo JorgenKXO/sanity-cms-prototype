@@ -183,8 +183,6 @@ export const articleLinkListContentBlockType = defineType({
     defineField({
       name: 'pages',
       title: 'Sider',
-      description:
-        'Legg til lenker i ønsket rekkefølge. Velg en Sanity-side og fyll eventuelt inn egen lenketekst. Du kan legge til så mange lenker du vil.',
       type: 'array',
       components: {input: LinkListPagesInput},
       of: [
@@ -249,7 +247,6 @@ export const articleTextContentBlockType = defineType({
     defineField({
       name: 'text',
       title: 'Tekst',
-      description: 'Rik tekst med overskrifter, lister og lenker.',
       type: 'array',
       of: [sectionArticleTextBlock],
       validation: (rule) => rule.required(),
@@ -283,14 +280,13 @@ export const articleImageContentBlockType = defineType({
       name: 'isDecorative',
       title: 'Dekorativt bilde',
       type: 'boolean',
-      description:
-        'Slå på hvis bildet er rent dekorativt og ikke formidler informasjon som er viktig for innholdet. Skjermlesere hopper da over bildet, og alternativ tekst er ikke nødvendig.',
+      description: 'Slå på hvis bildet er dekorativt.',
       initialValue: false,
     }),
     defineField({
       name: 'alt',
       title: 'Alternativ tekst',
-      description: 'Beskriv hva bildet viser, slik at skjermlesere kan formidle innholdet til brukeren.',
+      description: 'Beskriv bildet for skjermlesere.',
       type: 'string',
       hidden: ({parent}) => Boolean(parent?.isDecorative),
       validation: (rule) =>
@@ -337,14 +333,13 @@ export const articleImageTextContentBlockType = defineType({
       name: 'isDecorative',
       title: 'Dekorativt bilde',
       type: 'boolean',
-      description:
-        'Slå på hvis bildet er rent dekorativt. Skjermlesere hopper da over bildet, og alternativ tekst er ikke nødvendig.',
+      description: 'Slå på hvis bildet er dekorativt.',
       initialValue: false,
     }),
     defineField({
       name: 'alt',
       title: 'Alternativ tekst',
-      description: 'Beskriv hva bildet viser, eller merk det som dekorativt.',
+      description: 'Beskriv bildet for skjermlesere.',
       type: 'string',
       hidden: ({parent}) => Boolean(parent?.isDecorative),
       validation: (rule) =>
@@ -374,7 +369,6 @@ export const articleImageTextContentBlockType = defineType({
     defineField({
       name: 'body',
       title: 'Tekst',
-      description: 'Brødtekst, tekstlenker og lister.',
       type: 'array',
       of: [
         defineArrayMember({
@@ -477,7 +471,6 @@ export const articleExampleContentBlockType = defineType({
     defineField({
       name: 'text',
       title: 'Innhold',
-      description: 'Rik tekst med underoverskrifter, Sanity-lenker, lister og uthevet tekst.',
       type: 'array',
       of: [exampleTextBlock],
       validation: (rule) => rule.required().min(1),
@@ -525,16 +518,12 @@ export const articleInformationContentBlockType = defineType({
       name: 'icon',
       title: 'Ikon',
       type: 'string',
-      description:
-        'Valgfritt. Velg et ikon fra Skatteetatens designsystem som skal vises ved siden av overskriften.',
       options: {list: sectionIconOptions.map(({title, value}) => ({title, value}))},
       components: {input: SectionIconInput},
     }),
     defineField({
       name: 'text',
       title: 'Innhold',
-      description:
-        'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, trekkspill-gruppe, knapp og lenkeliste.',
       type: 'array',
       of: informationPanelContentBlocks,
       validation: (rule) => rule.required(),
@@ -567,8 +556,7 @@ export const articleButtonContentBlockType = defineType({
     defineField({
       name: 'appearance',
       title: 'Utseende',
-      description:
-        'Bruk megaknapp for én tydelig hovedhandling. Velg primær- eller sekundærknapp for øvrige lenker.',
+      description: 'Bruk megaknapp for én hovedhandling.',
       type: 'string',
       options: {
         list: [
@@ -733,8 +721,6 @@ export const articleOpenCloseContentBlockType = defineType({
     defineField({
       name: 'content',
       title: 'Innhold',
-      description:
-        'Rik tekst med samme formateringsvalg som trekkspill, samt informasjonspanel, bilde, eksempel, knapp og lenkeliste. Åpne/Lukke kan ikke inneholde en annen Åpne/Lukke.',
       type: 'array',
       of: nestedRichTextContentBlocks.filter((member) => member.type !== 'openClose'),
       validation: (rule) => rule.required().min(1),
@@ -760,14 +746,13 @@ export const articleAccordionGroupContentBlockType = defineType({
     defineField({
       name: 'showNumbers',
       title: 'Vis med tall',
-      description: 'Vis et tall til venstre for hvert trekkspill, med en linje mellom tallene.',
+      description: 'Nummerering med linje mellom trekkspillene.',
       type: 'boolean',
       initialValue: false,
     }),
     defineField({
       name: 'accordions',
       title: 'Trekkspill',
-      description: 'Legg til trekkspillene som skal inngå i gruppen.',
       type: 'array',
       of: [
         defineArrayMember({
@@ -784,14 +769,12 @@ export const articleAccordionGroupContentBlockType = defineType({
             defineField({
               name: 'ingress',
               title: 'Ingress',
-              description: 'Valgfri ingress som vises under overskriften.',
+              description: 'Vises under overskriften.',
               type: 'string',
             }),
             defineField({
               name: 'content',
               title: 'Innhold',
-              description:
-                'Rik tekst med samme formateringsvalg som Eksempel, samt informasjonspanel, Åpne/Lukke, bilde, eksempel, knapp og lenkeliste.',
               type: 'array',
               of: nestedRichTextContentBlocks,
               validation: (rule) => rule.required().min(1),
@@ -841,8 +824,6 @@ defineArrayMember({
       defineField({
         name: 'text',
         title: 'Innhold',
-        description:
-          'Normal tekst, underoverskrifter, uthevet tekst (fet/kursiv), lenker, lister, Åpne/Lukke, knapp og lenkeliste.',
         type: 'array',
         of: warningPanelContentBlocks,
         validation: (rule) => rule.required(),
@@ -872,7 +853,6 @@ defineArrayMember({
       defineField({
         name: 'text',
         title: 'Innhold',
-        description: 'Ren tekst, uthevet tekst (fet/kursiv), lenker og underoverskrift.',
         type: 'array',
         of: [panelTextBlock],
         validation: (rule) => rule.required(),

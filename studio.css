@@ -1,0 +1,17 @@
+/* Keep Portable Text insert controls beside the formatting actions, not centered in their flex slot. */
+[data-ui='Box']:has(+ [data-ui='Box'] [data-testid='insert-menu-auto-collapse-menu']) {
+  flex: 0 0 max-content !important;
+}
+
+[data-testid='insert-menu-auto-collapse-menu'] > [data-ui='Flex'] {
+  justify-content: flex-start !important;
+}
+
+[data-testid='action-button-strong'] [data-ui='Flex'] > [data-ui='Box']:last-child,
+[data-testid='action-button-em'] [data-ui='Flex'] > [data-ui='Box']:last-child,
+[data-testid='action-button-bullet'] [data-ui='Flex'] > [data-ui='Box']:last-child,
+[data-testid='action-button-number'] [data-ui='Flex'] > [data-ui='Box']:last-child,
+[data-testid='action-button-link'] [data-ui='Flex'] > [data-ui='Box']:last-child,
+[data-testid='action-button-pageLink'] [data-ui='Flex'] > [data-ui='Box']:last-child {
+  display: none;
+}

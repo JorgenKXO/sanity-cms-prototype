@@ -2,6 +2,8 @@ import {visionTool} from '@sanity/vision'
 import {defineConfig, type Template} from 'sanity'
 import {structureTool} from 'sanity/structure'
 
+import './studio.css'
+
 import {schemaTypes} from './schemaTypes'
 import {defaultDocumentNode, deskStructure} from './structure'
 

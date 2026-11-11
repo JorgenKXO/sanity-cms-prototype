@@ -64,6 +64,9 @@ Dette er en avgrensning av redaktørgrensesnittet, ikke tilgangskontroll.
 Det manuelt redigerte feltet **Sist oppdatert** er fjernet fra artikler og
 seksjonssider. Tidligere lagrede verdier slettes ikke fra datasettet.
 
+**Bilde og tekst** er skjult fra innsettingsmenyene i artikler og seksjoner.
+Eksisterende blokker beholdes og kan fortsatt redigeres og forhåndsvises.
+
 ## Make a simple article page
 
 1. Open Studio.

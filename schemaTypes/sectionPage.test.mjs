@@ -236,26 +236,33 @@ test('does not define optional editor names on content blocks', () => {
   }
 })
 
-test('hides shared content and crisis blocks from content builder insert menus', () => {
+test('hides shared content, crisis, and image-text blocks from content builder insert menus', () => {
   const article = schemaTypes.find((type) => type.name === 'article')
   const section = schemaTypes.find((type) => type.name === 'pageSection')
 
-  for (const field of [
-    article.fields.find((item) => item.name === 'content'),
-    section.fields.find((item) => item.name === 'content'),
-  ]) {
+  for (const type of [article, section]) {
+    const field = type.fields.find((item) => item.name === 'content')
     assert.equal(field.components.input, ContentBuilderInput)
+    const contentType = workspace.schema.get(type.name).fields
+      .find((item) => item.name === 'content').type
+    const imageTextType = contentType.of.find((member) => member.name === 'bildeOgTekst')
+    assert.ok(imageTextType)
+    const existingMember = {
+      kind: 'item',
+      key: 'legacy-image-text',
+      item: {schemaType: imageTextType},
+      parentSchemaType: contentType,
+    }
     const filtered = ContentBuilderInput({
-      schemaType: {
-        ...field,
-        of: field.of.map((member) =>
-          member.type === 'reference' ? {...member, to: [{name: 'sharedContent'}]} : member,
-        ),
-      },
-      members: [],
+      schemaType: contentType,
+      members: [existingMember],
       renderDefault: (props) => props,
     })
     assert.ok(!filtered.schemaType.of.some((member) => member.name === 'krise'))
+    assert.ok(!filtered.schemaType.of.some((member) => member.name === 'bildeOgTekst'))
+    assert.ok(filtered.schemaType.of.some((member) => member.name === 'tekst'))
+    assert.equal(filtered.members[0].item.schemaType, imageTextType)
+    assert.equal(filtered.members[0].parentSchemaType, filtered.schemaType)
     assert.ok(
       !filtered.schemaType.of.some(
         (member) => 'to' in member && member.to.some((target) => target.name === 'sharedContent'),
@@ -289,6 +296,7 @@ test('offers accordion groups and link lists on articles but not section pages',
   assert.ok(directArticleBlocks.some((block) => block.type === 'accordionGroup'))
   assert.ok(directArticleBlocks.some((block) => block.type === 'lenkeliste'))
   assert.ok(directArticleBlocks.some((block) => block.type === 'eksempel'))
+  assert.ok(directArticleBlocks.some((block) => block.type === 'bildeOgTekst'))
   assert.ok(!directArticleBlocks.some((block) => block.type === 'sitat'))
   assert.ok(articleContent.of.every((block) => block.name !== 'seksjon'))
   assert.deepEqual(

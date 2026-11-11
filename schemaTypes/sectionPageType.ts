@@ -14,13 +14,19 @@ export const pageSectionType = defineType({
   icon: BlockContentIcon,
   options: {collapsible: true, collapsed: true},
   fields: [
-    defineField({name: 'heading', title: 'Overskrift (valgfritt)', type: 'string'}),
+    defineField({
+      name: 'heading',
+      title: 'Overskrift',
+      type: 'string',
+      validation: (rule) => rule.required(),
+    }),
     defineField({
       name: 'icon',
-      title: 'Ikon (valgfritt)',
+      title: 'Ikon',
       type: 'string',
       options: {list: sectionIconOptions.map(({title, value}) => ({title, value}))},
       components: {input: SectionIconInput},
+      validation: (rule) => rule.required(),
     }),
     defineField({
       name: 'content',

@@ -134,6 +134,8 @@ const text = (key = 'text') => ({
 const section = (index) => ({
   _key: `section-${index}`,
   _type: 'pageSection',
+  heading: `Seksjon ${index}`,
+  icon: 'info',
   content: [text()],
 })
 const document = (sections) => ({
@@ -170,15 +172,24 @@ test('requires one to ten sections, including exact boundary values', async () =
   assert.ok((await errors(undefined)).some((marker) => marker.path[0] === 'sections'))
 })
 
-test('requires section content, but heading and icon are optional', async () => {
+test('requires section heading, icon, and content', async () => {
   assert.deepEqual(await errors([section(1)]), [])
-  for (const content of [undefined, []]) {
-    const result = await errors([{...section(1), content}])
-    assert.ok(
-      result.some((marker) => marker.path.includes('content')),
-      JSON.stringify(result),
-    )
+
+  for (const field of ['heading', 'icon', 'content']) {
+    for (const value of [undefined, '']) {
+      const result = await errors([{...section(1), [field]: value}])
+      assert.ok(
+        result.some((marker) => marker.path.includes(field)),
+        `${field}=${JSON.stringify(value)}: ${JSON.stringify(result)}`,
+      )
+    }
   }
+
+  const emptyContentErrors = await errors([{...section(1), content: []}])
+  assert.ok(
+    emptyContentErrors.some((marker) => marker.path.includes('content')),
+    JSON.stringify(emptyContentErrors),
+  )
 })
 
 test('supports the navigation-page highlighted intro on articles and section pages', async () => {

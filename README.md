@@ -116,6 +116,10 @@ all top-level content must be sections; validation blocks publishing otherwise.
 The preview draws a green line above each section (and below the last one), with
 the icon in a black circle to the left of the heading and content.
 
+Sections on **section pages** require both a heading and an icon. Existing
+section-page sections without either value must be updated before they can be
+published. This requirement does not apply to sections in articles.
+
 **Regelverk** panels use that heading by default and allow plain text, links,
 subheadings and **Lenkeliste** objects. Text formatting and lists are disabled.
 

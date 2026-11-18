@@ -294,7 +294,7 @@ test('hides crisis panels from navigation content insert menus', () => {
   assert.deepEqual(filtered.schemaType.of.map((member) => member.name), ['informasjonPanel'])
 })
 
-test('offers accordion groups and link lists on articles but not section pages', () => {
+test('offers accordion groups and link lists on articles and section pages', () => {
   const article = schemaTypes.find((type) => type.name === 'article')
   const sectionType = schemaTypes.find((type) => type.name === 'pageSection')
   const articleContent = article.fields.find((field) => field.name === 'content')
@@ -312,7 +312,10 @@ test('offers accordion groups and link lists on articles but not section pages',
   assert.ok(articleContent.of.every((block) => block.name !== 'seksjon'))
   assert.deepEqual(
     sectionBlocks.map((block) => block.name || block.type),
-    ['tekst', 'bilde', 'bildeOgTekst', 'eksempel', 'informasjon', 'knapp', 'varsel', 'krise', 'rettskilderPanel', 'openClose'],
+    [
+      'tekst', 'bilde', 'bildeOgTekst', 'eksempel', 'informasjon', 'knapp', 'varsel', 'krise',
+      'rettskilderPanel', 'openClose', 'accordionGroup', 'lenkeliste',
+    ],
   )
   assert.ok(!sectionBlocks.some((block) => block.type === 'sitat'))
   assert.deepEqual(sectionPageBuilder.of.map((block) => block.type), ['pageSection'])

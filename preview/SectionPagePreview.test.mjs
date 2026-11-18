@@ -601,6 +601,27 @@ test('renders green boundaries matching the original section prototype', () => {
   assert.equal((html.match(/display:flex;gap:var\(--spacing-xl\);align-items:flex-start/g) || []).length, 2)
 })
 
+test('renders accordion groups and link lists inside section page content', () => {
+  const html = render(SectionPagePreview, {
+    title: 'Seksjonsside med trekkspill og lenkeliste',
+    sections: [{
+      _key: 'section',
+      heading: 'Ofte stilte spørsmål',
+      content: [
+        {
+          _key: 'accordion-group',
+          _type: 'accordionGroup',
+          accordions: [{_key: 'accordion', title: 'Spørsmål i seksjonen', content: []}],
+        },
+        {_key: 'link-list', _type: 'lenkeliste', pages: []},
+      ],
+    }],
+  })
+
+  assert.ok(html.includes('Spørsmål i seksjonen'), html)
+  assert.ok(html.includes('Legg til minst én side for å forhåndsvise lenkelisten.'), html)
+})
+
 test('shows added system icons in centered white-on-black circles beside section text', () => {
   const html = render(SectionPagePreview, {
     title: 'Seksjonsside med nytt ikon',

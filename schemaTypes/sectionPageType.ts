@@ -33,7 +33,11 @@ export const pageSectionType = defineType({
       title: 'Innhold',
       type: 'array',
       components: {input: ContentBuilderInput},
-      of: articleContentBlocks,
+      of: [
+        ...articleContentBlocks,
+        defineArrayMember({type: 'accordionGroup'}),
+        defineArrayMember({type: 'lenkeliste'}),
+      ],
       validation: (rule) => rule.required().min(1),
     }),
   ],
